@@ -1,0 +1,5 @@
+{"event":"init","conversation_id":"00000000-0000-4000-8000-000000000002","init":{"model":"gemini-3.8-flash-low","cwd":"C:\tmp","tools":["list_dir","run_command"],"permission_mode":"always-proceed"}}
+{"event":"step_update","step_update":{"conversation_id":"00000000-0000-4000-8000-000000000002","step_index":0,"state":"DONE","step_type":"user_input"}}
+{"event":"step_update","step_update":{"conversation_id":"00000000-0000-4000-8000-000000000002","step_index":1,"state":"ACTIVE","step_type":"agent_response","text_delta":"bonjour"}}
+{"event":"step_update","step_update":{"conversation_id":"00000000-0000-4000-8000-000000000002","step_index":1,"state":"DONE","step_type":"agent_response","text_delta":"\n","duration_seconds":2.5914525,"usage":{"input_tokens":8712,"output_tokens":2,"thinking_tokens":0,"cache_read_tokens":0,"total_tokens":8714}}}
+{"event":"result","result":{"conversation_id":"00000000-0000-4000-8000-000000000002","status":"SUCCESS","response":"bonjour\n","duration_seconds":2.8061223,"num_turns":1,"usage":{"input_tokens":8712,"output_tokens":2,"thinking_tokens":0,"cache_read_tokens":0,"total_tokens":8714}}}

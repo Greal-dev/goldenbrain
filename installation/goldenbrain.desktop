@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Name=GoldenBrain
+Comment=Confier des tâches à des assistants IA, rangées dans vos notes
+Comment[en]=Hand tasks to AI assistants, filed in your notes
+Comment[de]=Aufgaben an KI-Assistenten übergeben, in Ihren Notizen abgelegt
+Comment[es]=Confiar tareas a asistentes de IA, ordenadas en sus notas
+Exec=@LANCEUR@
+Icon=@ICONE@
+Terminal=false
+Categories=Office;ProjectManagement;
+StartupNotify=false

@@ -1,0 +1,9 @@
+# Composants épinglés de l'installation « un clic » : clé, adresse, empreinte SHA-256.
+# Lu par installation/installer.sh et scripts/construire_*.py ; changer une version = changer sa ligne entière.
+python-linux-x86_64 https://github.com/astral-sh/python-build-standalone/releases/download/20261110/cpython-3.12.16%2B20261110-x86_64-unknown-linux-gnu-install_only.tar.gz c2f87d4b4e8db3abddb0f116c6ccfc503d0cbdbb9ee8faacddad1b679ec12e99
+python-linux-aarch64 https://github.com/astral-sh/python-build-standalone/releases/download/20261110/cpython-3.12.16%2B20261110-aarch64-unknown-linux-gnu-install_only.tar.gz 4792f81750282597fb2a3389fe18b945ed2ba6aad5e45ad406d122c58cb33081
+python-macos-arm64 https://github.com/astral-sh/python-build-standalone/releases/download/20261110/cpython-3.12.16%2B20261110-aarch64-apple-darwin-install_only.tar.gz e956e60bc9465d577ef8062059aa05cd3a2665b4b8678a2ed24e432368330b8f
+python-macos-x86_64 https://github.com/astral-sh/python-build-standalone/releases/download/20261110/cpython-3.12.16%2B20261110-x86_64-apple-darwin-install_only.tar.gz 83f2922437e6d546d0fcdb8c11f150a8e52787e8d9ea8651b1974e20908eb1bc
+python-windows-x86_64 https://github.com/astral-sh/python-build-standalone/releases/download/20261110/cpython-3.12.16%2B20261110-x86_64-pc-windows-msvc-install_only.tar.gz e23fe5b16926de1d81661b1a97352e89fb167549c55a6825796ccd0f32ec7f1b
+mingit-windows-x86_64 https://github.com/git-for-windows/git/releases/download/v2.56.1.windows.1/MinGit-2.56.1-64-bit.zip 4a92850b6e917da4fd010669b614b55dccf5b0ec333a534cc4be4700dfefdafd
+innosetup https://github.com/jrsoftware/issrc/releases/download/is-6_7_4/innosetup-6.7.4.exe a549929319f9120716677c685535ca4671e4b937b5fdc87e2585f32d8eb30e8c

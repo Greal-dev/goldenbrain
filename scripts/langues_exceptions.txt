@@ -1,0 +1,22 @@
+# Libellés visibles volontairement hors dictionnaire (INV-LANGUE-1) : fichier | littéral | motif
+langues.js | Français | nom de la langue écrit dans cette langue, pour être reconnu quelle que soit la langue affichée
+langues.js | English | idem
+langues.js | Deutsch | idem
+langues.js | Español | idem
+notes_tache.js | btn primaire petit | classes CSS (boutons), jamais montrées
+maj.js | btn petit primaire | classes CSS (bouton), jamais montrées
+economie.js | pas de donnée | début d’un motif renvoyé par le serveur, comparé tel quel, jamais montré
+version.js | btn petit primaire | classes CSS (bouton), jamais montrées
+installation.js | Dans un terminal | début d’une instruction renvoyée par le serveur, comparé tel quel, jamais montré
+codespace.js | Shutdown | valeur d’état renvoyée par GitHub, comparée telle quelle, jamais montrée
+propositions.js | btn primaire petit | classes CSS (bouton), jamais montrées
+decisions-agents.js | btn primaire petit | classes CSS (bouton), jamais montrées
+decisions.js | btn primaire petit | classes CSS (boutons), jamais montrées
+transfo.js | Le découpage précédent est insuffisant. Découpe le travail de ce projet en tickets autonomes et vérifiables, au moins deux, autant que nécessaire, sans reprendre les tickets déjà présents, et termine par : | consigne envoyée à l’agent (protocole de découpage lu par le serveur), jamais un libellé d’interface
+transfo.js | Archives/ | nom de dossier technique du vault (suffixe de date), pas un libellé
+transfo.js | resume: une phrase sur le projet | format imposé de la consigne de découpage (clé lue par le serveur), jamais un libellé
+transfo.js | - titre: … | format imposé de la consigne de découpage (clé lue par le serveur), jamais un libellé
+transfo.js | description: … | format imposé de la consigne de découpage (clé lue par le serveur), jamais un libellé
+note-edition.js | btn primaire petit | classes CSS (bouton), jamais montrées
+notes_ia.js | btn primaire petit | classes CSS (bouton), jamais montrées
+travaux.js | btn petit danger | classe CSS (bouton), jamais montrée

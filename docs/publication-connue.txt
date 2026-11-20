@@ -1,0 +1,3 @@
+# INV-PUB-1 : éléments personnels déjà présents et recensés (tâche « Nettoyer le code avant
+# ouverture »), en avertissement jusqu'à leur retrait ; une ligne = fichier<TAB>empreinte de la
+# ligne (sha256 tronqué, aucune donnée recopiée). Tout élément absent de cette liste bloque la porte.

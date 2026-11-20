@@ -1,0 +1,66 @@
+/* Le temps : colonnes Échéance et Priorité, retard, édition en place, vue « Aujourd'hui ». Mêmes variables de thème que style.css. */
+.c-ech, .c-prio { font-size: 12px; font-variant-numeric: tabular-nums; }
+.c-ech { color: var(--texte-2); }
+.retard { color: var(--c-bloque); font-weight: 600; }
+.prio { display: inline-block; padding: 0 6px; border-radius: 9px; font-size: 11.5px; line-height: 17px; border: 1px solid var(--bord-fort); color: var(--texte-2); }
+.prio-haute { color: var(--c-bloque); border-color: currentColor; font-weight: 600; }
+.prio-basse { opacity: .75; }
+
+/* En-têtes triables */
+.c-th { display: flex; }
+.tri { all: unset; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; text-transform: inherit; letter-spacing: inherit; font: inherit; color: inherit; }
+.tri:hover, .tri:focus-visible { color: var(--texte); }
+.tri:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.tri-sens { font-size: 9px; }
+
+/* Édition en place dans l'en-tête d'une tâche */
+.temps-edit { display: inline-flex; align-items: center; gap: 6px; }
+.temps-edit input.retard { color: var(--c-bloque); border-color: currentColor; }
+
+/* Vue « Aujourd'hui » */
+.aujourdhui { padding: 14px 20px 28px; overflow: auto; height: 100%; box-sizing: border-box; }
+.au-date { margin: 2px 0 14px; color: var(--texte-2); text-transform: capitalize; }
+.au-groupe { margin: 0 0 18px; }
+.au-groupe h3 { margin: 0 0 6px; font-size: 13px; text-transform: uppercase; letter-spacing: .04em; color: var(--texte-2); }
+.au-retard h3 { color: var(--c-bloque); }
+.au-liste { list-style: none; margin: 0; padding: 0; border: 1px solid var(--bord); border-radius: 6px; }
+.au-liste li + li { border-top: 1px solid var(--bord); }
+.au-ligne { all: unset; box-sizing: border-box; width: 100%; display: grid; grid-template-columns: 14px minmax(160px, 2fr) minmax(100px, 1.2fr) 86px 74px; align-items: center; column-gap: 10px; min-height: 32px; padding: 0 12px; cursor: pointer; }
+.au-ligne:hover { background: var(--survol); }
+.au-ligne:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.au-ligne > * { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.au-titre { font-weight: 500; }
+.au-place { color: var(--texte-2); font-size: 12px; }
+.au-ech { font-size: 12px; color: var(--texte-2); text-align: right; }
+.au-ech.retard { color: var(--c-bloque); }
+.au-res { grid-column: 2 / -1; font-size: 12px; color: var(--texte-2); }
+.au-res.manque { font-style: italic; color: var(--c-attente); }
+
+/* Écran « En cours » (travaux.js) */
+.b-lien { background: none; border: 0; padding: 0; cursor: pointer; font: inherit; font-weight: 600; color: var(--texte-2); font-size: 12px; text-decoration: underline dotted; }
+.b-lien:hover { color: var(--accent); }
+.travaux .tr-sous-titre { text-transform: none; }
+.tr-cartes { display: grid; gap: 10px; }
+.tr-carte { border: 1px solid var(--bord); border-radius: 8px; padding: 10px 12px; background: var(--panneau-2); }
+.tr-carte.en-pause { opacity: .8; border-style: dashed; }
+.tr-carte.silence .tr-action { color: var(--c-bloque); }
+.tr-tete { display: flex; gap: 8px; align-items: baseline; }
+.tr-noms { display: flex; flex-direction: column; min-width: 0; }
+.tr-titre { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tr-projet, .tr-qui, .tr-depuis, .tr-sa-etat, .tr-fichiers { color: var(--texte-2); font-size: 12px; }
+.tr-depuis { margin-left: auto; white-space: nowrap; }
+.tr-qui { margin: 4px 0 0; }
+.tr-action { margin: 6px 0; }
+.tr-av { display: flex; gap: 8px; align-items: center; font-size: 12px; color: var(--texte-2); }
+.tr-av progress { width: 160px; }
+.tr-sas { margin: 6px 0; font-size: 13px; }
+.tr-sas summary { cursor: pointer; color: var(--texte-2); }
+.tr-sas ul { list-style: none; margin: 4px 0 0; padding: 0; }
+.tr-sa { display: flex; gap: 8px; align-items: center; padding: 2px 0; }
+.tr-sa-desc { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tr-sa.echec .tr-sa-etat { color: var(--danger); }
+.tr-point { width: 8px; height: 8px; border-radius: 50%; background: var(--texte-2); flex: none; }
+.tr-point.tourne { background: var(--accent); }
+.tr-gestes { display: flex; gap: 6px; margin-top: 8px; }
+.tr-raison { color: var(--texte-2); font-size: 12px; }
+.tr-ligne { grid-template-columns: minmax(160px, 2fr) minmax(140px, 2fr) minmax(90px, 1fr); }

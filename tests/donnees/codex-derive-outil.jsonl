@@ -1,0 +1,7 @@
+{"type": "thread.started", "thread_id": "00000000-0000-4000-8000-000000000003"}
+{"type": "turn.started"}
+{"type": "item.completed", "item": {"id": "item_0", "type": "agent_message", "text": "J’exécute `echo salut`.\n"}}
+{"type": "item.started", "item": {"id": "item_1", "type": "command_execution", "command": "\"C:\\\\Program Files\\\\PowerShell\\\\7\\\\pwsh.exe\" -Command 'echo salut'", "aggregated_output": "", "exit_code": null, "status": "in_progress"}}
+{"type": "item.completed", "item": {"id": "item_1", "type": "command_execution", "command": "\"C:\\\\Program Files\\\\PowerShell\\\\7\\\\pwsh.exe\" -Command 'echo salut'", "aggregated_output": "salut\r\n", "exit_code": 0, "status": "completed"}}
+{"type": "item.completed", "item": {"id": "item_2", "type": "agent_message", "text": "ok"}}
+{"type": "turn.completed", "usage": {"input_tokens": 244893, "cached_input_tokens": 134272, "cache_write_input_tokens": 0, "output_tokens": 206, "reasoning_output_tokens": 53}}

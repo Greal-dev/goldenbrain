@@ -1,0 +1,57 @@
+name: Bug report (anomalie)
+description: Something does not work as expected. (Un comportement inattendu.)
+labels: ["bug", "à trier"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you. Please remove any personal data: names, paths from your machine, excerpts of your vault or conversations, tokens.
+        *Merci. Retirez toute donnée personnelle : noms, chemins de votre poste, extraits de votre vault ou de vos conversations, jetons.*
+        The in-app button (Settings → Installation and version → Report a problem) fills in the version and system for you.
+        *Le bouton de l'application (Réglages → Installation et version → Signaler un problème) remplit la version et le système.*
+  - type: textarea
+    id: constat
+    attributes:
+      label: What happened? (Ce qui s'est passé)
+    validations:
+      required: true
+  - type: textarea
+    id: etapes
+    attributes:
+      label: Steps to reproduce (Pour reproduire)
+      placeholder: |
+        1. Open …
+        2. Click …
+        3. See …
+    validations:
+      required: true
+  - type: textarea
+    id: attendu
+    attributes:
+      label: What did you expect? (Ce qui était attendu)
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version — commit, date, channel (Version — commit, date, canal)
+      placeholder: "a1b2c3d (2026-11-20) · canal stable"
+    validations:
+      required: true
+  - type: input
+    id: systeme
+    attributes:
+      label: System (Système)
+      placeholder: "Windows 11 · Python 3.12.7"
+    validations:
+      required: true
+  - type: input
+    id: harnais
+    attributes:
+      label: Agent harness and version, if relevant (Harnais et version, si utile)
+      placeholder: "Claude Code, Codex, OpenCode…"
+  - type: textarea
+    id: journal
+    attributes:
+      label: Logs or screenshot, anonymised (Journal ou capture, anonymisés)
+      render: text

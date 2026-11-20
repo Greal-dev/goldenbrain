@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, interactive-widget=resizes-content">
+  <meta name="color-scheme" content="light dark">
+  <title>GoldenBrain</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="apple-touch-icon" href="icone-192.png">
+  <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#1a1d23" media="(prefers-color-scheme: dark)">
+  <script src="theme.js"></script>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="notes.css">
+  <link rel="stylesheet" href="lot7.css">
+  <link rel="stylesheet" href="temps.css">
+  <link rel="stylesheet" href="decisions.css">
+  <link rel="stylesheet" href="filtres.css">
+  <link rel="stylesheet" href="statut.css">
+  <link rel="stylesheet" href="reglages.css">
+  <link rel="stylesheet" href="telephone.css">
+  <link rel="stylesheet" href="accueil.css">
+  <link rel="stylesheet" href="apprendre.css">
+  <link rel="stylesheet" href="manager.css">
+  <script type="module" src="app.js"></script>
+</head>
+<body>
+  <header id="bandeau">
+    <div class="b-haut">
+      <button id="marque" class="marque" type="button" title="Vue d’ensemble" data-t-title="index.vue_d_ensemble"><img class="logo" src="favicon.svg" alt="" width="20" height="20">GoldenBrain</button>
+      <button id="btn-aujourdhui" class="btn-compte" type="button" aria-pressed="false" title="Qu’est-ce que je fais aujourd’hui ? En retard, dues aujourd’hui, dues cette semaine, à moi" data-t-title="index.qu_est_ce_que_je"><span data-t="index.aujourd_hui">Aujourd’hui</span> <span class="n" id="n-retard" title="Tâches en retard" data-t-title="index.taches_en_retard">0</span></button>
+      <button id="btn-decisions" class="btn-compte" type="button" aria-pressed="false" title="Tout ce qui attend votre décision, tranché sur place" data-t-title="index.tout_ce_qui_attend_votre"><span data-t="index.decisions">Décisions</span> <span class="n" id="n-decisions">0</span></button>
+      <button id="btn-amoi" class="btn-compte" type="button" aria-pressed="false" title="Filtrer l’arbre sur les tâches en attente ou terminées à valider" data-t-title="index.filtrer_l_arbre_sur_les"><span data-t="index.a_moi">À moi</span> <span class="n" id="n-amoi">0</span></button>
+      <div class="rel prop-zone">
+        <button id="btn-props" class="btn-compte" type="button" aria-expanded="false" aria-controls="panneau-props"><span data-t="index.propositions">Propositions</span> <span class="n" id="n-props">0</span></button>
+        <div id="panneau-props" class="panneau" hidden></div>
+      </div>
+      <div class="rel">
+        <button id="btn-incidents" class="btn-compte" type="button" aria-expanded="false" aria-controls="panneau-incidents" title="Pourquoi des tours ont échoué ou se sont arrêtés, et l’état des quotas par compte" data-t-title="index.pourquoi_des_tours_ont_echoue"><span data-t="index.incidents">Incidents</span> <span class="n" id="n-incidents">0</span></button>
+        <div id="panneau-incidents" class="panneau panneau-incidents" hidden></div>
+      </div>
+      <div class="rel-align rel f-alignement">
+        <button id="btn-align" class="btn-compte alerte" type="button" aria-expanded="false" aria-controls="panneau-align" hidden title="Les dossiers du vault ne suivent pas l’arbre" data-t-title="index.les_dossiers_du_vault_ne"><span class="n" id="n-align">0</span> <span id="lib-align"><span data-t="index.dossiers_a_aligner">dossiers à aligner</span></span></button>
+        <div id="panneau-align" class="panneau panneau-align" hidden></div>
+      </div>
+      <div class="rech-zone rel">
+        <input id="recherche" type="search" placeholder="Rechercher tâches et notes  ( / )" data-t-placeholder="index.rechercher_taches_et_notes" aria-label="Rechercher une tâche ou une note" data-t-aria-label="index.rechercher_une_tache_ou_une" autocomplete="off" role="combobox" aria-expanded="false" aria-controls="rech-liste" aria-autocomplete="list">
+        <ul id="rech-liste" class="rech-liste" role="listbox" aria-label="Résultats de la recherche" data-t-aria-label="index.resultats_de_la_recherche" hidden></ul>
+      </div>
+      <span id="conn" class="conn" hidden><span data-t="index.connexion_perdue">Connexion perdue…</span></span>
+      <button id="btn-equipe" class="btn f-equipe" type="button" aria-pressed="false" title="Personas : regards qui relisent les tâches terminées" data-t-title="index.personas_regards_qui_relisent_les"><span data-t="index.equipe">Équipe</span></button>
+      <button id="btn-revue" class="btn f-jardinage" type="button"><span data-t="index.revue_de_coherence">Revue de cohérence</span></button>
+      <button id="btn-nouvelle" class="btn primaire" type="button"><span data-t="index.nouvelle_tache">Nouvelle tâche</span></button>
+      <button id="btn-routine" class="btn" type="button" title="Créer une routine programmée (consigne exécutée à heure fixe)" data-t-title="index.creer_une_routine_programmee_consigne"><svg class="ico" viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><circle cx="8" cy="8" r="6.25"/><path d="M8 4.5V8l2.5 1.5"/></svg><span data-t="index.routine">Routine</span></button>
+      <button id="btn-reglages" class="btn" type="button" aria-pressed="false" title="Mode simple ou avancé, fonctions à afficher" data-t-title="index.mode_simple_ou_avance_fonctions"><span data-t="index.reglages">Réglages</span></button>
+      <button id="btn-manager" class="btn" type="button" aria-pressed="false" aria-controls="volet-manager" title="Converser avec le manager : il oriente, met à jour et relance toutes les tâches" data-t-title="index.manager_titre"><span data-t="index.manager">Manager</span></button>
+      <button id="btn-guide" class="btn" type="button" aria-pressed="false" title="Guide : installation, premiers pas, chaque écran, dépannage" data-t-title="index.guide_installation_premiers_pas_chaque" aria-label="Guide" data-t-aria-label="index.guide">?</button>
+    </div>
+    <div class="b-bas">
+      <button id="btn-travaux" class="b-lib b-lien" type="button" title="Voir ce que font les assistants IA : aides lancées, avancement, file d’attente, routines, incidents" data-t-title="index.voir_travaux"><span data-t="index.en_cours">En cours</span> (<span id="n-tours">0</span>)</button>
+      <div id="tours" class="tours" role="list" aria-label="Tours en cours" data-t-aria-label="index.tours_en_cours"></div>
+      <span class="b-lib" id="lib-file" hidden><span data-t="index.en_file">En file</span> (<span id="n-file">0</span>)</span>
+      <div id="file" class="tours" role="list" aria-label="Tours en file" data-t-aria-label="index.tours_en_file"></div>
+    </div>
+  </header>
+  <div id="banniere" role="alert" hidden></div>
+  <div id="maj-serveur" role="status" hidden></div>
+  <div id="redemarrage-differe" role="status" hidden></div>
+  <div id="maj-auto" role="status" hidden></div>
+  <div id="maj-dispo" role="status" hidden></div>
+  <div id="poste-reserve" role="status" hidden></div>
+  <div id="vigie-alertes" role="alert" hidden></div>
+  <div id="reseau-perdu" role="status" hidden></div>
+  <main id="corps">
+    <nav id="volet-gauche" aria-label="Arbre des tâches" data-t-aria-label="index.arbre_des_taches">
+      <div id="onglets" class="onglets" role="tablist" aria-label="Navigation" data-t-aria-label="index.navigation">
+        <button id="onglet-taches" class="onglet" type="button" role="tab" aria-selected="true" aria-controls="pan-taches"><span data-t="index.taches">Tâches</span></button>
+        <button id="onglet-notes" class="onglet" type="button" role="tab" aria-selected="false" aria-controls="pan-notes" tabindex="-1"><span data-t="index.notes">Notes</span></button>
+      </div>
+      <div id="pan-taches" class="pan" role="tabpanel" aria-labelledby="onglet-taches">
+      <div class="g-tete">
+        <span id="arbre-titre" class="g-titre"><span data-t="index.taches_ouvertes">Tâches ouvertes</span></span>
+        <button id="chip-filtre" class="chip" type="button" hidden title="Retirer le filtre" data-t-title="index.retirer_le_filtre"><span data-t="index.filtre_a_moi">filtre « à moi »</span> &times;</button>
+        <div class="bascule" role="group" aria-label="Affichage" data-t-aria-label="index.affichage">
+          <button id="vue-ouvertes" data-vue="ouvertes" type="button" aria-pressed="true"><span data-t="index.ouvertes">Ouvertes</span></button>
+          <button id="vue-toutes" data-vue="toutes" type="button" aria-pressed="false"><span data-t="index.toutes">Toutes</span></button>
+        </div>
+      </div>
+      <div id="filtres" class="filtres" aria-label="Filtres de l’arbre" data-t-aria-label="index.filtres_de_l_arbre"></div>
+      <div id="arbre" role="tree" aria-label="Casquettes, opérations, conteneurs et tâches" data-t-aria-label="index.casquettes_operations_conteneurs_et_taches"></div>
+      </div>
+      <div id="pan-notes" class="pan" role="tabpanel" aria-labelledby="onglet-notes" hidden>
+        <div class="g-tete">
+          <span class="g-titre"><span data-t="index.dossier">Dossier :</span> <span id="notes-dossier"><span data-t="index.racine_du_vault">racine du vault</span></span></span>
+          <button id="btn-note-actu" class="btn petit" type="button" title="Relire les dossiers (modifications faites ailleurs)" data-t-title="index.relire_les_dossiers_modifications_faites" aria-label="Actualiser les dossiers" data-t-aria-label="index.actualiser_les_dossiers">&#8635;</button>
+          <button id="btn-graphe" class="btn petit" type="button" title="Graphe du second cerveau" data-t-title="index.graphe_du_second_cerveau"><span data-t="index.graphe">Graphe</span></button>
+          <a class="btn petit aide" href="#guide=organiser-votre-second-cerveau" title="Organiser votre second cerveau (guide)" data-t-title="index.organiser_second_cerveau_guide" aria-label="Aide : organiser votre second cerveau" data-t-aria-label="index.aide_organiser_second_cerveau" data-id="notes-guide">?</a>
+          <button id="btn-note-neuve" class="btn petit primaire" type="button" title="Nouvelle note dans le dossier courant" data-t-title="index.nouvelle_note_dans_le_dossier"><span data-t="index.nouvelle_note">Nouvelle note</span></button>
+        </div>
+        <div id="notes-arbre" role="tree" aria-label="Dossiers et notes du vault" data-t-aria-label="index.dossiers_et_notes_du_vault"></div>
+      </div>
+    </nav>
+    <section id="volet-droit" aria-label="Détail" data-t-aria-label="index.detail"></section>
+    <aside id="volet-manager" aria-label="Manager" data-t-aria-label="index.manager" hidden></aside>
+  </main>
+  <nav id="barre-basse" aria-label="Navigation principale" data-t-aria-label="index.navigation_principale">
+    <button type="button" data-tel="taches"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg><span data-t="index.taches">Tâches</span></button>
+    <button type="button" data-tel="decisions"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span><span data-t="index.decisions">Décisions</span> <span class="n" id="n-decisions-bas" hidden></span></span></button>
+    <button type="button" data-tel="recherche"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg><span data-t="index.recherche">Recherche</span></button>
+    <button type="button" data-tel="reglages"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></svg><span data-t="index.reglages">Réglages</span></button>
+  </nav>
+  <div id="voile-redemarrage" class="voile" role="alertdialog" aria-modal="true" aria-label="Redémarrage du serveur" data-t-aria-label="index.redemarrage_du_serveur" tabindex="-1" hidden></div>
+</body>
+</html>

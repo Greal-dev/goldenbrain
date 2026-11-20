@@ -1,0 +1,56 @@
+/* Lot 7 — serveur à jour, étapes à la demande, rattachement, promotion et réduction. Mêmes variables de thème que style.css. */
+
+/* Serveur à mettre à jour : bandeau persistant et voile de redémarrage */
+#maj-serveur, #redemarrage-differe, #maj-auto, #maj-dispo, #poste-reserve, #reseau-perdu { flex: none; display: flex; align-items: center; gap: 14px; padding: 6px 14px; font-size: 12.5px; border-bottom: 1px solid var(--c-attente);
+  background: color-mix(in srgb, var(--c-attente) 20%, var(--panneau)); }
+#maj-serveur .maj-t, #redemarrage-differe .maj-t, #maj-auto .maj-t, #maj-dispo .maj-t, #poste-reserve .maj-t, #reseau-perdu .maj-t { flex: 1; min-width: 0; }
+#maj-dispo .maj-neuf { margin-top: 4px; } #maj-dispo .maj-neuf ul { margin: 4px 0 0; padding-left: 18px; max-height: 40vh; overflow: auto; }
+.voile { position: fixed; inset: 0; z-index: 60; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; text-align: center; padding: 24px;
+  background: color-mix(in srgb, var(--fond) 90%, transparent); backdrop-filter: blur(2px); }
+.voile:focus { outline: none; }
+.voile-titre { margin: 0; font-size: 18px; font-weight: 600; }
+.voile-aide { margin: 0; max-width: 460px; color: var(--texte-2); }
+.tourne.grand { width: 26px; height: 26px; border-width: 3px; }
+
+/* Conversation : bascule « Étapes », tours, activité en direct */
+.d-defile { overflow-anchor: none; } /* le défilement est géré à la main (bascule des étapes, direct) */
+.conv-tete { position: sticky; top: -14px; z-index: 3; display: flex; align-items: center; gap: 10px; margin: 16px -20px 8px; padding: 5px 20px; background: var(--fond); border-bottom: 1px solid var(--bord); }
+.conv-tete .conv-titre { margin: 0; }
+.btn-etapes { margin-left: auto; display: inline-flex; align-items: center; gap: 7px; }
+.btn-etapes .sw { position: relative; width: 24px; height: 13px; border-radius: 7px; background: var(--bord-fort); flex: none; }
+.btn-etapes .sw::after { content: ""; position: absolute; top: 2px; left: 2px; width: 9px; height: 9px; border-radius: 50%; background: var(--panneau); transition: left .1s; }
+.btn-etapes[aria-pressed="true"] .sw { background: var(--accent); }
+.btn-etapes[aria-pressed="true"] .sw::after { left: 13px; }
+.conv.masque .tour-c .etape, .conv.masque .tour-c .final .outils { display: none; }
+.conv.masque .tour-c.deplie .etape, .conv.masque .tour-c.deplie .final .outils { display: block; }
+.conv.masque .tour-c.deplie .etape { margin-left: 14px; border-style: dashed; background: var(--panneau-2); }
+.conv:not(.masque) .etapes-n, .conv:not(.masque) .activite { display: none; }
+.etapes-n { display: block; margin: 0 0 6px; padding: 1px 4px; border: 0; background: none; color: var(--texte-2); font-size: 11.5px; text-decoration: underline dotted; text-underline-offset: 3px; }
+.etapes-n:hover { color: var(--texte); }
+.activite { display: flex; align-items: center; gap: 8px; margin: 0 0 8px; padding: 6px 12px; color: var(--texte-2); font-size: 12px; border: 1px dashed var(--bord-fort); border-radius: 6px; }
+.activite .act-t { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* Rattachement d'une tâche */
+.d-rattache { display: flex; align-items: center; gap: 8px; margin: -2px 0 8px; font-size: 12px; color: var(--texte-2); }
+.d-rattache .crumb { font-size: 12px; font-weight: 600; }
+
+/* Projet vs tâche : pictogramme de dossier (la tâche porte sa pastille de statut) */
+.ico-projet { position: relative; flex: none; width: 13px; height: 9px; margin: 3px 1px 0; border: 1.5px solid var(--accent); border-radius: 0 2px 2px 2px; background: var(--accent-fond); }
+.ico-projet::before { content: ""; position: absolute; left: -1.5px; top: -4.5px; width: 6px; height: 3px; border: 1.5px solid var(--accent); border-bottom: 0; border-radius: 2px 2px 0 0; background: var(--accent-fond); }
+.t-conteneur .titre, .cl.t-conteneur .c-t { font-weight: 600; }
+
+/* Ligne d'information, réduction */
+.lien-annuler.discret { color: var(--texte-2); text-decoration: none; font-size: 15px; line-height: 1; }
+.rappel-archive { padding: 8px 10px; background: var(--panneau-2); border: 1px solid var(--bord); border-radius: 5px; }
+.rappel-archive p { margin: 0; }
+.rappel-archive p + p { margin-top: 4px; color: var(--texte-2); }
+
+/* Signe de vie des tours (INV-VIGIE-1, INV-VIGIE-2) */
+#vigie-alertes { flex: none; display: flex; flex-direction: column; gap: 4px; padding: 6px 14px; font-size: 12.5px; border-bottom: 1px solid var(--c-bloque); }
+#vigie-alertes .vie-ligne { display: flex; align-items: center; gap: 14px; }
+#vigie-alertes .maj-t { flex: 1; min-width: 0; }
+.d-vie .vie { margin-top: 6px; font-size: 12.5px; color: var(--c-encours); }
+.d-vie .vie.silence, .d-vie .vie-alerte { color: var(--c-bloque); }
+.vie-age { opacity: .7; }
+.vie-gestes { display: inline-flex; gap: 6px; margin-left: 10px; }
+.tour.silence .tour-act { color: var(--c-bloque); }

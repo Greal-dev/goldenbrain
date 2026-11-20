@@ -1,0 +1,7 @@
+# Motifs personnels pour la garde de publication (INV-PUB-1).
+# Copier en `.sensible` (non suivi, listé dans .gitignore) : une expression régulière par ligne,
+# insensible à la casse ; une ligne qui commence par `#` est un commentaire.
+# La porte (scripts/check.py) échoue si un fichier du dépôt contient l'un de ces motifs.
+# Exemples à adapter : votre nom, votre identifiant de compte, vos projets, vos clients.
+# \bmon-nom\b
+# mon-projet-secret

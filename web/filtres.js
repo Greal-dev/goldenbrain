@@ -1,0 +1,152 @@
+// Rôle : barre de filtres, regroupement et tri de l'arbre des tâches (vue de base) + libellé court du statut.
+// Frontières : calcul pur sur S.arbre (jamais d'écriture, pas d'API) ; l'état est gardé dans le navigateur
+// (localStorage). Le classement de l'ordonnancement (INV-ORDO-2) porte sur des tours en file, pas sur
+// l'arbre : ici, priorité puis échéance, comme son premier critère, sans le dupliquer.
+import { t, tn, LOCALE } from './langues.js';
+import { h, $, remplacer, pourMoi, groupeStatut, RETOUR } from './dom.js';
+import { S, on, emit, cleNoeud, parcourir } from './store.js';
+import { rangPriorite, libellePriorite, ecartJours } from './temps.js';
+import { badgeRoutine, libelleRoutine } from './routines.js';
+
+const CLE = 'orch.filtres';
+const VIDE = { statuts: [], priorite: '', echeance: '', portee: '', harnais: '', executant: '', ia: false, routines: false, amoi: false, groupe: '', tri: 'arbre' };
+let F = { ...VIDE, ...(() => { try { return JSON.parse(localStorage.getItem(CLE) || '{}'); } catch { return {}; } })() };
+F.statuts = Array.isArray(F.statuts) ? F.statuts : [];
+S.filtreAMoi = !!F.amoi;
+const sauver = () => { F.amoi = S.filtreAMoi; localStorage.setItem(CLE, JSON.stringify(F)); };
+
+// Statut lisible d'une tâche : clé, libellé court (pastille de la ligne), libellé du filtre.
+export const STATUTS_COURTS = [
+  ['a-faire', t('filtres.st_a_faire')], ['en-cours', t('filtres.st_en_cours')], ['bloque', t('filtres.st_bloque')], ['a-moi', t('filtres.st_a_moi')],
+  ['a-valider', t('filtres.st_a_valider')], ['fait', t('filtres.st_fait')], ['cloture', t('filtres.st_cloture')], ['abandonne', t('filtres.st_abandonne')],
+];
+export const cleStatut = (n) => (n.statut === RETOUR ? 'a-moi' : n.a_valider ? 'a-valider' : groupeStatut(n.statut));
+export const libelleCourt = (n) => n.routine ? libelleRoutine(n) : STATUTS_COURTS.find(([k]) => k === cleStatut(n))?.[1] || n.statut || '—';
+export const badgeStatut = (n) => n.routine ? badgeRoutine(n) : h('span', { class: `badge-st bs-${cleStatut(n)}`, 'data-statut': cleStatut(n) }, libelleCourt(n));
+
+const ECHEANCES = [['', t('filtres.toutes')], ['retard', t('filtres.en_retard')], ['semaine', t('filtres.cette_semaine')]];
+const GROUPES = [['', t('filtres.g_arbre')], ['statut', t('filtres.g_statut')], ['priorite', t('filtres.g_priorite')], ['projet', t('filtres.g_projet')], ['echeance', t('filtres.g_echeance')]];
+const TRIS = [['arbre', t('filtres.tri_arbre')], ['priorite', t('filtres.tri_priorite')]];
+
+const semaine = (n) => { if (!n.echeance) return false; const e = ecartJours(n.echeance); return e >= 0 && e <= 7; };
+const filtresActifs = () => F.statuts.length + ['priorite', 'echeance', 'portee', 'harnais', 'executant'].filter((k) => F[k]).length + (F.ia ? 1 : 0) + (F.routines ? 1 : 0) + (S.filtreAMoi ? 1 : 0);
+export const actif = () => filtresActifs() > 0 || !!F.groupe || F.tri !== 'arbre';
+
+function passe(n, chem) {
+  if (S.filtreAMoi && !pourMoi(n)) return false;
+  if (F.statuts.length && !F.statuts.includes(cleStatut(n))) return false;
+  if (F.priorite && (n.priorite || 'aucune') !== F.priorite) return false;
+  if (F.echeance === 'retard' && !n.retard) return false;
+  if (F.echeance === 'semaine' && !semaine(n)) return false;
+  if (F.portee && !chem.includes(F.portee)) return false;
+  if (F.harnais && n.harnais !== F.harnais) return false;
+  if (F.executant && (n.executant || 'ia') !== F.executant) return false; // INV-EXECUTANT-1
+  if (F.ia && !(S.etat.occupees || {})[n.id]) return false;
+  if (F.routines && !n.routine) return false; // INV-ROUTINE-5
+  return true;
+}
+// Tâche de rang : priorité (haute d'abord), puis échéance (sans échéance en dernier).
+const cmp = (a, b) => rangPriorite(a.priorite) - rangPriorite(b.priorite) || (a.echeance || '9999').localeCompare(b.echeance || '9999');
+const trier = (ns) => (F.tri === 'priorite' ? [...ns.filter((x) => x.type !== 'tache'), ...ns.filter((x) => x.type === 'tache').sort(cmp)] : ns);
+
+function elaguer(ns, chem) {
+  const r = [];
+  for (const n of ns) {
+    const c = [...chem, cleNoeud(n)];
+    const enf = elaguer(n.enfants || [], c);
+    if (n.type === 'tache' ? passe(n, chem) || enf.length : enf.length) r.push({ ...n, enfants: trier(enf) });
+  }
+  return trier(r);
+}
+const nomProjet = (chem, arbre) => {
+  const k = [...chem].reverse().find((c) => c.startsWith('conteneur:')) || chem[0];
+  for (const x of parcourir(arbre)) if (cleNoeud(x) === k) return x.titre;
+  return t('filtres.sans_projet');
+};
+const GROUPEURS = {
+  statut: (n) => [STATUTS_COURTS.findIndex(([c]) => c === cleStatut(n)), libelleCourt(n)],
+  priorite: (n) => [rangPriorite(n.priorite), n.priorite ? libellePriorite(n.priorite) : t('filtres.sans_priorite')],
+  echeance: (n) => (n.retard ? [0, t('filtres.en_retard')] : !n.echeance ? [4, t('filtres.sans_echeance')] : ecartJours(n.echeance) === 0 ? [1, t('filtres.aujourdhui')] : semaine(n) ? [2, t('filtres.cette_semaine')] : [3, t('filtres.plus_tard')]),
+};
+function grouper(arbre) {
+  const taches = [];
+  (function aller(ns, chem) {
+    for (const n of ns) {
+      const c = [...chem, cleNoeud(n)];
+      if (n.type === 'tache') taches.push({ n: { ...n, enfants: [] }, chem });
+      aller(n.enfants || [], c);
+    }
+  })(arbre, []);
+  const groupes = new Map();
+  for (const { n, chem } of taches) {
+    const [ordre, titre] = F.groupe === 'projet' ? [0, nomProjet(chem, S.arbre)] : GROUPEURS[F.groupe](n);
+    if (!groupes.has(titre)) groupes.set(titre, { ordre, noeud: { id: `${F.groupe}:${titre}`, type: 'groupe', titre, enfants: [], ouvertes: 0 } });
+    groupes.get(titre).noeud.enfants.push(n);
+  }
+  return [...groupes.values()].sort((a, b) => a.ordre - b.ordre || a.noeud.titre.localeCompare(b.noeud.titre, LOCALE))
+    .map(({ noeud }) => ({ ...noeud, enfants: noeud.enfants.sort(F.tri === 'priorite' ? cmp : () => 0), ouvertes: noeud.enfants.length }));
+}
+
+export const compter = (ns) => { let k = 0; for (const x of parcourir(ns)) if (x.type === 'tache') k += 1; return k; };
+// Arbre tel que le volet le montre : filtré, puis groupé ou trié.
+export function appliquer(arbre) {
+  const a = actif() ? elaguer(arbre, []) : arbre;
+  return F.groupe ? grouper(a) : a;
+}
+
+function liste(id, libelle, options, val, quand) {
+  const sel = h('select', { id, onchange: () => quand(sel.value) }, options.map(([k, l]) => h('option', { value: k, ...(k === val ? { selected: '' } : {}) }, l)));
+  return h('label', { class: 'f-champ', for: id }, h('span', null, libelle), sel);
+}
+function coche(id, libelle, val, quand) {
+  const c = h('input', { type: 'checkbox', id, ...(val ? { checked: '' } : {}), onchange: () => quand(c.checked) });
+  return h('label', { class: 'f-coche', for: id }, c, h('span', null, libelle));
+}
+const changer = (patch) => { Object.assign(F, patch); sauver(); emit('filtre'); };
+
+let dernier = 0;
+export function dessinerBarre() {
+  const zone = $('#filtres');
+  if (!zone) return;
+  sauver(); // « À moi » peut aussi être basculé depuis le bandeau
+  const foc = zone.contains(document.activeElement) ? document.activeElement : null;
+  const reperer = foc && (foc.id ? `#${foc.id}` : foc.dataset.statut ? `[data-statut="${foc.dataset.statut}"]` : null);
+  const ouvert = zone.querySelector('details')?.open ?? false;
+  const portees = [['', t('filtres.toutes')]];
+  for (const x of parcourir(S.arbre)) if (x.type === 'casquette' || x.type === 'conteneur') portees.push([cleNoeud(x), x.titre]);
+  const harnais = ['', ...new Set([...parcourir(S.arbre)].filter((x) => x.type === 'tache' && x.harnais).map((x) => x.harnais))].map((k) => [k, k || t('filtres.tous')]);
+  const n = filtresActifs();
+  const d = h('details', { class: 'f-boite', ...(ouvert ? { open: '' } : {}) },
+    h('summary', null, t('filtres.titre'), n ? h('span', { class: 'compte', title: tn('filtres.actifs', n) }, n) : null,
+      h('span', { class: 'f-compte', id: 'f-compte', role: 'status', 'aria-live': 'polite' })),
+    h('div', { class: 'f-statuts', role: 'group', 'aria-label': t('filtres.statut') }, STATUTS_COURTS.map(([k, l]) => h('button', {
+      type: 'button', class: `f-st bs-${k}`, 'aria-pressed': String(F.statuts.includes(k)), 'data-statut': k,
+      onclick: () => changer({ statuts: F.statuts.includes(k) ? F.statuts.filter((x) => x !== k) : [...F.statuts, k] }),
+    }, l))),
+    h('div', { class: 'f-grille' },
+      liste('f-priorite', t('filtres.priorite'), [['', t('filtres.toutes')], ['haute', t('filtres.haute')], ['moyenne', t('filtres.moyenne')], ['basse', t('filtres.basse')], ['aucune', t('filtres.sans_priorite')]], F.priorite, (v) => changer({ priorite: v })),
+      liste('f-echeance', t('filtres.echeance'), ECHEANCES, F.echeance, (v) => changer({ echeance: v })),
+      liste('f-portee', t('filtres.portee'), portees, F.portee, (v) => changer({ portee: v })),
+      liste('f-harnais', t('filtres.assistant'), harnais, F.harnais, (v) => changer({ harnais: v })),
+      liste('f-executant', t('filtres.executant'), [['', t('filtres.toutes')], ['humain', t('filtres.par_moi')], ['ia', t('filtres.par_ia')]], F.executant, (v) => changer({ executant: v })),
+      liste('f-groupe', t('filtres.grouper'), GROUPES, F.groupe, (v) => changer({ groupe: v })),
+      liste('f-tri', t('filtres.trier'), TRIS, F.tri, (v) => changer({ tri: v }))),
+    h('div', { class: 'f-pied' },
+      coche('f-ia', t('filtres.ia_travail'), F.ia, (v) => changer({ ia: v })),
+      coche('f-routines', t('filtres.routines'), F.routines, (v) => changer({ routines: v })),
+      coche('f-amoi', t('filtres.a_moi'), S.filtreAMoi, (v) => { S.filtreAMoi = v; sauver(); emit('filtre'); }),
+      h('button', { type: 'button', class: 'btn petit', id: 'f-raz', onclick: () => { F = { ...VIDE }; S.filtreAMoi = false; sauver(); emit('filtre'); } }, t('filtres.raz'))));
+  remplacer(zone, d);
+  compteur(dernier);
+  if (reperer) zone.querySelector(reperer)?.focus();
+}
+export function compteur(k) {
+  dernier = k;
+  const e = $('#f-compte');
+  if (e) e.textContent = tn('filtres.n_taches', k);
+}
+export function initFiltres() {
+  on('filtre', dessinerBarre);
+  on('arbre', () => { if (!$('#filtres').contains(document.activeElement)) dessinerBarre(); });
+  dessinerBarre();
+}

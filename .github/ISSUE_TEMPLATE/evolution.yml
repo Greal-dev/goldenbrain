@@ -1,0 +1,37 @@
+name: Feature request (demande d'évolution)
+description: Suggest an improvement or a new capability. (Proposer une amélioration ou une capacité nouvelle.)
+labels: ["évolution", "à trier"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Check the roadmap (ROADMAP.md) and existing issues first. For a large change, agree on the approach here before opening a pull request.
+        *Consultez d'abord la feuille de route (ROADMAP.md) et les tickets existants. Pour un changement important, convenez de l'approche ici avant toute demande de fusion.*
+  - type: textarea
+    id: besoin
+    attributes:
+      label: The need — what are you trying to do? (Le besoin — que cherchez-vous à faire ?)
+    validations:
+      required: true
+  - type: textarea
+    id: proposition
+    attributes:
+      label: Proposed solution (Solution proposée)
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered (Autres pistes envisagées)
+  - type: input
+    id: version
+    attributes:
+      label: Version you use (Version utilisée)
+  - type: dropdown
+    id: contribuer
+    attributes:
+      label: Would you like to implement it? (Souhaitez-vous la réaliser ?)
+      options:
+        - "No (non)"
+        - "Yes, with some guidance (oui, avec un peu d'aide)"
+        - "Yes (oui)"

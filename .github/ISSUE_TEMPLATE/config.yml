@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Question or discussion (question ou discussion)
+    url: https://github.com/Greal-dev/goldenbrain/discussions
+    about: Ask how to do something, share a setup or an idea that is not yet a request. (Demander comment faire, partager un usage ou une idée.)
+  - name: Security vulnerability (faille de sécurité)
+    url: https://github.com/Greal-dev/goldenbrain/blob/main/SECURITY.md
+    about: Never in a public issue; follow SECURITY.md. (Jamais dans un ticket public ; voir SECURITY.md.)
+  - name: Become a beta tester (devenir testeur)
+    url: https://github.com/Greal-dev/goldenbrain/blob/main/BETA.md
+    about: Try upcoming versions and report the results. (Essayer les versions à venir et rendre compte.)

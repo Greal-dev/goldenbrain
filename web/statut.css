@@ -1,0 +1,12 @@
+/* Changement de statut depuis les listes : pastille cliquable, menu, refus en ligne, bandeau d'annulation. */
+.st-chg { cursor: pointer; }
+.st-chg[aria-disabled="true"] { cursor: not-allowed; opacity: .75; }
+.st-chg:hover, .st-chg:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.st-lien { display: inline-flex; align-items: center; gap: 6px; min-width: 0; border-radius: 4px; }
+.st-refus { color: var(--danger); background: var(--danger-fond); border-radius: 4px; font-size: 11px; padding: 0 6px; margin-left: 6px; }
+.menu-statut { position: fixed; z-index: 60; min-width: 190px; background: var(--panneau); border: 1px solid var(--bord-fort); border-radius: 6px; box-shadow: var(--ombre); padding: 4px; font-size: 12px; }
+.ms-titre { color: var(--texte-2); font-size: 11px; padding: 4px 8px 2px; }
+.ms-item { display: flex; align-items: center; gap: 8px; width: 100%; text-align: left; background: transparent; border: 0; border-radius: 4px; padding: 4px 8px; color: var(--texte); cursor: pointer; font: inherit; }
+.ms-item:hover, .ms-item:focus-visible { background: var(--survol); outline: 2px solid var(--accent); outline-offset: -2px; }
+.ms-item[aria-checked="true"] { font-weight: 600; background: var(--sel); }
+.annul-statut { position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%); z-index: 70; background: var(--panneau); border: 1px solid var(--bord-fort); border-radius: 6px; box-shadow: var(--ombre); padding: 6px 10px; font-size: 12px; display: flex; align-items: center; gap: 8px; }

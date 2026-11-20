@@ -1,0 +1,33 @@
+/* Statut lisible dans l'arbre, barre de filtres et regroupements. Mêmes variables de thème que style.css. */
+.badge-st, .f-st { --bs: var(--c-nc); border: 1px solid var(--bs); border-radius: 9px; font-size: 11px; line-height: 15px; padding: 0 6px; white-space: nowrap; color: var(--texte); background: transparent; flex: none; }
+.bs-en-cours { --bs: var(--c-encours); } .bs-a-moi, .bs-a-valider { --bs: var(--c-attente); } .bs-bloque { --bs: var(--c-bloque); }
+.bs-fait { --bs: var(--c-terminee); } .bs-cloture { --bs: var(--c-validee); } .bs-abandonne { --bs: var(--c-abandon); text-decoration: line-through; }
+.badge-st.bs-a-moi, .badge-st.bs-a-valider { background: var(--c-attente); color: var(--sur-vif); font-weight: 600; }
+.badge-st.bs-en-cours { border-width: 1.5px; }
+.t-groupe { font-weight: 600; }
+.filtres { border-bottom: 1px solid var(--bord); font-size: 12px; }
+.f-boite > summary { cursor: pointer; padding: 5px 10px; display: flex; align-items: center; gap: 8px; color: var(--texte-2); }
+.f-compte { margin-left: auto; font-variant-numeric: tabular-nums; }
+.f-statuts { display: flex; flex-wrap: wrap; gap: 4px; padding: 2px 10px 6px; }
+.f-st { cursor: pointer; padding: 1px 8px; }
+.f-st[aria-pressed="true"] { background: var(--accent-fond); box-shadow: inset 0 0 0 1px var(--bs); font-weight: 600; }
+.f-grille { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 8px; padding: 0 10px 6px; }
+.f-champ { display: flex; flex-direction: column; gap: 1px; color: var(--texte-2); min-width: 0; }
+.f-champ select { min-width: 0; }
+.f-pied { display: flex; align-items: center; gap: 6px 12px; flex-wrap: wrap; padding: 0 10px 7px; }
+.f-coche { display: inline-flex; align-items: center; gap: 4px; }
+.f-pied .btn { margin-left: auto; }
+/* INV-ROUTINE-5 : routine distincte d'une tâche — horloge, prochaine exécution, point de la dernière issue */
+.badge-st.bs-routine { --bs: var(--c-encours); border-style: dashed; display: inline-flex; align-items: center; gap: 4px; }
+.badge-st.bs-routine.pause { --bs: var(--c-nc); color: var(--texte-2); }
+.issue { width: 7px; height: 7px; border-radius: 50%; display: inline-block; flex: none; background: var(--c-nc); }
+.issue.i-reussie { background: var(--c-terminee); } .issue.i-echouee { background: var(--c-bloque); }
+.issue.i-en_cours { background: var(--c-encours); animation: pulse 1.2s infinite alternate; }
+@keyframes pulse { to { opacity: .3; } }
+.routine-bloc { border: 1px dashed var(--bord); border-radius: 6px; padding: 6px 10px; margin: 6px 0; font-size: 13px; }
+.routine-bloc .r-tete, .routine-bloc .r-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.routine-bloc .r-actions { margin-top: 6px; } .routine-bloc .r-prog { min-width: 220px; }
+.routine-bloc .r-erreur { color: var(--c-bloque); }
+.routine-bloc .r-hist ul { list-style: none; padding-left: 0; margin: 4px 0; }
+.routine-bloc .r-hist li { display: flex; align-items: center; gap: 6px; }
+.pastille-retard { flex: none; border: 1px solid var(--c-attente); border-radius: 9px; font-size: 11px; line-height: 15px; padding: 0 6px; white-space: nowrap; background: var(--c-attente); color: #1b1205; }

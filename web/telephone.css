@@ -1,0 +1,59 @@
+/* Rôle : mise en page téléphone (≤ 480 px) et écrans tactiles sans survol.
+   Frontières : n'agit qu'en dessous de 480 px de large, sauf le bloc « sans survol » ; l'écran affiché (liste ou détail)
+   est posé par telephone.js sur body[data-ecran]. */
+#barre-basse, #barre-basse .n[hidden] { display: none; }
+
+/* Écran tactile : rien ne s'atteint par le survol seul. */
+@media (hover: none) {
+  .ligne.sel > .actions-ligne { display: flex; }
+  .msg-modifier, .msg-repondre, .btn-discret { opacity: 1; }
+  .f-st li button { visibility: visible; }
+}
+
+@media (max-width: 480px) {
+  body { height: 100vh; height: 100dvh; min-height: 0; overflow: hidden; }
+  /* Bandeau : logo, recherche, nouvelle tâche ; le reste passe par la barre basse ou la page Décisions. */
+  .b-haut { flex-wrap: nowrap; padding: 6px 8px; }
+  .b-haut > :not(#marque, .rech-zone, #btn-nouvelle, #btn-manager, #conn) { display: none; }
+  #marque { font-size: 0; min-width: 44px; justify-content: center; }
+  .rech-zone { order: 0; flex: 1 1 auto; min-width: 0; }
+  .b-bas { display: none; }
+
+  /* Un seul écran à la fois : l'arbre, ou l'élément ouvert en plein écran. */
+  #corps { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+  #volet-gauche { flex: 1; min-height: 0; max-height: none; border: 0; }
+  #volet-droit { flex: 1; min-height: 0; }
+  body[data-ecran="liste"] #volet-droit, body[data-ecran="detail"] #volet-gauche { display: none; }
+
+  #barre-basse { display: flex; flex: none; border-top: 1px solid var(--bord); background: var(--panneau); padding-bottom: env(safe-area-inset-bottom); }
+  #barre-basse button { flex: 1; min-height: 56px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+    border: 0; background: none; color: var(--texte-2); font-size: 11.5px; }
+  #barre-basse button[aria-current] { color: var(--accent-vif, var(--accent)); font-weight: 600; }
+  #barre-basse .ico { width: 20px; height: 20px; margin: 0; }
+  /* Clavier virtuel ouvert sur une saisie : la barre basse s'efface pour laisser la place au champ. */
+  body:has(:is(textarea, input[type="text"], input[type="search"]):focus) #barre-basse { display: none; }
+
+  /* Cibles tactiles ≥ 44 px ; champs à 16 px, sans quoi iOS zoome à la saisie. */
+  button, .btn, .btn-compte, select, summary, .onglet, input:not([type="checkbox"], [type="radio"]) { min-height: 44px; }
+  input, textarea, select { font-size: 16px; }
+  .ligne { height: 44px; }
+  .act-ligne { min-width: 44px; min-height: 40px; }
+
+  /* Vue projet : titre et statut seulement ; le reste se lit dans la tâche ouverte. */
+  .casc-tete { padding: 8px 12px; }
+  .casc-l1 { flex-wrap: wrap; row-gap: 6px; }
+  .casc-outils { margin-left: 0; flex-wrap: wrap; }
+  .cl { grid-template-columns: minmax(0, 1fr) auto; min-height: 44px; padding: 0 10px 0 4px; }
+  .cl > :is(.c-act, .c-sit, .c-mot, .c-ech, .c-prio, .c-lien, .c-maj, .actions-ligne) { display: none; }
+  .c-groupe { grid-column: 2; gap: 8px; }
+
+  /* Tâche en plein écran : panneaux Conversation et Notes empilés (style.css), en-tête borné. */
+  .d-tete { padding: 8px 12px; max-height: 40%; overflow-y: auto; }
+  .d-titre { font-size: 17px; }
+  .d-meta select, .d-meta input { max-width: 100%; }
+  .cl-tete > :nth-child(n+3) { display: none; }
+  .decisions { padding: 10px 12px; }
+  .d-defile { padding: 10px 12px 14px; }
+  .composer { padding: 8px 12px calc(8px + env(safe-area-inset-bottom)); }
+  .composer .rappel { max-width: 34vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+}

@@ -1,0 +1,7 @@
+/* Mode « Apprendre » (INV-APPRENDRE-1) : encadré d'explication de l'agent, distinct du reste de la réponse. */
+.md blockquote.callout.c-apprendre { margin: 6px 0; padding: 6px 12px; border: 0; border-left: 4px solid var(--accent); border-radius: 4px; background: var(--accent-fond); color: var(--texte); }
+.md blockquote.callout.c-apprendre .callout-titre { font-weight: 700; margin-bottom: 2px; }
+.md blockquote.callout.c-apprendre .callout-titre::before { content: "💡 "; }
+.ap-tache { display: inline-flex; gap: 4px; align-items: center; color: var(--texte-2); }
+.f-retenir { margin-bottom: 8px; border-left: 4px solid var(--accent); background: var(--accent-fond); border-radius: 4px; padding: 4px 12px; }
+.f-retenir ul { margin: 2px 0 0; padding-left: 18px; }

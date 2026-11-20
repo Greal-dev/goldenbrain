@@ -1,0 +1,20 @@
+# Vos réglages. Ce fichier ne contient que vos ÉCARTS : tout le reste vient de
+# config.exemple.toml, qui suit les versions. Recopiez ici la clé à changer, sous sa section.
+# Exemples :
+#
+# [serveur]
+# port = 8300
+#
+# [harnais.claude]
+# modele_defaut = "sonnet"
+#
+# [validation]
+# mode = "persona"
+#
+# [jardinage]
+# rythme = "hebdomadaire"
+
+# Mode simple : projets, tâches, conversation, statut, valider. Passez à "avance" (ou dans
+# l'interface : Réglages) pour tout voir.
+[interface]
+mode = "simple"

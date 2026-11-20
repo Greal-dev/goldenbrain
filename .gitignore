@@ -1,0 +1,16 @@
+config.toml
+journal/
+etat/
+equipe/
+__pycache__/
+.pytest_cache/
+.claude/
+.playwright-mcp/
+python.local
+.sensible
+config.ancien.toml
+.maj_retour
+archives/
+.venv/
+build/
+*.egg-info/

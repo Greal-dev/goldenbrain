@@ -1,0 +1,34 @@
+/* Accueil d'un nouvel arrivant : fenêtre à 3 écrans (accueil.js). */
+.accueil { position: fixed; inset: 0; z-index: 50; display: flex; align-items: flex-start; justify-content: center; overflow: auto; padding: 4vh 12px; background: rgba(0, 0, 0, .45); }
+.ac-carte { background: var(--panneau); color: var(--texte); border: 1px solid var(--bord); border-radius: 8px; padding: 18px 22px; width: min(820px, 100%); }
+.ac-carte h2 { margin: 0 0 8px; font-size: 18px; }
+.ac-pas { display: flex; gap: 14px; list-style: none; margin: 0 0 12px; padding: 0; font-size: 13px; color: var(--texte-2); }
+.ac-pas .en-cours { color: var(--texte); font-weight: 600; }
+.ac-source { border: 1px solid var(--bord); border-radius: 6px; margin: 8px 0; padding: 8px 12px; }
+.ac-source .note { margin: 2px 0 0 24px; }
+.ac-champ { display: grid; gap: 2px; margin: 8px 0 0 24px; font-size: 13px; }
+.ac-champ input { max-width: 480px; }
+.ac-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 14px; }
+.ac-plan ul { list-style: none; margin: 4px 0; padding-left: 18px; }
+.ac-casquette { border: 1px solid var(--bord); border-radius: 6px; padding: 8px 12px; margin: 8px 0; }
+.ac-operation { margin: 6px 0 6px 12px; padding: 4px 8px; border-left: 2px solid var(--bord); }
+.ac-projet { margin: 4px 0; padding: 4px 6px; border-radius: 4px; }
+.ac-projet.existe { opacity: .7; }
+.ac-tache { display: flex; align-items: center; gap: 6px; padding: 1px 0; cursor: grab; }
+.ac-ligne { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.ac-nom { flex: 1; min-width: 160px; max-width: 420px; }
+.ac-src { font-size: 11px; color: var(--texte-2); border: 1px solid var(--bord); border-radius: 10px; padding: 0 6px; }
+.survol { outline: 2px dashed var(--accent); }
+.ac-laisses { margin: 10px 0; font-size: 13px; }
+/* Premiers pas (premiers-pas.js) et galerie de modèles de « Nouvelle tâche » (bandeau.js). */
+.pp-liste { list-style: none; margin: 8px 0; padding: 0; }
+.pp-assistant { border: 1px solid var(--bord); border-radius: 6px; margin: 6px 0; padding: 6px 12px; }
+.pp-assistant[data-etat="pret"] b { color: var(--accent); }
+.pp-assistant details p { margin: 6px 0; font-size: 13px; }
+.pp-commande { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.pp-commande code { padding: 4px 6px; border: 1px solid var(--bord); border-radius: 4px; user-select: all; overflow-wrap: anywhere; }
+.modeles { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 6px; margin: 0 0 10px; }
+.modele { text-align: left; border: 1px solid var(--bord); border-radius: 6px; padding: 6px 8px; background: none; color: inherit; cursor: pointer; font: inherit; }
+.modele b { display: block; font-size: 13px; }
+.modele span { font-size: 12px; color: var(--texte-2); }
+.modele.choisi, .modele:hover { outline: 2px solid var(--accent); }

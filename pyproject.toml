@@ -1,0 +1,15 @@
+[project]
+name = "orchestrateur"
+version = "0.1.0"
+description = "Surface de pilotage de tâches confiées à des agents IA, adossée à un vault Markdown."
+requires-python = ">=3.12"
+license = "Apache-2.0"
+license-files = ["LICENSE", "NOTICE"]
+dependencies = ["fastapi", "uvicorn", "PyYAML"]
+
+[project.optional-dependencies]
+test = ["pytest", "httpx"]  # httpx : requis par TestClient de FastAPI
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]

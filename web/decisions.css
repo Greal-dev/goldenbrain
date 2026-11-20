@@ -1,0 +1,28 @@
+/* Page « Décisions » : une carte par décision, groupes de projet repliables. */
+.decisions { max-width: 980px; }
+.dc-barre { display: flex; gap: 16px; align-items: center; margin: 0 0 12px; }
+.dc-groupe { margin: 0 0 14px; }
+.dc-groupe > summary { cursor: pointer; font-weight: 600; margin-bottom: 6px; }
+.dc-liste { list-style: none; margin: 0; padding: 0; border: 1px solid var(--bord); border-radius: 6px; }
+.dc + .dc { border-top: 1px solid var(--bord); }
+.dc { padding: 8px 12px; display: grid; gap: 6px; }
+.dc-tete { display: flex; align-items: center; gap: 8px; }
+.dc-titre { all: unset; cursor: pointer; font-weight: 500; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dc-titre:hover { text-decoration: underline; }
+.dc-titre:focus-visible { outline: 2px solid var(--accent); }
+.dc-motif { color: var(--texte-2); font-size: 12px; white-space: nowrap; }
+.dc-fiche { display: grid; gap: 2px; font-size: 13px; }
+.dc-l { margin: 0; color: var(--texte-2); }
+.dc-l.manque { font-style: italic; }
+.dc-muette { margin: 0; }
+.tag.muette { background: var(--c-bloque); color: var(--accent-texte); }
+.dc-q, .dc-essai { margin: 0; white-space: pre-wrap; }
+.dc-q.manque { color: var(--texte-2); font-style: italic; }
+.dc-essai { color: var(--texte-2); font-size: 13px; }
+.dc-ferm { list-style: none; margin: 0; padding: 0; }
+.dc-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: flex-start; }
+.dc-rep { display: flex; gap: 6px; flex: 1; min-width: 260px; }
+.dc-rep textarea { flex: 1; font: inherit; }
+.dc-report { display: inline-flex; gap: 4px; }
+.dc-agent .ag-choix { max-width: 420px; }
+.tag.evitable { background: color-mix(in srgb, var(--accent) 18%, var(--panneau)); border-color: var(--accent); cursor: help; }
