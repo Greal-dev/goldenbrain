@@ -78,7 +78,7 @@ A routine is automated only after about two weeks of successful manual or assist
 - Accepted when: the gate passes on the three systems and an update keeps `config.toml` and local state.
 
 **Interface translation** · L · web interface + translations · **contributions welcome**
-- Intent: the interface, currently in French, offers English, German and Spanish.
+- Intent: the interface offers French, English, German and Spanish.
 - Accepted when: switching language changes every label without changing any vault key or value.
 
 **More harness adapters** · M each · harness adapters · **contributions welcome**

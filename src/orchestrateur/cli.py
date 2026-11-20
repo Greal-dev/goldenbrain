@@ -10,7 +10,7 @@ Telegram), arrêt et relance d'une tâche (chat de projet, INV-PILOTAGE-1) ; `co
 ou révoque le jeton d'un exécuteur, depuis le poste du chef.
 Frontières : stdlib seule (hors `console`, `m365`, `executeur`, `installation`, importés tard) ; n'importe ni le moteur ni le vault ; sortie texte, code de retour
 non nul en cas d'erreur.
-Invariants portés : INV-MSG-1 (transmet `ORCH_SAUTS` + 1), INV-EXEC-5 (ne fait que proposer),
+Invariants portés : INV-MSG-1 (transmet `ORCH_SAUTS` + 1), INV-EXEC-5 (ne fait que proposer), `reflexes` et `tracer` : `cli_reflexes.py`,
 INV-EQUIPE-1 (un tour de persona, marqué `ORCH_PERSONA`, ne sollicite pas l'équipe),
 INV-FEU-1 (`feu-vert verifier` rend 0 seulement pour un feu vert accordé à ce sha exact ; serveur
 injoignable = non nul).
@@ -27,6 +27,8 @@ import time
 import urllib.error
 import urllib.parse
 import urllib.request
+
+from . import cli_reflexes
 
 
 class ErreurCli(Exception):
@@ -247,14 +249,13 @@ def main(argv: list[str] | None = None) -> int:
     sous.add_parser("arbre", help="arbre des tâches ouvertes")
     ac = sous.add_parser("agents-cc", help="agents de Claude Code regroupés et rattachement proposé (lecture seule)")
     ac.add_argument("--relever", action="store_true", help="relire le dossier de Claude Code maintenant")
-    sous.add_parser("natif", help="relais de l'interface native (lancé par GoldenBrain)"
-                    ).add_argument("fichier")
+    sous.add_parser("natif", help="relais de l'interface native (lancé par GoldenBrain)").add_argument("fichier")
     sous.add_parser("lire", help="fiche et chemin d'une tâche").add_argument("id")
     d = sous.add_parser("dire", help="message à une autre tâche")
     d.add_argument("id")
     d.add_argument("message")
-    sous.add_parser("chercher", help="tâches dont le titre, la fiche ou la place contiennent "
-                                     "tous les mots").add_argument("mots")
+    sous.add_parser("chercher", help="tâches dont le titre, la fiche ou la place contiennent tous les mots").add_argument("mots")
+    cli_reflexes.ajouter(sous)  # reflexes, tracer : INV-REFLEXES-1, INV-TRACE-1
     de = sous.add_parser("deleguer", help="confier un travail à une tâche enfant, lancée par GoldenBrain")
     de.add_argument("titre")
     de.add_argument("brief", help="objectif, contexte utile, livrable attendu")
@@ -280,14 +281,11 @@ def main(argv: list[str] | None = None) -> int:
     ra = sous.add_parser("rattacher", help="rattacher un envoi Telegram à une tâche existante")
     ra.add_argument("envoi", type=int)
     ra.add_argument("id")
-    te = sous.add_parser("telegram", help="poser une question sur Telegram ; la réponse revient à la "
-                                          "tâche courante")
+    te = sous.add_parser("telegram", help="poser une question sur Telegram ; la réponse revient à la tâche courante")
     te.add_argument("texte")
-    te.add_argument("--validation", action="store_true",
-                    help="compte rendu à valider : boutons Valider / Renvoyer")
+    te.add_argument("--validation", action="store_true", help="compte rendu à valider : boutons Valider / Renvoyer")
     te.add_argument("--tache", default="", help="tâche touchée : ajoute sa ligne (titre, place, lien)")
-    te.add_argument("--choix", action="append", default=[],
-                    help="tâche candidate (2 ou 3 fois) : boutons de choix au lieu de deviner")
+    te.add_argument("--choix", action="append", default=[], help="tâche candidate (2 ou 3 fois) : boutons de choix au lieu de deviner")
     te.add_argument("--geste", default="", help="statut=<s> | echeance=AAAA-MM-JJ | priorite=<p> sur "
                                                 "--tache, appliqué si l'utilisateur confirme")
     tj = sous.add_parser("telegram-jeton", help="saisir le jeton du bot Telegram sans l'afficher (coffre du poste)")
@@ -381,7 +379,9 @@ def main(argv: list[str] | None = None) -> int:
     except ValueError:
         sauts = 1
     try:
-        if a.commande == "arbre":
+        if a.commande in cli_reflexes.COMMANDES:
+            sortie = cli_reflexes.executer(a, appeler, _q)
+        elif a.commande == "arbre":
             sortie = rendre_arbre(appeler("GET", "/arbre")["noeuds"]) or ["(aucune tâche ouverte)"]
         elif a.commande == "lire":
             sortie = rendre_tache(appeler("GET", f"/taches/{_q(a.id)}"))

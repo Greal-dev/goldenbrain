@@ -1,11 +1,12 @@
 // Rôle : premiers pas d'un nouvel arrivant, en 2 écrans — 1. quels assistants IA sont prêts sur ce poste (et comment installer celui
 // qui manque : page officielle, commande à copier, « Vérifier à nouveau ») ; 2. une tâche de démonstration qui répond en une ou deux minutes.
 // Frontières : GET /api/accueil/premiers-pas(/assistants), POST /api/accueil/premiers-pas/fait (poste seulement), GET /api/modeles,
-// POST /api/taches. N'installe rien (INV-PREMIERS-PAS-1) ; enchaîne sur l'accueil existant (`suite`) sans le refaire. INV-WEB-1 : tout passe par h().
+// POST /api/taches ; réflexes de l'agent (`reflexes.js`, proposés au 2e écran). N'installe rien (INV-PREMIERS-PAS-1) ; enchaîne sur l'accueil existant (`suite`) sans le refaire. INV-WEB-1 : tout passe par h().
 import { h, remplacer } from './dom.js';
 import { api, post } from './api.js';
 import { erreur, emit, ouvrir } from './store.js';
 import { t } from './langues.js';
+import { sectionReflexes } from './reflexes.js';
 
 const NODE = 'https://nodejs.org/';
 const DEMO = 'premiere-tache';
@@ -95,6 +96,7 @@ function ecranDemo() {
     h('label', { class: 'ac-champ' }, t('premiers-pas.avec'), h('select', { 'data-id': 'pp-choix', onchange: (e) => { E.choix = e.target.value; } },
       prets.map((a) => h('option', { value: a.id, selected: a.id === E.choix ? true : null }, a.libelle)))),
     h('p', { class: 'note' }, t('premiers-pas.ensuite')),
+    h('details', { 'data-id': 'pp-reflexes' }, h('summary', null, t('reflexes.titre')), h('p', null, t('reflexes.aide')), sectionReflexes()),
     h('div', { class: 'ac-actions' },
       h('button', { class: 'btn', type: 'button', 'data-id': 'pp-retour', onclick: () => { E.ecran = 1; dessiner(); } }, t('premiers-pas.retour')),
       h('button', { class: 'btn', type: 'button', 'data-id': 'pp-passer', onclick: fermer }, t('premiers-pas.passer')),

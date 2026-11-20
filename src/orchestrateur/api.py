@@ -21,7 +21,7 @@ from pydantic import BaseModel
 from . import (api_apprendre, api_accueil, modeles, api_appareils, api_arbre, api_codespace, api_executeurs, api_installation, api_retour, api_compactage, api_decisions,
                api_economie, api_etoile, api_executant, api_execution, api_feux, api_interface, api_maj, api_notes, api_pilotage, api_poste,
                api_rapprochement, api_resultat, api_routines, api_simultanes, api_manager, api_telegram, api_temps, api_titre,
-               api_travaux, api_validation, api_vigie)
+               api_reflexes, api_travaux, api_validation, api_vigie)
 from .api_temps import CorpsTache
 from . import (appareils, codespace, conseil, console, decisions, depot, executant, geste, guide, langues, liens, recherche, regroupement,
                reprise, temps, transformations, version, vigie)
@@ -492,8 +492,8 @@ def creer_app(config: Config, moteur: Moteur | None = None) -> FastAPI:
     app.include_router(api_appareils.routes(config, registre))  # INV-DISTANT-5
     app.include_router(api_telegram.routes(config, moteur, connecteur))
     app.include_router(api_manager.routes(connecteur))  # INV-MANAGER-1
-    app.include_router(guide.routes())  # INV-GUIDE-1
-    app.include_router(modeles.routes())  # INV-MODELES-1
+    for m in (guide, modeles): app.include_router(m.routes())  # INV-GUIDE-1, INV-MODELES-1
+    app.include_router(api_reflexes.routes_traces(vault, moteur.publier, tache))  # INV-TRACE-1
     app.include_router(api_executant.routes(moteur, tache))  # INV-EXECUTANT-1
     if WEB.is_dir():
         app.mount("/", StaticFiles(directory=WEB, html=True), name="web")

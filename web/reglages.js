@@ -28,6 +28,7 @@ import { sectionEtoile } from './etoile.js';
 import { sectionAccueil, choixLangue } from './accueil.js';
 import { sectionPremiersPas, titreSectionPremiersPas } from './premiers-pas.js';
 import { sectionSignaler } from './signaler.js';
+import { sectionReflexes } from './reflexes.js';
 
 const PHRASES = {
   equipe: [t('reglages.famille_equipe_nom'), t('reglages.famille_equipe_phrase')],
@@ -71,12 +72,13 @@ const GROUPES = [
     resume: () => t('reglages.resume_fonctions', { n: FAMILLES.filter(ouvert).length, total: FAMILLES.length }),
     sous: () => [['familles', null, null, h('ul', { class: 'rg-liste' }, FAMILLES.map(interrupteur))]] },
   { id: 'agents', titre: t('reglages.agents'), aide: t('reglages.agents_aide'),
-    resume: () => parts('simultanes', 'economie', 'compactage', 'apprendre'),
+    resume: () => parts('simultanes', 'economie', 'compactage', 'apprendre', 'reflexes'),
     sous: () => [
       ['simultanes', t('reglages.simultanes'), t('reglages.simultanes_aide'), sectionSimultanes()[1]],
       ['economie', t('reglages.economie'), t('reglages.economie_aide'), sectionEconomie()[1]],
       ['compactage', t('reglages.compactage'), t('reglages.compactage_aide'), sectionCompactage()[1]],
       ['apprendre', t('apprendre.titre'), null, sectionApprendre()[1]],
+      ['reflexes', t('reflexes.titre'), t('reflexes.aide'), sectionReflexes()],
       ['moteurs', t('reglages.moteurs'), t('reglages.moteurs_aide'), h('div', { 'data-id': 'moteurs' }, moteursParRole())]] },
   { id: 'validation', titre: t('reglages.validation'), aide: t('reglages.validation_aide'),
     resume: () => (POLITIQUES.find(([v]) => v === (S.interface?.propositions ?? 'montrer')) || POLITIQUES[0])[1],
@@ -101,7 +103,7 @@ const GROUPES = [
       ['accueil', t('accueil.titre'), null, h('div', null, ...sectionAccueil().slice(1))]] },
 ];
 // Sous-section → groupe, pour l'ancre #reglages/<sous-section>.
-const ANCRES = { mode: 'affichage', theme: 'affichage', familles: 'fonctions', simultanes: 'agents', economie: 'agents', compactage: 'agents', apprendre: 'agents',
+const ANCRES = { mode: 'affichage', theme: 'affichage', familles: 'fonctions', simultanes: 'agents', economie: 'agents', compactage: 'agents', apprendre: 'agents', reflexes: 'agents',
   moteurs: 'agents', propositions: 'validation', telegram: 'connexions', appareils: 'connexions', executeurs: 'connexions',
   installation: 'installation', langue: 'affichage', version: 'installation', etoile: 'affichage', evitable: 'validation', integration: 'validation',
   'maj-auto': 'installation', signaler: 'installation', accueil: 'installation', 'premiers-pas': 'installation' };

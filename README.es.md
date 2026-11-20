@@ -8,7 +8,7 @@ GoldenBrain es un puesto de mando local para el trabajo confiado a agentes de IA
 
 ![Una tarea: conversación y notas personales lado a lado](docs/captures/tache.png)
 
-La interfaz, las claves de configuración y los documentos de diseño están en francés; este README, la guía de contribución y la política de seguridad existen en cuatro idiomas. Las capturas proceden de un vault de demostración ficticio (`python scripts/captures.py`).
+Las claves de configuración y los documentos de diseño están en francés; este README, la guía de contribución y la política de seguridad existen en cuatro idiomas. Las capturas proceden de un vault de demostración ficticio (`python scripts/captures.py`).
 
 ## Instalación rápida
 
@@ -20,7 +20,7 @@ La interfaz, las claves de configuración y los documentos de diseño están en 
   `curl -fsSL https://github.com/Greal-dev/goldenbrain/raw/main/installation/installer.sh | bash`
   En Mac sin terminal: `GoldenBrain-macos-arm64.zip` (Intel: `x86_64`), arrástrelo a Aplicaciones; primera apertura con clic derecho → Abrir (aplicación sin firmar).
 
-Python y sus componentes van incluidos; cada inicio abre GoldenBrain en el navegador y la actualización en un clic sigue activa. Después necesita un vault (basta una carpeta vacía) y un asistente de IA conectado (tabla abajo). Detalles: [guía, « En un clic »](docs/GUIDE.md#en-un-clic).
+Python y sus componentes van incluidos; cada inicio abre GoldenBrain en el navegador y la actualización en un clic sigue activa. Después necesita un vault (basta una carpeta vacía) y un asistente de IA conectado (tabla abajo). Detalles: [guía, « Con un clic »](docs/GUIDE.es.md#en-un-clic).
 
 **Desde el código (desarrolladores)**
 
@@ -56,7 +56,7 @@ Abra después http://127.0.0.1:8300 (siempre esta dirección, no `localhost`; `l
 | OpenCode | ver opencode.ai | ver su documentación |
 | Antigravity (`agy`) | ver su documentación | desde la aplicación |
 
-La guía completa — primeros pasos, cada pantalla, resolución de problemas, arranque al iniciar sesión con systemd — es [`docs/GUIDE.md`](docs/GUIDE.md), también en la aplicación (botón « ? ») y con `python orch.py guide`.
+La guía completa — primeros pasos, cada pantalla, resolución de problemas, arranque al iniciar sesión con systemd — es [`docs/GUIDE.es.md`](docs/GUIDE.es.md), también en la aplicación (botón « ? ») y con `python orch.py guide`.
 
 ## Funciones clave
 
@@ -77,7 +77,7 @@ Cualquier arnés (Claude Code, Codex, OpenCode, Gemini CLI…) puede pilotar Gol
 ## Limitaciones conocidas
 
 - Un solo usuario, un solo puesto: el servidor escucha en `127.0.0.1` sin autenticación. No lo exponga nunca a Internet; el acceso remoto pasa solo por Tailscale.
-- Interfaz solo en francés (la traducción figura en la [hoja de ruta](ROADMAP.es.md)).
+- Interfaz en francés, inglés, alemán y español; las claves de configuración y los documentos de diseño siguen en francés.
 - Windows y Linux (Debian) se usan a diario; macOS debería funcionar pero no se ha probado.
 - Usted debe instalar el arnés e iniciar su sesión; GoldenBrain no instala ni paga ninguno. El adaptador de Copilot CLI aún no se ha probado con una suscripción real.
 - Las pruebas de interfaz (Playwright) no se ejecutan en integración continua; allí solo se ejecuta `python scripts/check.py`.

@@ -15,7 +15,7 @@ import json
 from fastapi import APIRouter
 from pydantic import BaseModel, Field
 
-from . import accueil, accueil_ecriture, accueil_sources, fiches, premiers_pas, squelette
+from . import accueil, accueil_ecriture, accueil_sources, api_reflexes, fiches, premiers_pas, squelette
 
 ROUTE = "/api/accueil"
 
@@ -47,7 +47,7 @@ def routes(config, moteur, vault) -> APIRouter:
         vide = not vault.index()[0]
         dispo = await asyncio.to_thread(accueil_sources.disponibles)
         return {"propose": vide and not etat(), "etat": etat() or "jamais", "conversations": dispo,
-                "vault": str(vault.racine), "vide": squelette.vide(vault.racine),
+                "vault": str(vault.racine), "vide": squelette.vide(vault.racine, vault.cfg.arrivee),
                 "obsidian": squelette.obsidian(vault.racine)}
 
     @r.post(ROUTE + "/proposer")
@@ -67,4 +67,5 @@ def routes(config, moteur, vault) -> APIRouter:
         return {"etat": "differe"}
 
     r.include_router(premiers_pas.routes(config, moteur, vault))  # même préfixe : poste seulement (INV-ACCUEIL-1)
+    r.include_router(api_reflexes.routes(config))  # INV-REFLEXES-1 : écrit hors du vault, poste seulement
     return r

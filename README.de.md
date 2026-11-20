@@ -8,7 +8,7 @@ GoldenBrain ist ein lokaler Leitstand für Arbeit, die KI-Programmieragenten üb
 
 ![Eine Aufgabe: Konversation und persönliche Notizen nebeneinander](docs/captures/tache.png)
 
-Oberfläche, Konfigurationsschlüssel und Entwurfsdokumente sind auf Französisch; dieses README, die Beitragsrichtlinie und die Sicherheitsrichtlinie gibt es in vier Sprachen. Die Bildschirmfotos stammen aus einem fiktiven Demo-Vault (`python scripts/captures.py`).
+Konfigurationsschlüssel und Entwurfsdokumente sind auf Französisch; dieses README, die Beitragsrichtlinie und die Sicherheitsrichtlinie gibt es in vier Sprachen. Die Bildschirmfotos stammen aus einem fiktiven Demo-Vault (`python scripts/captures.py`).
 
 ## Schnellinstallation
 
@@ -20,7 +20,7 @@ Oberfläche, Konfigurationsschlüssel und Entwurfsdokumente sind auf Französisc
   `curl -fsSL https://github.com/Greal-dev/goldenbrain/raw/main/installation/installer.sh | bash`
   Auf dem Mac ohne Terminal: `GoldenBrain-macos-arm64.zip` (Intel: `x86_64`) in „Programme“ ziehen; erster Start per Rechtsklick → Öffnen (App nicht signiert).
 
-Python und seine Komponenten sind enthalten; jeder Start öffnet GoldenBrain im Browser, Ein-Klick-Updates funktionieren weiter. Danach brauchen Sie einen Vault (ein leerer Ordner genügt) und einen angemeldeten KI-Assistenten (Tabelle unten). Details: [Anleitung, « En un clic »](docs/GUIDE.md#en-un-clic).
+Python und seine Komponenten sind enthalten; jeder Start öffnet GoldenBrain im Browser, Ein-Klick-Updates funktionieren weiter. Danach brauchen Sie einen Vault (ein leerer Ordner genügt) und einen angemeldeten KI-Assistenten (Tabelle unten). Details: [Anleitung, « Mit einem Klick »](docs/GUIDE.de.md#en-un-clic).
 
 **Aus dem Quellcode (Entwickler)**
 
@@ -56,7 +56,7 @@ Set-Content python.local "$PWD\.venv\Scripts\python.exe" -Encoding ascii
 | OpenCode | siehe opencode.ai | siehe seine Dokumentation |
 | Antigravity (`agy`) | siehe seine Dokumentation | in der Anwendung |
 
-Das vollständige Handbuch — erste Schritte, jeder Bildschirm, Fehlerbehebung, Start bei der Anmeldung mit systemd — ist [`docs/GUIDE.md`](docs/GUIDE.md), auch in der Anwendung (Schaltfläche « ? ») und über `python orch.py guide`.
+Das vollständige Handbuch — erste Schritte, jeder Bildschirm, Fehlerbehebung, Start bei der Anmeldung mit systemd — ist [`docs/GUIDE.de.md`](docs/GUIDE.de.md), auch in der Anwendung (Schaltfläche « ? ») und über `python orch.py guide`.
 
 ## Wichtigste Funktionen
 
@@ -77,7 +77,7 @@ Jeder Harness (Claude Code, Codex, OpenCode, Gemini CLI…) kann GoldenBrain üb
 ## Bekannte Grenzen
 
 - Ein Benutzer, ein Arbeitsplatz: Der Server lauscht auf `127.0.0.1` ohne Authentifizierung. Setzen Sie ihn nie dem Internet aus; Fernzugriff nur über Tailscale.
-- Oberfläche nur auf Französisch (Übersetzung steht in der [Roadmap](ROADMAP.de.md)).
+- Oberfläche auf Französisch, Englisch, Deutsch und Spanisch; Konfigurationsschlüssel und Entwurfsdokumente bleiben auf Französisch.
 - Windows und Linux (Debian) werden täglich genutzt; macOS sollte funktionieren, wurde aber nicht erprobt.
 - Ein Harness muss von Ihnen installiert und angemeldet sein; GoldenBrain installiert und bezahlt keinen. Der Copilot-CLI-Adapter wurde noch nicht mit einem echten Abonnement erprobt.
 - Die Oberflächentests (Playwright) laufen nicht in der kontinuierlichen Integration; dort läuft nur `python scripts/check.py`.

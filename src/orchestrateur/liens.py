@@ -6,12 +6,12 @@ Rôle : lire les deux clés (tolérant), calculer « alimenté par » et les voi
 Frontières : n'écrit que par `Vault.modifier` (clés gérées, INV-VAULT-1) ; ne lance aucun tour.
 Invariants portés : INV-VAULT-1 (liste en ligne, clé retirée si vide), INV-LIEN-1 (fournit au
 moteur les tâches alimentées), INV-ORDO-1 (`prerequis` stocké côté tâche qui attend ; aucun
-cycle de prérequis).
+cycle de prérequis), INV-INTEG-2 (lien d'office vers la tâche d'intégration du projet).
 """
 
 from __future__ import annotations
 
-from . import langues
+from . import depot, langues
 from .vault import Conflit, Invalide, NonTrouve, Tache, Vault, nettoyer_lien
 
 TYPES = ("alimente", "prerequis", "voir_aussi")
@@ -148,3 +148,20 @@ def delier(vault: Vault, ident: str, type_: str, cible: str) -> None:
 
 def alimentees(taches: dict[str, Tache], ident: str) -> list[str]:
     return graphe(taches)[0].get(ident, [])
+
+
+def relier_integration(vault: Vault, ident: str) -> str | None:
+    """INV-INTEG-2 : une tâche créée dans un projet qui déclare sa tâche d'intégration l'alimente
+    d'office, sans quoi la branche livrée n'est jamais intégrée. Sauf l'intégration elle-même et
+    l'enfant d'une tâche qui l'alimente déjà (sa parente porte le lien ; un message par tour suffit).
+    Un lien impossible (cible absente, cycle) n'empêche jamais la création."""
+    try:
+        cible = depot.integration(vault, ident)
+        t = vault.tache(ident)
+        parent = t.parent_brut or ""
+        if not cible or cible == ident or (parent and (parent == cible or cible in ids(vault.tache(parent).fm, "alimente"))):
+            return None
+        lier(vault, ident, "alimente", cible)
+    except (Conflit, NonTrouve, Invalide):
+        return None
+    return cible

@@ -23,12 +23,16 @@ def dossiers(cfg) -> list[str]:
     return [cfg.casquettes, cfg.projets, "Inbox", "Ressources", "Archives"]
 
 
-def vide(racine: Path) -> bool:
-    """Vrai si la racine n'existe pas ou ne porte aucune note `.md` (dossiers cachés exclus)."""
+def vide(racine: Path, arrivee: str = "") -> bool:
+    """Vrai si la racine n'existe pas ou ne porte aucune note `.md` (dossiers cachés et dossier d'arrivée exclus).
+
+    Le dossier d'arrivée (`[vault] arrivee`) reçoit les tâches que GoldenBrain crée lui-même (démonstration des
+    premiers pas, manager) : sans cette exclusion, la démonstration privait l'arrivant du vault de départ (recette 20/11).
+    """
     if not racine.is_dir():
         return True
-    for _, noms, fichiers in os.walk(racine):
-        noms[:] = [n for n in noms if not n.startswith(".")]
+    for d, noms, fichiers in os.walk(racine):
+        noms[:] = [n for n in noms if not n.startswith(".") and not (arrivee and Path(d) == racine and n == arrivee)]
         if any(f.endswith(".md") for f in fichiers):
             return False
     return True
@@ -41,7 +45,7 @@ def obsidian(racine: Path) -> bool:
 def propose(vault) -> dict | None:
     """Ce que le vault de départ ajouterait ; None si le vault porte déjà des notes. N'écrit rien."""
     racine = vault.racine
-    if not vide(racine):
+    if not vide(racine, vault.cfg.arrivee):
         return None
     return {"dossiers": [d for d in dossiers(vault.cfg) if not (racine / d).is_dir()],
             "notes": [LISEZ_MOI] if not (racine / LISEZ_MOI).exists() else []}

@@ -80,3 +80,24 @@ def test_modele_pre_remplit_nouvelle_tache(page, serveur, captures):
     page.screenshot(path=str(captures / "modeles-nouvelle-tache.png"))
     assert fichiers(serveur.vault) == avant  # un modèle ne crée rien : la création reste le geste de l'utilisateur
     assert not page.erreurs, page.erreurs
+
+
+def test_reflexes_de_l_agent_accepter_puis_retirer(page, serveur, captures):
+    # INV-REFLEXES-1 : aperçu, puis écriture au seul clic ; le reste du fichier est rendu tel quel.
+    (serveur.home / ".claude").mkdir()
+    consignes = serveur.home / ".claude" / "CLAUDE.md"
+    consignes.write_text("# Mes consignes\n", encoding="utf-8")
+    page.on("dialog", lambda d: d.accept())
+    page.goto(page.url_serveur + "/#reglages/reflexes")
+    ligne = page.locator('[data-id="rf-claude"]')
+    expect(ligne).to_have_attribute("data-etat", "absent")
+    ligne.locator("summary").click()
+    expect(page.locator('[data-id="rf-apercu-claude"]')).to_contain_text("+<!-- goldenbrain:reflexes debut")
+    assert "goldenbrain" not in consignes.read_text(encoding="utf-8")
+    page.screenshot(path=str(captures / "reflexes-apercu.png"))
+    page.click('[data-id="rf-accepter-claude"]')
+    expect(page.locator('[data-id="rf-claude"]')).to_have_attribute("data-etat", "a_jour")
+    assert consignes.read_text(encoding="utf-8").startswith("# Mes consignes\n\n<!-- goldenbrain:reflexes debut")
+    page.click('[data-id="rf-retirer-claude"]')
+    expect(page.locator('[data-id="rf-claude"]')).to_have_attribute("data-etat", "absent")
+    assert consignes.read_text(encoding="utf-8") == "# Mes consignes\n"

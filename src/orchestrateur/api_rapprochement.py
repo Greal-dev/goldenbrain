@@ -4,7 +4,7 @@ Rôle : brancher `rapprochement` sur l'API ; `creer` est le corps de POST /api/t
 rapprochement, puis création) ; `api.py` est plafonné à 500 lignes.
 Frontières : aucune ressemblance calculée ici (module `rapprochement`) ; la création reste `Moteur.creer`.
 Invariants portés : INV-RAPPROCHEMENT-1 (409 + `candidates` sur correspondance forte, sauf `forcer`),
-INV-RAPPROCHEMENT-2 (un complément est une création évitée).
+INV-RAPPROCHEMENT-2 (un complément est une création évitée), INV-INTEG-2 (lien d'office vers l'intégration).
 """
 
 from __future__ import annotations
@@ -13,7 +13,7 @@ from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
-from . import langues, rapprochement
+from . import langues, liens, rapprochement
 from .vault import exiger_description
 
 
@@ -38,6 +38,7 @@ def creer(moteur, tache, c, source: str | None):
         c.description = exiger_description(c.description, "tâche")
     ident = moteur.creer(c.titre, c.description, c.conteneur, c.parent, c.lancer,
                          c.harnais, c.modele, c.echeance, c.priorite, c.mission)
+    liens.relier_integration(moteur.vault, ident)  # INV-INTEG-2 : UI, `orch creer`, `orch deleguer`
     mesure.creation(c.titre)
     return tache(ident)
 

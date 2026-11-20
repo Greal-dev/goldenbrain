@@ -8,7 +8,7 @@ GoldenBrain est un poste de pilotage local pour le travail confié à des agents
 
 ![Une tâche : conversation et notes personnelles côte à côte](docs/captures/tache.png)
 
-L'interface, les clés de configuration et les documents de conception sont en français ; ce README, le guide de contribution et la politique de sécurité existent en quatre langues. Les captures proviennent d'un vault de démonstration fictif (`python scripts/captures.py`).
+Les clés de configuration et les documents de conception sont en français ; ce README, le guide de contribution et la politique de sécurité existent en quatre langues. Les captures proviennent d'un vault de démonstration fictif (`python scripts/captures.py`).
 
 ## Installation rapide
 
@@ -77,7 +77,7 @@ Tout harnais (Claude Code, Codex, OpenCode, Gemini CLI…) peut piloter GoldenBr
 ## Limites connues
 
 - Un seul utilisateur, un seul poste : le serveur écoute sur `127.0.0.1` sans authentification. Ne l'exposez jamais à Internet ; l'accès à distance passe par Tailscale seulement.
-- Interface en français seulement (la traduction est à la [feuille de route](ROADMAP.fr.md)).
+- Interface en français, anglais, allemand et espagnol ; les réglages de configuration et les documents de conception restent en français.
 - Windows et Linux (Debian) servent au quotidien ; macOS devrait fonctionner mais n'a pas été essayé.
 - Un harnais doit être installé et connecté par vous ; GoldenBrain n'en installe ni n'en paie aucun. L'adaptateur Copilot CLI n'a pas encore été essayé sur un abonnement réel.
 - Les tests d'interface (Playwright) ne tournent pas en intégration continue ; seul `python scripts/check.py` y tourne.

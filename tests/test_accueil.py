@@ -210,6 +210,22 @@ def test_vault_vide_recoit_un_second_cerveau_de_depart_apres_validation(monde):
     assert accueil.proposer(vault, q)["squelette"] is None  # rejoué : plus rien à proposer (INV-ACCUEIL-4)
 
 
+def test_deux_roles_recoivent_deux_codes_de_casquette_distincts(monde):
+    vault, _, _ = monde  # recette 20/11 : « Travail » et « Famille » recevaient tous deux C1
+    plan = accueil.proposer(vault, {"questions": {"actif": True, "roles": ["Travail", "Famille"]}})
+    accueil_ecriture.appliquer(vault, plan)
+    codes = sorted(p.name.split("-")[0] for p in (vault.racine / "Casquettes").iterdir())
+    assert codes == ["C1", "C2"]
+
+
+def test_tache_de_demonstration_ne_prive_pas_du_vault_de_depart(monde):
+    vault, _, _ = monde  # recette 20/11 : la démo des premiers pas, rangée dans _meta, rendait le vault « non vide »
+    (vault.racine / "_meta" / "taches").mkdir(parents=True)
+    (vault.racine / "_meta" / "taches" / "demo.md").write_text("---\ntype: tache\n---\n", encoding="utf-8")
+    plan = accueil.proposer(vault, {"questions": {"actif": True, "roles": ["Travail"]}})
+    assert plan["squelette"] and "Inbox" in plan["squelette"]["dossiers"]
+
+
 def test_vault_de_depart_decoche_n_ecrit_aucun_dossier(monde):
     vault, _, _ = monde
     plan = accueil.proposer(vault, {"questions": {"actif": True, "roles": ["Travail"]}})

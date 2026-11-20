@@ -89,6 +89,7 @@ class Ecrivain:
         self.crees = {"casquettes": 0, "projets": 0, "taches": 0, "notes": 0, "dossiers": 0}
         self.ignores: list[str] = []
         self.stems = {p.stem.casefold() for p in self._md()}
+        self.codes: dict[str, tuple[str, str]] = {}  # casquettes attribuées par ce plan, dossiers pas encore créés
 
     def _md(self):
         for d, noms, fichiers in os.walk(self.racine):
@@ -115,7 +116,9 @@ class Ecrivain:
 
     def code_casquette(self, nom: str) -> tuple[str, str]:
         """(code, dossier) : une casquette de même nom est reprise, sinon le premier code libre."""
-        base, pris, cle = self.racine / self.vault.cfg.casquettes, set(), norm(nom)
+        base, pris, cle = self.racine / self.vault.cfg.casquettes, {c for c, _ in self.codes.values()}, norm(nom)
+        if cle in self.codes:
+            return self.codes[cle]
         for d in (base.iterdir() if base.is_dir() else []):
             if m := CODE.match(d.name):
                 pris.add(m.group(1))
@@ -125,7 +128,8 @@ class Ecrivain:
         n = 1
         while f"C{n}" in pris:
             n += 1
-        return f"C{n}", f"C{n}-{slugifier(nom, False)}"
+        self.codes[cle] = (f"C{n}", f"C{n}-{slugifier(nom, False)}")  # recette 20/11 : deux rôles recevaient tous deux C1
+        return self.codes[cle]
 
 
 def _frontmatter(cles: dict) -> str:

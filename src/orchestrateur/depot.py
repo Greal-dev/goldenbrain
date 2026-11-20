@@ -4,7 +4,7 @@ Rôle : un projet du vault déclare son dépôt (clé `depot:` de son `contexte.
 table `<vault>/_meta/projets-externes.md`, colonnes `| dépôt | casquette | projet |`) ; tout tour
 d'une tâche de ce projet ou de ses descendants s'exécute dans ce dossier, pour tous les harnais.
 Frontières : lecture seule du vault ; ne lance rien. Le repli (dossier du harnais) reste au moteur.
-Invariants portés : INV-DEPOT-1.
+Invariants portés : INV-DEPOT-1, INV-INTEG-2 (clé `integration:`).
 """
 
 from __future__ import annotations
@@ -76,3 +76,11 @@ def conf_harnais(vault, conf: dict, ident: str) -> dict:
     """Section `[harnais.<nom>]` dont le `dossier` est celui du dépôt du projet, s'il y en a un."""
     d, _ = dossier_de_travail(vault, ident)
     return {**conf, "dossier": d} if d else conf
+
+
+def integration(vault, ident: str) -> str | None:
+    """INV-INTEG-2 : tâche d'intégration déclarée (`integration:` du `contexte.md`), conteneur le plus proche."""
+    for _, fm in contextes(vault, ident):
+        if c := str(fm.get("integration") or "").strip():
+            return c
+    return None

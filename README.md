@@ -8,7 +8,7 @@ GoldenBrain is a local control desk for work handed to AI coding agents. Each ta
 
 ![A task: conversation and personal notes side by side](docs/captures/tache.png)
 
-The interface, configuration keys and design documents are in French; this README, the contribution guide and the security policy exist in four languages. Screenshots come from a fictitious demonstration vault (`python scripts/captures.py`).
+Configuration keys and design documents are in French; this README, the contribution guide and the security policy exist in four languages. Screenshots come from a fictitious demonstration vault (`python scripts/captures.py`).
 
 ## Quick install
 
@@ -20,7 +20,7 @@ The interface, configuration keys and design documents are in French; this READM
   `curl -fsSL https://github.com/Greal-dev/goldenbrain/raw/main/installation/installer.sh | bash`
   On a Mac without the terminal: `GoldenBrain-macos-arm64.zip` (Intel: `x86_64`), drag it to Applications; first launch with right-click → Open (the app is not signed).
 
-Python and its components are bundled; each launch opens GoldenBrain in the browser, and one-click updates keep working. You then need a vault (an empty folder will do) and a logged-in AI assistant (table below). Details: [guide, « En un clic »](docs/GUIDE.md#en-un-clic).
+Python and its components are bundled; each launch opens GoldenBrain in the browser, and one-click updates keep working. You then need a vault (an empty folder will do) and a logged-in AI assistant (table below). Details: [guide, « In one click »](docs/GUIDE.en.md#en-un-clic).
 
 **From source (developers)**
 
@@ -56,7 +56,7 @@ Then open http://127.0.0.1:8300 (always this address, not `localhost`; `lancer.c
 | OpenCode | see opencode.ai | see its documentation |
 | Antigravity (`agy`) | see its documentation | from the application |
 
-The full guide — first steps, every screen, troubleshooting, start at login with systemd — is [`docs/GUIDE.md`](docs/GUIDE.md), also in the app (« ? » button) and by `python orch.py guide`.
+The full guide — first steps, every screen, troubleshooting, start at login with systemd — is [`docs/GUIDE.en.md`](docs/GUIDE.en.md), also in the app (« ? » button) and by `python orch.py guide`.
 
 ## Key features
 
@@ -77,7 +77,7 @@ Any harness (Claude Code, Codex, OpenCode, Gemini CLI…) can steer GoldenBrain 
 ## Known limitations
 
 - Single user, single workstation: the server listens on `127.0.0.1` with no authentication. Never expose it to the Internet; remote access goes through Tailscale only.
-- Interface in French only (translation is on the [roadmap](ROADMAP.md)).
+- Interface in French, English, German and Spanish; configuration keys and design documents stay in French.
 - Windows and Linux (Debian) are used daily; macOS is expected to work but has not been tried.
 - A harness must be installed and logged in by you; GoldenBrain neither installs nor pays for one. The Copilot CLI adapter has not yet been tried against a real subscription.
 - Interface tests (Playwright) do not run in continuous integration; only `python scripts/check.py` does.
