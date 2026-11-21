@@ -56,6 +56,8 @@ if __name__ == "__main__":
     from orchestrateur.harnais import HARNAIS
 
     HARNAIS["faux"] = HarnaisFactice
+    if os.environ.get("GB_DEMO"):  # démonstration : la colonne « Moteur » montre un harnais réel, joué par le factice
+        HARNAIS["claude"] = HarnaisFactice
     faux_poste()  # INV-INSTALL-1 : l'interface n'atteint jamais le vrai poste
     from orchestrateur import console
     console.lancer = lambda argv, nouvelle: None  # jamais d'onglet de terminal réel pendant les scénarios

@@ -43,6 +43,7 @@ SECTIONS: dict[str, str] = {
     "en-cours": "En cours",
     "notes": "Notes",
     "routines": "Routines",
+    "chaines": "Chaînes",
     "equipe": "Équipe",
     "reglages": "Réglages",
     "mise-a-jour-d-un-clic": "Mise à jour d'un clic",

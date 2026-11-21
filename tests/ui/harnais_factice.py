@@ -7,12 +7,15 @@ commande `orch` (chat de projet, INV-PILOTAGE-1) ; « [journaux] » ouvre une se
 (la conversation se relit aux journaux, comme Codex : « Modifier », INV-RETOUR-1) ; « [bavard] » écrit 64 Ko sur la sortie d'erreur
 du serveur (journal abondant, voir `scenario_porte.py`) ; « [aides] » lance deux sous-agents (un fini), une liste
 d'étapes et une écriture, avec un processus inerte à mettre en pause (écran « En cours », INV-TRAVAUX-1).
+Démonstration (captures, vidéo) : si `GB_DEMO` nomme un fichier JSON `{message: scène}`, un message qui y figure
+joue sa scène (texte, sous-agents, durée, fin) dans la langue de la démonstration, sans directive visible.
 Frontières : aucune E/S vault ; seul processus : `orch creer`, comme un agent. Hors de `src/` : n'entre pas dans le produit.
 """
 
 from __future__ import annotations
 
 import asyncio
+import json
 import os
 import re
 import subprocess
@@ -30,6 +33,11 @@ EXPLICATION = "> [!apprendre] Ce que je fais\n> Je lis le dossier pour comprendr
 RENDU_APPRENDRE = RENDU.replace("prochain_pas: relire\n", "prochain_pas: relire\nretenir: lire avant d'agir ; vérifier ensuite ; noter ce qui reste\n")
 
 
+def _scenes() -> dict:
+    chemin = os.environ.get("GB_DEMO")
+    return json.loads(Path(chemin).read_text(encoding="utf-8")) if chemin else {}
+
+
 class HarnaisFactice:
     nom = "faux"
     consigne_native = True
@@ -39,6 +47,10 @@ class HarnaisFactice:
         self.stop = asyncio.Event()
 
     async def lancer(self, message, *, session, deriver, consigne, env, modele=""):
+        if scene := _scenes().get(message.strip()):
+            async for e in self._jouer(scene, session or "s-demo"):
+                yield e
+            return
         apprend = "Mode « Apprendre » actif" in (consigne or "")
         sid = session or ("s-journaux" if "[journaux]" in message else "s-apprendre" if apprend else "s-faux")
         yield Evenement("session", session=sid)
@@ -82,6 +94,24 @@ class HarnaisFactice:
             await p.wait()
         yield Evenement("outil", texte="Read: dossier")
         yield Evenement("fin", session=sid, texte=RENDU_APPRENDRE if apprend else RENDU, mesure={"contexte": 123_456, "cout": 0.02})
+
+    async def _jouer(self, scene: dict, sid: str):
+        """Scène de démonstration : le tour se lit comme celui d'un vrai agent, dans la langue choisie."""
+        yield Evenement("session", session=sid)
+        yield Evenement("texte", texte=scene["texte"])
+        for i, aide in enumerate(scene.get("aides", [])):
+            yield Evenement("suivi", suivi={"sous_agent": {"id": f"a{i}", "description": aide, "genre": "Explore"}})
+        if scene.get("aides"):
+            yield Evenement("suivi", suivi={"avancement": {"fait": 2, "total": 5}})
+            yield Evenement("outil", texte="Write: factures/export.py")
+            yield Evenement("outil", texte="Bash: pytest -q")
+        try:
+            await asyncio.wait_for(self.stop.wait(), scene.get("duree", 1))
+            return
+        except TimeoutError:
+            pass
+        yield Evenement("outil", texte="Read: dossier")
+        yield Evenement("fin", session=sid, texte=scene["fin"], mesure={"contexte": 48_000, "cout": 0.03})
 
     async def arreter(self):
         self.stop.set()

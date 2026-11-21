@@ -31,3 +31,15 @@
 .routine-bloc .r-hist ul { list-style: none; padding-left: 0; margin: 4px 0; }
 .routine-bloc .r-hist li { display: flex; align-items: center; gap: 6px; }
 .pastille-retard { flex: none; border: 1px solid var(--c-attente); border-radius: 9px; font-size: 11px; line-height: 15px; padding: 0 6px; white-space: nowrap; background: var(--c-attente); color: #1b1205; }
+/* INV-CHAINE-1 : chaînes de phases — liste des modèles, éditeur de phases, bloc du détail */
+.chaines-liste { list-style: none; padding: 0; margin: 8px 0; display: flex; flex-direction: column; gap: 8px; }
+.chaine-modele { display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; border: 1px solid var(--bord); border-radius: 6px; padding: 6px 10px; }
+.chaine-modele .cm-actions { display: flex; gap: 6px; flex: none; } .chaine-modele p { margin: 2px 0 0; }
+.cm-origine { font-size: 11px; color: var(--texte-2); border: 1px solid var(--bord); border-radius: 8px; padding: 0 6px; }
+.cp-phase { border: 1px solid var(--bord); border-radius: 6px; margin: 6px 0; display: flex; flex-direction: column; gap: 4px; }
+.cp-champ { display: flex; flex-direction: column; gap: 1px; color: var(--texte-2); font-size: 12px; } .cp-ligne { display: flex; gap: 8px; align-items: center; }
+.cp-barre { display: flex; gap: 4px; justify-content: flex-end; }
+.chaine-bloc { border: 1px dashed var(--bord); border-radius: 6px; padding: 6px 10px; margin: 6px 0; font-size: 13px; }
+.chaine-bloc .ch-phases { margin: 6px 0; padding-left: 4px; list-style: none; } .chaine-bloc .ch-phase.ici { font-weight: 600; }
+.chaine-bloc .ch-phase.p-faite { color: var(--c-terminee); } .chaine-bloc .ch-phase.p-echec, .chaine-bloc .ch-erreur { color: var(--c-bloque); }
+.chaine-bloc .ch-phase.p-sautee { color: var(--texte-2); text-decoration: line-through; } .chaine-bloc .ch-actions { display: flex; gap: 6px; }

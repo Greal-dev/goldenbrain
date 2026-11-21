@@ -23,7 +23,7 @@ Para qué sirve: instalar GoldenBrain como una aplicación corriente. Python, su
 
 Cómo funciona: cada inicio abre el navegador en GoldenBrain, arrancando GoldenBrain en este ordenador si aún no está en marcha (un segundo clic no arranca un segundo GoldenBrain). En el primer inicio, la aplicación se copia en su carpeta personal (`~/.local/share/goldenbrain/app`, `~/Library/Application Support/GoldenBrain/app` o `%LOCALAPPDATA%\GoldenBrain\app`): esa copia es la que hace avanzar la «Actualización con un clic», y conserva sus ajustes (`config.toml`).
 
-Conviene saber: la instalación habla el idioma del sistema (francés, inglés, alemán o español; inglés para cualquier otro idioma) y, en el primer inicio, lo anota en `config.toml` (`[interface] langue`) para que GoldenBrain se abra en el mismo idioma; un `config.toml` existente nunca se modifica. Reinstalar o desinstalar nunca toca esa copia ni el vault. El registro del arranque es `lancement.log`, en la carpeta de datos (Linux, macOS). Para construir usted mismo los instaladores: `python scripts/construire_deb.py`, `construire_windows.py` (Inno Setup bajo wine), `construire_macos.py`; cada componente descargado se verifica por su huella (`installation/versions.txt`).
+Conviene saber: la instalación habla el idioma del sistema (francés, inglés, alemán o español; inglés para cualquier otro idioma) y, en el primer inicio, lo anota en `config.toml` (`[interface] langue`) para que GoldenBrain se abra en el mismo idioma; un `config.toml` existente nunca se modifica. Reinstalar o desinstalar nunca toca esa copia ni el vault. El registro del arranque es `lancement.log`, en la carpeta de datos (Linux, macOS). Para construir usted mismo los instaladores: `python scripts/construire_deb.py`, `construire_windows.py` (Inno Setup bajo wine), `construire_macos.py`; cada componente descargado se verifica por su huella (`installation/versions.txt`). Cada versión publicada en la página de versiones incluye los cuatro instaladores, reconstruidos cada vez, y una nota en inglés, francés, español y alemán (`python scripts/publier_version.py`, lanzado por la publicación).
 
 ### Linux {#linux}
 
@@ -199,6 +199,12 @@ El vault es su **segundo cerebro**: notas corrientes (archivos Markdown) que Gol
 - **Cómo se hace**: botón «Rutina» (reloj, arriba). Título, instrucción, programa («chaque jour 08:00», «en semaine 18:00», «lundi,jeudi 09:30», «toutes les 2 h de 8 h à 20 h», o una expresión cron; la fórmula se escribe en francés), proyecto, conversación (la misma o una nueva en cada ejecución), recuperación de un vencimiento perdido. Dentro de la rutina: «Poner en pausa», «Ejecutar ahora», historial de ejecuciones. Una tarea existente se convierte en rutina en el sitio con «Convertir en rutina» (misma nota, misma conversación); «Quitar la rutina» vuelve a hacerla ordinaria.
 - **Conviene saber**: una rutina lleva un reloj en el árbol; nunca se ejecuta dos veces a la vez y pasa por la misma cola que las tareas.
 
+### Cadenas {#chaines}
+
+- **Para qué sirve**: encadenar varias fases de trabajo confiadas a la IA sobre una misma carpeta (p. ej. responder a una licitación: análisis, propuesta de valor, solución, redacción, revisión), partiendo cada fase del resultado de la anterior.
+- **Cómo se hace**: botón «Cadenas» (arriba): lista de modelos, incluidos («Réponse à un appel d'offres», «Article ou contenu») y personales, guardados en `_meta/chaines/` del vault; «Nueva cadena» o «Modificar»: título, resumen, contexto común, carpeta vigilada y proyecto (opcionales), y luego las fases (título, instrucciones, documentos de entrada, entregable esperado, asistente de IA, modelo de IA, casilla «Validación humana tras esta fase»), que se pueden añadir, eliminar y reordenar; «Quitar» (modelos personales, con confirmación). Inicio manual: «Iniciar» en la lista, o ⛓ en un proyecto: modelo, proyecto, carpeta a tratar, título opcional. Se crea una tarea madre, con una tarea por fase; su detalle muestra las fases numeradas con su estado, un enlace a cada una, el estado de la cadena y su posible error. «Validar y continuar» reanuda tras una fase con validación humana; «Reanudar» relanza la fase fallida.
+- **Conviene saber**: las fases se suceden una a una, nunca en paralelo. Con una carpeta vigilada, cada nueva subcarpeta inicia la cadena, sin recuperar las que ya existían. La IA puede adaptar las fases pendientes a la carpeta real (omitir, añadir, duplicar, cambiar una instrucción): cada ajuste se señala en el detalle, con su motivo.
+
 ### Equipo {#equipe}
 
 - **Para qué sirve**: expertos (miradas especializadas) que revisan las tareas terminadas.
@@ -292,6 +298,7 @@ Para leer por todo agente —Claude Code, Codex, OpenCode, Gemini CLI u otro— 
 | `solliciter <persona> "<pregunta>"` | opinión de un persona del equipo |
 | `telegram "<texto>"` | mensaje al usuario en Telegram (`--validation`, `--choix`); exige el bot configurado |
 | `poste reserver "<motivo>"` / `poste liberer` | reservar el puesto durante una prueba pesada; si está ocupado, esperar turno (`--attente <min>`, por defecto 30) |
+| `chaine plan\|sauter\|ajouter\|dedoubler\|consigne …` | adaptar la cadena de la tarea a la carpeta real: `plan` la muestra; omitir, añadir, duplicar una fase o cambiar su instrucción (solo fases pendientes), siempre con `--motif`: el ajuste se registra y se muestra al usuario |
 | `feu-vert demander\|accorder\|refuser\|verifier …` | luz verde ligada a una versión |
 
 `python orch.py <comando> -h` da las opciones de cada uno.

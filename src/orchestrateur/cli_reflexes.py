@@ -55,7 +55,7 @@ def _reflexes(a) -> list[str]:
     return [f"{chemin} : {('bloc retiré' if action == 'retirer' else 'bloc posé') if change else 'déjà à jour'}"]
 
 
-def executer(a, appeler, quoter) -> list[str]:
+def executer(a, appeler, quoter, source: str = "") -> list[str]:
     if a.commande == "reflexes":
         return _reflexes(a)
     docs = [os.path.abspath(d) for d in a.document]  # le serveur ne connaît pas le dossier courant de l'agent

@@ -25,6 +25,7 @@ import { blocCodespace } from './codespace.js';
 import { ligneVie } from './vigie.js';
 import { bandeauIncident } from './incidents.js';
 import { blocRoutine, convertirEnRoutine } from './routines.js';
+import { blocChaine } from './chaines.js';
 import { groupesStatut, ecrireStatut, INFO_VERROU } from './statut.js';
 import { curseur, humain } from './executant.js';
 import { panneau, creerNotes } from './notes_tache.js';
@@ -143,6 +144,7 @@ function dessinerTete() {
     curseur(tk, (x) => (x ? appliquer(x) : rafraichir()), erreur), // INV-EXECUTANT-1
     rattachement(tk, b),
     tk.frontmatter?.nature === 'routine' ? blocRoutine(tk.id, () => { emit('recharger'); rafraichir(); }) : null, // INV-ROUTINE-5
+    tk.frontmatter?.chaine || tk.frontmatter?.chaine_phase ? blocChaine(tk.id, () => { emit('recharger'); rafraichir(); }) : null, // INV-CHAINE-1
     h('div', { class: 'd-meta' }, ...(tk.frontmatter?.nature === 'routine' ? [] : [pastille(tk.statut), selecteurStatut(tk)]), // INV-ROUTINE-5 : état au lieu du statut
       tk.statut_verrouille ? b(t('detail.reprendre_main'), reprendre, { cls: 'verrou', titre: t('detail.reprendre_main_titre') }) : null,
       controleRepere(tk.controle),

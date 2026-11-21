@@ -7,6 +7,7 @@ import { ouvert, simple } from './interface.js';
 import { post, api } from './api.js';
 import { formulaire } from './dialogue.js';
 import { nouvelleRoutine } from './routines.js';
+import { ouvrirChaines } from './chaines.js';
 import { carteProposition, enAttente } from './propositions.js';
 import { initRecherche } from './recherche.js';
 import { PRIORITES } from './temps.js';
@@ -228,6 +229,7 @@ export function initBandeau() {
   $('#marque').addEventListener('click', () => ouvrir(null));
   $('#btn-nouvelle').addEventListener('click', nouvelleTache);
   $('#btn-routine').addEventListener('click', () => nouvelleRoutine());
+  $('#btn-chaines').addEventListener('click', () => ouvrirChaines());
   $('#btn-equipe').addEventListener('click', () => ouvrirVue('equipe'));
   $('#btn-reglages').addEventListener('click', () => ouvrirVue('reglages'));
   $('#btn-guide').addEventListener('click', () => ouvrirGuide());

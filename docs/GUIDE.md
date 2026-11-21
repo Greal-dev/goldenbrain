@@ -23,7 +23,7 @@ Deux voies : **en un clic** (sans invite de commandes ni Python à installer : t
 
 Comment ça marche : chaque lancement ouvre le navigateur sur GoldenBrain, en démarrant GoldenBrain sur cet ordinateur s'il ne tourne pas encore (un second clic n'en démarre pas un second). Au premier lancement, l'application est recopiée dans votre dossier personnel (`~/.local/share/goldenbrain/app`, `~/Library/Application Support/GoldenBrain/app` ou `%LOCALAPPDATA%\GoldenBrain\app`) : c'est cette copie que la « Mise à jour d'un clic » fait avancer, et elle garde vos réglages (`config.toml`).
 
-À savoir : l'installation parle la langue du système (français, anglais, allemand ou espagnol ; anglais pour toute autre langue) et, au premier lancement, la reporte dans `config.toml` (`[interface] langue`) pour que GoldenBrain s'ouvre dans la même langue ; un `config.toml` existant n'est jamais modifié. Réinstaller ou désinstaller ne touche jamais cette copie ni le vault. Le journal du démarrage est `lancement.log` dans le dossier de données (Linux, macOS). Pour construire soi-même les installateurs : `python scripts/construire_deb.py`, `construire_windows.py` (Inno Setup sous wine), `construire_macos.py` ; chaque composant téléchargé est vérifié par son empreinte (`installation/versions.txt`).
+À savoir : l'installation parle la langue du système (français, anglais, allemand ou espagnol ; anglais pour toute autre langue) et, au premier lancement, la reporte dans `config.toml` (`[interface] langue`) pour que GoldenBrain s'ouvre dans la même langue ; un `config.toml` existant n'est jamais modifié. Réinstaller ou désinstaller ne touche jamais cette copie ni le vault. Le journal du démarrage est `lancement.log` dans le dossier de données (Linux, macOS). Pour construire soi-même les installateurs : `python scripts/construire_deb.py`, `construire_windows.py` (Inno Setup sous wine), `construire_macos.py` ; chaque composant téléchargé est vérifié par son empreinte (`installation/versions.txt`). Chaque version publiée sur la page des versions porte les quatre installateurs, reconstruits à chaque fois, et une note en anglais, français, espagnol et allemand (`python scripts/publier_version.py`, lancé par la publication).
 
 ### Linux
 
@@ -199,6 +199,12 @@ Le vault est votre **second cerveau** : des notes ordinaires (fichiers Markdown)
 - **Comment faire** : bouton « Routine » (horloge, en haut). Titre, consigne, programme (« chaque jour 08:00 », « en semaine 18:00 », « lundi,jeudi 09:30 », « toutes les 2 h de 8 h à 20 h », ou une expression cron), projet, conversation (la même ou une neuve à chaque exécution), rattrapage d'une échéance manquée. Dans la routine : « Mettre en pause », « Exécuter maintenant », historique des exécutions. Une tâche existante devient routine sur place par « Transformer en routine » (même note, même conversation) ; « Retirer la routine » la rend ordinaire.
 - **À savoir** : une routine porte une horloge dans l'arbre ; elle ne s'exécute jamais deux fois en même temps et passe par la même file que les tâches.
 
+### Chaînes
+
+- **À quoi ça sert** : enchaîner plusieurs phases de travail confiées à l'IA sur un même dossier (ex. répondre à un appel d'offres : analyse, proposition de valeur, solution, rédaction, relecture), chaque phase partant du résultat de la précédente.
+- **Comment faire** : bouton « Chaînes » (en haut) : liste des modèles, intégrés (« Réponse à un appel d'offres », « Article ou contenu ») et personnels, rangés dans `_meta/chaines/` du vault ; « Nouvelle chaîne » ou « Modifier » : titre, résumé, contexte commun, dossier surveillé et projet (facultatifs), puis les phases (titre, consigne, documents d'entrée, livrable attendu, assistant IA, modèle d'IA, case « Validation humaine après cette phase ») ajoutables, supprimables et réordonnables ; « Retirer » (modèles personnels, avec confirmation). Lancement manuel : « Lancer » dans la liste, ou ⛓ sur un projet : modèle, projet, dossier traité, titre facultatif. Une tâche parente est créée, avec une tâche par phase ; son détail montre les phases numérotées avec leur état, un lien vers chacune, l'état de la chaîne et son erreur éventuelle. « Valider et poursuivre » reprend après une phase à validation humaine ; « Reprendre » relance la phase en échec.
+- **À savoir** : les phases se déroulent une à une, jamais en parallèle. Si un dossier surveillé est indiqué, chaque nouveau sous-dossier lance la chaîne, sans rattrapage de ceux qui existaient déjà. L'IA peut adapter les phases à venir au dossier réel (sauter, ajouter, dédoubler, changer une consigne) : chaque ajustement est signalé dans le détail, avec son motif.
+
 ### Équipe
 
 - **À quoi ça sert** : des experts (regards spécialisés) qui relisent les tâches terminées.
@@ -294,6 +300,7 @@ Le vault est votre **second cerveau** : des notes ordinaires (fichiers Markdown)
 | `solliciter <persona> "<question>"` | avis d'un persona de l'équipe |
 | `telegram "<texte>"` | message à l'utilisateur sur Telegram (`--validation`, `--choix`) ; exige le bot configuré |
 | `poste reserver "<motif>"` / `poste liberer` | réserver le poste pendant une épreuve lourde ; s'il est pris, attendre son tour (`--attente <min>`, défaut 30) |
+| `chaine plan\|sauter\|ajouter\|dedoubler\|consigne …` | adapter la chaîne de la tâche au dossier réel : `plan` la montre ; sauter, ajouter, dédoubler une phase ou changer sa consigne (phase à venir seulement), toujours avec `--motif` : l'ajustement est journalisé et montré à l'utilisateur |
 | `feu-vert demander\|accorder\|refuser\|verifier …` | feu vert lié à une version |
 
 `python orch.py <commande> -h` donne les options de chacune.

@@ -4,11 +4,17 @@
 
 GoldenBrain ist ein lokaler Leitstand für Arbeit, die KI-Programmieragenten übertragen wird. Jede Aufgabe ist eine Markdown-Notiz in Ihrem Vault (ein einfacher Notizordner, mit oder ohne Obsidian), und ihre Ausführung ist eine gewöhnliche Konversation eines Kommandozeilen-Harness — Claude Code, Codex, OpenCode, GitHub Copilot CLI oder Antigravity —, die Sie jederzeit fortsetzen können. GoldenBrain ordnet ein, reiht ein, überwacht und verknüpft diese Konversationen; der Agent liefert eine kurze Ergebniskarte in die Notiz, und Sie bestätigen.
 
-![Aufgabenbaum als Kaskade, mit Status, Live-Aktivität und Engine](docs/captures/arbre.png)
+![Aufgabenbaum als Kaskade, mit Status, Live-Aktivität und Engine](docs/captures/arbre-de.png)
 
-![Eine Aufgabe: Konversation und persönliche Notizen nebeneinander](docs/captures/tache.png)
+![Eine Aufgabe: Konversation mit dem Agenten und persönliche Notizen nebeneinander](docs/captures/tache-de.png)
 
-Konfigurationsschlüssel und Entwurfsdokumente sind auf Französisch; dieses README, die Beitragsrichtlinie und die Sicherheitsrichtlinie gibt es in vier Sprachen. Die Bildschirmfotos stammen aus einem fiktiven Demo-Vault (`python scripts/captures.py`).
+![In Arbeit: was jeder Agent tut, seine Unteragenten und sein Fortschritt](docs/captures/travaux-de.png)
+
+![Zweites Gehirn: Notizen und Aufgaben als Graph verknüpft](docs/captures/graphe-de.png)
+
+[▶ Demo-Video (etwa 40 s)](docs/captures/demo-de.webm)
+
+Konfigurationsschlüssel und Entwurfsdokumente sind auf Französisch; dieses README, die Beitragsrichtlinie und die Sicherheitsrichtlinie gibt es in vier Sprachen. Bildschirmfotos und Video stammen aus einem fiktiven Demo-Vault (`python scripts/captures.py`).
 
 ## Schnellinstallation
 

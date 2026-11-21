@@ -21,7 +21,7 @@ from pydantic import BaseModel
 from . import (api_apprendre, api_accueil, modeles, api_appareils, api_arbre, api_codespace, api_executeurs, api_installation, api_retour, api_compactage, api_decisions,
                api_economie, api_etoile, api_executant, api_execution, api_feux, api_interface, api_maj, api_notes, api_pilotage, api_poste,
                api_rapprochement, api_resultat, api_routines, api_simultanes, api_manager, api_telegram, api_temps, api_titre,
-               api_reflexes, api_travaux, api_validation, api_vigie)
+               api_reflexes, api_travaux, api_validation, api_vigie, api_chaines)
 from .api_temps import CorpsTache
 from . import (appareils, codespace, conseil, console, decisions, depot, executant, geste, guide, langues, liens, recherche, regroupement,
                reprise, temps, transformations, version, vigie)
@@ -148,8 +148,8 @@ def creer_app(config: Config, moteur: Moteur | None = None) -> FastAPI:
 
     @asynccontextmanager
     async def cycle(_: FastAPI):
-        # INV-JARD-1, INV-AGENTSCC-1, INV-ROUTINE-3 : planificateurs de fond, arrêtés avec le serveur.
-        fond = [asyncio.create_task(b()) for b in (jardinier.boucle, moteur.agents_cc.boucle, moteur.routines.boucle)]
+        # INV-JARD-1, INV-AGENTSCC-1, INV-ROUTINE-3, INV-CHAINE-4 : planificateurs de fond, arrêtés avec le serveur.
+        fond = [asyncio.create_task(b()) for b in (jardinier.boucle, moteur.agents_cc.boucle, moteur.routines.boucle, moteur.chaines.boucle)]
         moteur.vigie.demarrer()
         # INV-EXEC-1 : tours coupés par l'arrêt, repris une fois ; INV-EXEC-10 : un tour repris d'office
         # n'est pas aussi relancé par un réveil sur quota (jamais les deux).
@@ -472,7 +472,7 @@ def creer_app(config: Config, moteur: Moteur | None = None) -> FastAPI:
     app.include_router(api_compactage.routes(config, moteur))  # INV-COMPACT-1
     app.include_router(api_apprendre.routes(config, moteur, tache))  # INV-APPRENDRE-1
     app.include_router(api_decisions.routes(moteur))
-    app.include_router(api_routines.routes(moteur.routines))  # INV-ROUTINE-1
+    for rt in (api_routines.routes(moteur.routines), api_chaines.routes(moteur)): app.include_router(rt)  # INV-ROUTINE-1, INV-CHAINE-1
     app.include_router(api_accueil.routes(config, moteur, vault))  # INV-ACCUEIL-1 : poste seulement
     app.include_router(api_installation.routes())  # INV-INSTALL-1 : poste seulement (garde INV-DISTANT-1)
     app.include_router(api_validation.routes(moteur))  # INV-VALID-2

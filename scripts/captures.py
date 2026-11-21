@@ -1,7 +1,8 @@
-"""Captures d'écran du README : `python scripts/captures.py`.
+"""Captures d'écran et vidéo de démonstration du README : `python scripts/captures.py` (≈ 5 min).
 
 Rôle : rejoue `tests/ui/scenario_captures.py` (vrai serveur, vault de démonstration fictif, harnais
-factice) et dépose `arbre.png` et `tache.png` dans `docs/captures/`.
+factice) dans les quatre langues et dépose dans `docs/captures/`, par langue `<l>` : `arbre-<l>.png`,
+`tache-<l>.png`, `travaux-<l>.png`, `graphe-<l>.png` et la vidéo `demo-<l>.webm`.
 Frontières : aucune installation (Playwright requis, comme `check_ui.py`) ; aucune donnée réelle (INV-PUB-1).
 """
 

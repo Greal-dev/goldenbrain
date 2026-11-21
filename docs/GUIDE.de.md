@@ -23,7 +23,7 @@ Wozu es dient: GoldenBrain wie eine gewöhnliche Anwendung installieren. Python,
 
 So funktioniert es: Bei jedem Start öffnet sich der Browser mit GoldenBrain; läuft GoldenBrain auf diesem Computer noch nicht, wird es dabei gestartet (ein zweiter Klick startet kein zweites). Beim ersten Start wird die Anwendung in Ihren persönlichen Ordner kopiert (`~/.local/share/goldenbrain/app`, `~/Library/Application Support/GoldenBrain/app` oder `%LOCALAPPDATA%\GoldenBrain\app`): Diese Kopie bringt das „Update mit einem Klick“ auf den neuesten Stand, und sie behält Ihre Einstellungen (`config.toml`).
 
-Gut zu wissen: Die Installation spricht die Sprache des Systems (Französisch, Englisch, Deutsch oder Spanisch; Englisch für jede andere Sprache) und überträgt sie beim ersten Start in `config.toml` (`[interface] langue`), damit GoldenBrain in derselben Sprache startet; eine vorhandene `config.toml` wird nie verändert. Neu installieren oder deinstallieren berührt weder diese Kopie noch den Vault. Das Startprotokoll ist `lancement.log` im Datenordner (Linux, macOS). Um die Installationsprogramme selbst zu bauen: `python scripts/construire_deb.py`, `construire_windows.py` (Inno Setup unter wine), `construire_macos.py`; jede heruntergeladene Komponente wird anhand ihres Fingerabdrucks geprüft (`installation/versions.txt`).
+Gut zu wissen: Die Installation spricht die Sprache des Systems (Französisch, Englisch, Deutsch oder Spanisch; Englisch für jede andere Sprache) und überträgt sie beim ersten Start in `config.toml` (`[interface] langue`), damit GoldenBrain in derselben Sprache startet; eine vorhandene `config.toml` wird nie verändert. Neu installieren oder deinstallieren berührt weder diese Kopie noch den Vault. Das Startprotokoll ist `lancement.log` im Datenordner (Linux, macOS). Um die Installationsprogramme selbst zu bauen: `python scripts/construire_deb.py`, `construire_windows.py` (Inno Setup unter wine), `construire_macos.py`; jede heruntergeladene Komponente wird anhand ihres Fingerabdrucks geprüft (`installation/versions.txt`). Jede auf der Versionsseite veröffentlichte Version enthält die vier Installationsprogramme, jedes Mal neu gebaut, und eine Notiz auf Englisch, Französisch, Spanisch und Deutsch (`python scripts/publier_version.py`, von der Veröffentlichung gestartet).
 
 ### Linux {#linux}
 
@@ -199,6 +199,12 @@ Der Vault ist Ihr **zweites Gehirn**: gewöhnliche Notizen (Markdown-Dateien), d
 - **So geht es**: Schaltfläche „Routine“ (Uhr, oben). Titel, Anweisung, Zeitplan („chaque jour 08:00“, „en semaine 18:00“, „lundi,jeudi 09:30“, „toutes les 2 h de 8 h à 20 h“ oder ein Cron-Ausdruck; die Formulierung wird auf Französisch erwartet), Projekt, Unterhaltung (dieselbe oder bei jeder Ausführung eine neue), Nachholen eines verpassten Termins. In der Routine: „Pausieren“, „Jetzt ausführen“, Verlauf der Ausführungen. Eine vorhandene Aufgabe wird mit „In Routine umwandeln“ an Ort und Stelle zur Routine (dieselbe Notiz, dieselbe Unterhaltung); „Routine entfernen“ macht sie wieder gewöhnlich.
 - **Gut zu wissen**: Eine Routine trägt im Baum eine Uhr; sie läuft nie zweimal gleichzeitig und geht durch dieselbe Warteschlange wie die Aufgaben.
 
+### Abläufe {#chaines}
+
+- **Wozu es dient**: mehrere der KI übertragene Arbeitsphasen für denselben Ordner aneinanderreihen (z. B. Antwort auf eine Ausschreibung: Analyse, Nutzenversprechen, Lösung, Ausarbeitung, Durchsicht), wobei jede Phase vom Ergebnis der vorigen ausgeht.
+- **So geht es**: Schaltfläche „Abläufe“ (oben): Liste der Vorlagen, mitgelieferte („Réponse à un appel d'offres“, „Article ou contenu“) und persönliche, abgelegt in `_meta/chaines/` des Vaults; „Neuer Ablauf“ oder „Bearbeiten“: Titel, Zusammenfassung, gemeinsamer Kontext, überwachter Ordner und Projekt (optional), dann die Phasen (Titel, Anweisungen, Eingabedokumente, erwartetes Ergebnis, KI-Assistent, KI-Modell, Kästchen „Menschliche Freigabe nach dieser Phase“), die sich hinzufügen, löschen und umordnen lassen; „Entfernen“ (persönliche Vorlagen, mit Bestätigung). Manueller Start: „Starten“ in der Liste oder ⛓ an einem Projekt: Vorlage, Projekt, zu bearbeitender Ordner, optionaler Titel. Es entsteht eine übergeordnete Aufgabe mit einer Aufgabe je Phase; ihre Detailansicht zeigt die nummerierten Phasen mit Zustand, einen Link zu jeder, den Zustand des Ablaufs und einen etwaigen Fehler. „Freigeben und fortfahren“ setzt nach einer Phase mit menschlicher Freigabe fort; „Fortsetzen“ startet die fehlgeschlagene Phase neu.
+- **Gut zu wissen**: Die Phasen laufen nacheinander, nie parallel. Bei einem überwachten Ordner startet jeder neue Unterordner den Ablauf, ohne bereits vorhandene nachzuholen. Die KI kann die kommenden Phasen an den tatsächlichen Ordner anpassen (überspringen, hinzufügen, verdoppeln, Anweisungen ändern): jede Anpassung wird in der Detailansicht mit ihrer Begründung angezeigt.
+
 ### Team {#equipe}
 
 - **Wozu es dient**: Experten (spezialisierte Sichtweisen), die abgeschlossene Aufgaben durchsehen.
@@ -292,6 +298,7 @@ Zu lesen von jedem Agenten — Claude Code, Codex, OpenCode, Gemini CLI oder and
 | `solliciter <persona> "<Frage>"` | Meinung eines Personas des Teams |
 | `telegram "<Text>"` | Nachricht an den Nutzer auf Telegram (`--validation`, `--choix`); setzt den konfigurierten Bot voraus |
 | `poste reserver "<Grund>"` / `poste liberer` | den Rechner während eines aufwendigen Tests reservieren; ist er belegt, auf die Reihe warten (`--attente <min>`, Standard 30) |
+| `chaine plan\|sauter\|ajouter\|dedoubler\|consigne …` | den Ablauf der Aufgabe an den tatsächlichen Ordner anpassen: `plan` zeigt ihn; eine Phase überspringen, hinzufügen, verdoppeln oder ihre Anweisungen ändern (nur kommende Phasen), immer mit `--motif`: die Anpassung wird protokolliert und dem Nutzer angezeigt |
 | `feu-vert demander\|accorder\|refuser\|verifier …` | an eine Version gebundene Freigabe |
 
 `python orch.py <Befehl> -h` nennt die Optionen jedes Befehls.

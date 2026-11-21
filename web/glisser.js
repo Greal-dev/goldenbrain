@@ -15,6 +15,7 @@ import { voirPlan } from './alignement-plan.js';
 import { info } from './info.js';
 import { reduire } from './transfo.js';
 import { nouvelleRoutine } from './routines.js';
+import { lancerChaine } from './chaines.js';
 
 const enc = encodeURIComponent;
 const norm = (s) => (s || '').normalize('NFD').replace(/\p{M}/g, '').toLowerCase();
@@ -173,7 +174,8 @@ export function actionsLigne(n) {
     n.montable && !fixe ? b('monter', '↰', t('glisser.monter')) : null,
     n.deplacable && !fixe ? b('vers', '↳', t('glisser.vers')) : null,
     projet && ouvert('transformations') ? b('reduire', '⊟', t('glisser.reduire')) : null,
-    projet ? b('routine', '⏰', t('glisser.routine')) : null);
+    projet ? b('routine', '⏰', t('glisser.routine')) : null,
+    projet ? b('chaine', '⛓', t('glisser.chaine')) : null);
 }
 
 // Branche glisser-déposer, boutons et raccourcis sur un conteneur de lignes [data-cle].
@@ -231,6 +233,7 @@ export function brancher(cont, defile, haut = 0) {
     const idx = indexer(), en = idx.get(k);
     if (!en) return;
     if (act === 'routine' && en.n.type === 'conteneur') { nouvelleRoutine(en.n.id); return; }
+    if (act === 'chaine' && en.n.type === 'conteneur') { lancerChaine(en.n.id); return; }
     if (en.n.type !== 'tache' && !ouvert('alignement') && act !== 'reduire') return;
     if (act === 'monter' && en.n.montable) monter(en.n, idx, cont);
     else if (act === 'vers' && en.n.deplacable) dialogueVers(en.n, idx, cont);

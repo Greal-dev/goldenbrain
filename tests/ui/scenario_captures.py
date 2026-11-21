@@ -1,11 +1,15 @@
-"""Captures d'écran du README sur un vault de démonstration fictif (INV-PUB-1 : aucune donnée réelle).
+"""Captures et vidéo de démonstration sur un vault fictif, dans les quatre langues (INV-PUB-1 : aucune donnée réelle).
 
-Rôle : serveur dédié, vault de démonstration (deux projets, une maison, quelques notes liées), puis deux
-captures : l'arbre en cascade, une tâche (conversation et notes).
-Frontières : écrit les images dans `GB_CAPTURES` (dossier, posé par `scripts/captures.py`), sinon dans le
-dossier temporaire du test ; ne touche jamais le dépôt lors de la porte d'interface.
+Rôle : par langue, un serveur dédié (vault `demo_vault.py`, langue posée dans `config.toml`, harnais factice
+inscrit sous le nom « claude » et jouant les scènes de la démonstration), puis un parcours filmé : arbre qui
+s'anime, tâche (conversation et note), écran « En cours » (sous-agents), graphe du second cerveau. Quatre
+images prises en chemin : `arbre-<l>.png`, `tache-<l>.png`, `travaux-<l>.png`, `graphe-<l>.png`, et la vidéo
+`demo-<l>.webm`.
+Frontières : écrit dans `GB_CAPTURES` (posé par `scripts/captures.py`, qui joue alors les quatre langues à vitesse
+de lecture) ; sans lui, porte d'interface : français seul, pauses écourtées, sorties dans le dossier du test.
 """
 
+import json
 import os
 import shutil
 import sys
@@ -14,106 +18,115 @@ from pathlib import Path
 import pytest
 from playwright.sync_api import expect
 
+import demo_vault
 import univers
 from aides_arbre import deplier_tout
 from conftest import demarrer
 
-TACHES = {
-    "Projets/C1-Site-vitrine": ("Site vitrine de l'atelier", "C1-Pro", {
-        "accueil": ("Refondre la page d'accueil", "en-cours", "priorite: haute\nharnais: faux\n"),
-        "contact": ("Corriger le formulaire de contact", "fait", "harnais: faux\n"),
-        "mentions": ("Rédiger les mentions légales", "a-faire", "echeance: 2026-12-04\n"),
-        "images": ("Optimiser les images", "a-faire", 'priorite: basse\nprerequis: ["[[accueil]]"]\n'),
-    }),
-    "Projets/C1-Facturation": ("Outil de facturation", "C1-Pro", {
-        "csv": ("Exporter les factures en CSV", "en-cours", "harnais: faux\n"),
-        "tests": ("Couvrir l'export par des tests", "a-faire", "priorite: haute\n"),
-    }),
-    "Projets/C2-Maison": ("Maison", "C2-Perso", {
-        "devis": ("Comparer les devis de la cuisine", "a-faire", "executant: humain\necheance: 2026-11-28\n"),
-        "chaudiere": ("Planifier l'entretien de la chaudière", "a-faire", "priorite: moyenne\n"),
-    }),
-}
-NOTES = {
-    "Ressources/accessibilite.md": ("Accessibilité web", "Contrastes, navigation au clavier. Voir [[typographie]]."),
-    "Ressources/typographie.md": ("Typographie", "Deux familles au plus. Utile pour [[Projets/C1-Site-vitrine/taches/accueil|l'accueil]]."),
-    "Ressources/devis-cuisine.md": ("Devis de la cuisine", "Trois artisans ; [[Projets/C2-Maison/taches/devis|comparaison]]."),
-    "Ressources/format-csv.md": ("Format CSV des factures", "Séparateur point-virgule. Voir [[Projets/C1-Facturation/taches/csv|l'export]]."),
-}
+SORTIE = os.environ.get("GB_CAPTURES")
+LANGUES = ("fr", "en", "de", "es") if SORTIE else ("fr",)
+LENTEUR = 1.0 if SORTIE else 0.05  # la vidéo se lit ; la porte, elle, n'attend pas
+H = {"X-Orchestrateur": "1"}  # l'API refuse ce qui ne vient pas de l'interface
+TAILLE = {"width": 1600, "height": 900}
 
 
-def _vault_demo(vault: Path) -> None:
-    for d in ("Projets", "_meta"):  # l'univers des autres scénarios n'a rien à faire sur une capture
-        shutil.rmtree(vault / d, ignore_errors=True)
-    for dossier, (nom, casquette, taches) in TACHES.items():
-        univers.ecrire(vault, f"{dossier}/contexte.md", f"---\ntype: contexte\ncasquette: {casquette}\nnom: {nom}\n---\n")
-        for f, (titre, statut, extra) in taches.items():
-            univers.ecrire(vault, f"{dossier}/taches/{f}.md", univers.tache(titre, statut, extra))
-    for rel, (titre, corps) in NOTES.items():
-        univers.ecrire(vault, rel, f"---\ntype: ressource\ntags: [demo]\n---\n\n# {titre}\n\n{corps}\n")
-
-
-@pytest.fixture(scope="module")
-def demo(tmp_path_factory):
+@pytest.fixture(scope="module", params=LANGUES)
+def demo(request, tmp_path_factory):
+    code = request.param
+    dossier = tmp_path_factory.mktemp(f"ui-captures-{code}")
+    scenes = dossier / "scenes.json"
+    scenes.write_text(json.dumps(demo_vault.scenes(code), ensure_ascii=False), encoding="utf-8")
     construire = univers.construire
 
-    def construire_demo(dossier, port, telegram_api=""):
+    def construire_demo(d, port, telegram_api=""):
         # Vault écrit AVANT le démarrage : les index (tâches, notes, graphe) naissent sur la démonstration.
-        config = construire(dossier, port, telegram_api)
-        _vault_demo(dossier / "vault")
-        # Le harnais factice ne lance aucune commande ; en nommer une qui existe évite « indisponible » à l'écran.
-        exe = Path(sys.executable).as_posix()
-        config.write_text(config.read_text(encoding="utf-8").replace(
-            "[harnais.faux]\n", f'[harnais.faux]\ncommande = "{exe}"\n'), encoding="utf-8")
+        config = construire(d, port, telegram_api)
+        demo_vault.ecrire_vault(d / "vault", code)
+        exe = Path(sys.executable).as_posix()  # une commande qui existe : ni « indisponible » ni vrai agent
+        texte = config.read_text(encoding="utf-8").replace('harnais_defaut = "faux"', 'harnais_defaut = "claude"')
+        texte = texte.replace("silence_s = 3\n", "silence_s = 300\n")  # pas d'alerte « silencieux » sur l'image
+        texte += f'\n[harnais.claude]\ncommande = "{exe}"\n\n[interface]\nlangue = "{code}"\n'
+        config.write_text(texte, encoding="utf-8")
         return config
 
     with pytest.MonkeyPatch.context() as mp:
+        mp.setenv("GB_DEMO", str(scenes))  # hérité par le serveur, lu par le harnais factice
         mp.setattr(univers, "construire", construire_demo)
-        yield from demarrer(tmp_path_factory.mktemp("ui-captures"))
+        for srv in demarrer(dossier):
+            srv.code = code
+            yield srv
 
 
-def _sortie(tmp_path) -> Path:
-    d = Path(os.environ.get("GB_CAPTURES") or tmp_path)
-    d.mkdir(parents=True, exist_ok=True)
-    return d
-
-
-def _page(navigateur, srv):
-    ctx = navigateur.new_context(viewport={"width": 1366, "height": 768})
-    page = ctx.new_page()
-    page.erreurs = []
-    page.on("pageerror", lambda e: page.erreurs.append(str(e)))
-    return ctx, page
+def _pause(page, secondes: float) -> None:
+    page.wait_for_timeout(int(secondes * 1000 * LENTEUR))
 
 
 def _cliche(page, chemin: Path) -> None:
-    page.mouse.move(1365, 767)  # ni survol ni focus : boutons de ligne et infobulles hors de l'image
+    page.mouse.move(TAILLE["width"] - 1, TAILLE["height"] - 1)  # ni survol ni focus : infobulles hors de l'image
     page.evaluate("document.activeElement && document.activeElement.blur()")
     page.wait_for_timeout(300)
     page.screenshot(path=str(chemin))
 
 
-def test_captures_du_readme(navigateur, demo, tmp_path):
-    sortie = _sortie(tmp_path)
-    ctx, page = _page(navigateur, demo)
+def _titre(code: str, fichier: str) -> str:
+    return next(t[0] for _, _, _, ts in demo_vault.DEMO[code]["projets"] for f, t in ts.items() if f == fichier)
+
+
+def test_captures_et_video(navigateur, demo, tmp_path):
+    code, d = demo.code, demo_vault.DEMO[demo.code]
+    sortie = Path(SORTIE or tmp_path)
+    sortie.mkdir(parents=True, exist_ok=True)
+    films = tmp_path / "films"
+    ctx = navigateur.new_context(viewport=TAILLE, locale=code, record_video_dir=str(films), record_video_size=TAILLE)
+    page = ctx.new_page()
+    erreurs = []
+    page.on("pageerror", lambda e: erreurs.append(str(e)))
     try:
         page.goto(demo.url + "/")
-        page.wait_for_selector("#arbre .ligne >> text=Site vitrine de l'atelier", timeout=20000)
+        page.wait_for_selector(f"#arbre .ligne >> text={d['projets'][0][1]}", timeout=20000)
         deplier_tout(page)
-        expect(page.locator(".casc-corps .c-t", has_text="Refondre la page d'accueil")).to_be_visible()
-        _cliche(page, sortie / "arbre.png")
+        _pause(page, 2)
+        for fichier in ("calendrier", "relances", "csv"):  # trois agents au travail pendant qu'on regarde
+            r = page.request.post(f"{demo.url}/api/taches/{fichier}/messages", data={"texte": demo_vault.message_de(code, fichier)}, headers=H)
+            assert r.ok, r.text()
+            _pause(page, 0.6)
+        situation = d["scenes"]["calendrier"][2]["situation"]
+        expect(page.locator(".casc-corps", has_text=situation)).to_be_visible(timeout=20000)
+        expect(page.locator(".casc-corps", has_text=d["scenes"]["relances"][2]["situation"])).to_be_visible(timeout=20000)
+        _pause(page, 2.5)
+        _cliche(page, sortie / f"arbre-{code}.png")
 
-        page.locator("#arbre .ligne .titre", has_text="Refondre la page d'accueil").first.click()
-        expect(page.locator(".d-titre")).to_have_text("Refondre la page d'accueil")
-        page.fill(".composer textarea", "Propose une structure pour l'en-tête et le pied de page.")
+        page.locator("#arbre .ligne .titre", has_text=_titre(code, "accueil")).first.click()
+        expect(page.locator(".d-titre")).to_have_text(_titre(code, "accueil"))
+        _pause(page, 1.5)
+        page.locator(".composer textarea").press_sequentially(d["message"], delay=35 * LENTEUR)
         page.press(".composer textarea", "Control+Enter")
         expect(page.locator(".msg.agent.final")).to_be_visible(timeout=20000)
-        ta = page.locator(".notes-ajout textarea")
-        ta.fill("Garder le logo actuel ; couleurs de la charte de 2025.")
-        ta.press("Control+Enter")
-        expect(page.locator(".note-t")).to_contain_text("Garder le logo actuel")
-        _cliche(page, sortie / "tache.png")
+        _pause(page, 3)
+        page.locator(".notes-ajout textarea").press_sequentially(d["note"], delay=35 * LENTEUR)
+        page.press(".notes-ajout textarea", "Control+Enter")
+        expect(page.locator(".note-t")).to_contain_text(d["note"])
+        _pause(page, 2)
+        _cliche(page, sortie / f"tache-{code}.png")
 
-        assert not page.erreurs, page.erreurs
+        page.click("#btn-travaux")
+        carte = page.locator("[data-id=travaux] [data-id=tr-tour][data-tache=csv]")
+        expect(carte.locator("[data-id=tr-sous-agent]")).to_have_count(2, timeout=10000)
+        _pause(page, 3)
+        _cliche(page, sortie / f"travaux-{code}.png")
+
+        page.goto(demo.url + "/#g")
+        page.wait_for_selector(".g-canvas[data-stable='1']", timeout=20000)
+        _pause(page, 1.5)
+        boite = page.locator(".g-canvas").bounding_box()
+        page.mouse.move(boite["x"] + boite["width"] / 2, boite["y"] + boite["height"] / 2)
+        for _ in range(6):  # recul à la molette : tout le graphe dans le cadre
+            page.mouse.wheel(0, 100)
+            page.wait_for_timeout(250)
+        _pause(page, 2)
+        _cliche(page, sortie / f"graphe-{code}.png")
+        assert not erreurs, erreurs
     finally:
+        page.request.post(f"{demo.url}/api/taches/csv/arret", headers=H)
         ctx.close()
+    shutil.move(page.video.path(), sortie / f"demo-{code}.webm")

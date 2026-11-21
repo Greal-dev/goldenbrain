@@ -4,11 +4,17 @@
 
 GoldenBrain est un poste de pilotage local pour le travail confié à des agents IA de programmation. Chaque tâche est une note Markdown de votre vault (un simple dossier de notes, Obsidian ou non) et son exécution est une conversation ordinaire d'un harnais en ligne de commande — Claude Code, Codex, OpenCode, GitHub Copilot CLI ou Antigravity — que vous pouvez reprendre à tout moment. GoldenBrain place, met en file, surveille et relie ces conversations ; l'agent rend une fiche courte dans la note, et vous validez.
 
-![Arbre des tâches en cascade, avec statut, activité en direct et moteur](docs/captures/arbre.png)
+![Arbre des tâches en cascade, avec statut, activité en direct et moteur](docs/captures/arbre-fr.png)
 
-![Une tâche : conversation et notes personnelles côte à côte](docs/captures/tache.png)
+![Une tâche : conversation avec l'agent et notes personnelles côte à côte](docs/captures/tache-fr.png)
 
-Les clés de configuration et les documents de conception sont en français ; ce README, le guide de contribution et la politique de sécurité existent en quatre langues. Les captures proviennent d'un vault de démonstration fictif (`python scripts/captures.py`).
+![En cours : ce que fait chaque agent, ses sous-agents et son avancement](docs/captures/travaux-fr.png)
+
+![Second cerveau : notes et tâches liées en graphe](docs/captures/graphe-fr.png)
+
+[▶ Vidéo de démonstration (environ 40 s)](docs/captures/demo-fr.webm)
+
+Les clés de configuration et les documents de conception sont en français ; ce README, le guide de contribution et la politique de sécurité existent en quatre langues. Les captures et la vidéo proviennent d'un vault de démonstration fictif (`python scripts/captures.py`).
 
 ## Installation rapide
 

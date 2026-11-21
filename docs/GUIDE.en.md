@@ -23,7 +23,7 @@ What it is for: installing GoldenBrain like an ordinary application. Python, its
 
 How it works: each launch opens the browser on GoldenBrain, starting GoldenBrain on this computer if it is not running yet (a second click does not start a second one). On first launch, the application is copied into your personal folder (`~/.local/share/goldenbrain/app`, `~/Library/Application Support/GoldenBrain/app` or `%LOCALAPPDATA%\GoldenBrain\app`): this copy is what the “One-click update” moves forward, and it keeps your settings (`config.toml`).
 
-Good to know: the installation speaks the system language (French, English, German or Spanish; English for any other language) and, on first launch, copies it into `config.toml` (`[interface] langue`) so that GoldenBrain opens in the same language; an existing `config.toml` is never modified. Reinstalling or uninstalling never touches this copy or the vault. The startup log is `lancement.log` in the data folder (Linux, macOS). To build the installers yourself: `python scripts/construire_deb.py`, `construire_windows.py` (Inno Setup under wine), `construire_macos.py`; each downloaded component is checked against its fingerprint (`installation/versions.txt`).
+Good to know: the installation speaks the system language (French, English, German or Spanish; English for any other language) and, on first launch, copies it into `config.toml` (`[interface] langue`) so that GoldenBrain opens in the same language; an existing `config.toml` is never modified. Reinstalling or uninstalling never touches this copy or the vault. The startup log is `lancement.log` in the data folder (Linux, macOS). To build the installers yourself: `python scripts/construire_deb.py`, `construire_windows.py` (Inno Setup under wine), `construire_macos.py`; each downloaded component is checked against its fingerprint (`installation/versions.txt`). Every version published on the releases page carries the four installers, rebuilt each time, and a note in English, French, Spanish and German (`python scripts/publier_version.py`, run by the publication).
 
 ### Linux {#linux}
 
@@ -199,6 +199,12 @@ The vault is your **second brain**: ordinary notes (Markdown files) that GoldenB
 - **How to do it**: “Routine” button (clock, at the top). Title, instruction, schedule (“chaque jour 08:00”, “en semaine 18:00”, “lundi,jeudi 09:30”, “toutes les 2 h de 8 h à 20 h”, or a cron expression; the wording is expected in French), project, conversation (the same or a new one at each run), catch-up of a missed due time. In the routine: “Pause”, “Run now”, history of runs. An existing task becomes a routine in place with “Turn into a routine” (same note, same conversation); “Remove the routine” makes it an ordinary task again.
 - **Good to know**: a routine carries a clock in the tree; it never runs twice at the same time and goes through the same queue as tasks.
 
+### Chains {#chaines}
+
+- **What it is for**: running several work phases handed to the AI on the same folder (e.g. answering a call for tenders: analysis, value proposition, solution, writing, review), each phase starting from the result of the previous one.
+- **How to do it**: “Chains” button (at the top): list of models, built-in (“Réponse à un appel d'offres”, “Article ou contenu”) and personal ones, stored in `_meta/chaines/` of the vault; “New chain” or “Edit”: title, summary, shared context, watched folder and project (optional), then the phases (title, instructions, input documents, expected deliverable, AI assistant, AI model, “Human approval after this phase” box), which can be added, deleted and reordered; “Remove” (personal models, with confirmation). Manual start: “Start” in the list, or ⛓ on a project: model, project, folder to process, optional title. A parent task is created, with one task per phase; its detail shows the numbered phases with their state, a link to each, the chain state and any error. “Approve and continue” resumes after a phase with human approval; “Resume” restarts the failed phase.
+- **Good to know**: phases run one at a time, never in parallel. With a watched folder, each new subfolder starts the chain, without catching up on those already there. The AI may adapt the upcoming phases to the real folder (skip, add, duplicate, change instructions): every adjustment is shown in the detail, with its reason.
+
 ### Team {#equipe}
 
 - **What it is for**: experts (specialised viewpoints) who review finished tasks.
@@ -292,6 +298,7 @@ To be read by any agent — Claude Code, Codex, OpenCode, Gemini CLI or other �
 | `solliciter <persona> "<question>"` | opinion of a team persona |
 | `telegram "<text>"` | message to the user on Telegram (`--validation`, `--choix`); requires the bot to be configured |
 | `poste reserver "<reason>"` / `poste liberer` | reserve the workstation during a heavy test; if it is taken, wait for your turn (`--attente <min>`, default 30) |
+| `chaine plan\|sauter\|ajouter\|dedoubler\|consigne …` | adapt the task's chain to the real folder: `plan` shows it; skip, add, duplicate a phase or change its instructions (upcoming phases only), always with `--motif`: the adjustment is logged and shown to the user |
 | `feu-vert demander\|accorder\|refuser\|verifier …` | green light tied to a version |
 
 `python orch.py <command> -h` gives the options of each.

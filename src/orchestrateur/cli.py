@@ -28,7 +28,7 @@ import urllib.error
 import urllib.parse
 import urllib.request
 
-from . import cli_reflexes
+from . import cli_chaines, cli_reflexes
 
 
 class ErreurCli(Exception):
@@ -255,7 +255,7 @@ def main(argv: list[str] | None = None) -> int:
     d.add_argument("id")
     d.add_argument("message")
     sous.add_parser("chercher", help="tâches dont le titre, la fiche ou la place contiennent tous les mots").add_argument("mots")
-    cli_reflexes.ajouter(sous)  # reflexes, tracer : INV-REFLEXES-1, INV-TRACE-1
+    for m in (cli_reflexes, cli_chaines): m.ajouter(sous)  # reflexes, tracer, chaine : INV-REFLEXES-1, INV-TRACE-1, INV-CHAINE-3
     de = sous.add_parser("deleguer", help="confier un travail à une tâche enfant, lancée par GoldenBrain")
     de.add_argument("titre")
     de.add_argument("brief", help="objectif, contexte utile, livrable attendu")
@@ -379,8 +379,8 @@ def main(argv: list[str] | None = None) -> int:
     except ValueError:
         sauts = 1
     try:
-        if a.commande in cli_reflexes.COMMANDES:
-            sortie = cli_reflexes.executer(a, appeler, _q)
+        if m := next((m for m in (cli_reflexes, cli_chaines) if a.commande in m.COMMANDES), None):
+            sortie = m.executer(a, appeler, _q, source)
         elif a.commande == "arbre":
             sortie = rendre_arbre(appeler("GET", "/arbre")["noeuds"]) or ["(aucune tâche ouverte)"]
         elif a.commande == "lire":
