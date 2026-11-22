@@ -41,10 +41,10 @@ def construire(source: str, branche: str) -> Path:
     python = c.extraire_python("python-linux-x86_64", opt)
     site = python / "lib" / "python3.12" / "site-packages"
     c.installer_dependances(site, ["manylinux2014_x86_64", "manylinux_2_17_x86_64"])
-    # /opt est en lecture seule pour l'utilisateur : le bytecode doit y être déjà.
-    # -s/-p : le bytecode retient le chemin installé (/opt/…), pas celui du poste de construction.
-    subprocess.run([str(python / "bin" / "python3"), "-m", "compileall", "-q", "-s", str(racine), "-p", "/",
-                    str(site)], check=True)
+    # /opt est en lecture seule pour l'utilisateur : le bytecode doit y être déjà, retenant /opt/…
+    # (et non le chemin du poste) ; toute la bibliothèque, car l'exécution du Python embarqué a déjà
+    # écrit des .pyc de la stdlib au chemin du poste.
+    c.recompiler_bytecode(python / "bin" / "python3", python / "lib", racine)
     app = c.graine(opt / "app", source, branche)
     shutil.copy2(c.INSTALLATION / "goldenbrain.sh", opt / "goldenbrain.sh")
     (opt / "goldenbrain.sh").chmod(0o755)
@@ -62,12 +62,14 @@ def construire(source: str, branche: str) -> Path:
         icones.mkdir(parents=True)
         shutil.copy2(c.RACINE / "web" / f"icone-{taille}.png", icones / "goldenbrain.png")
 
+    c.controler_propre(racine)
     version = c.version(app)
     kio = sum(f.stat().st_size for f in racine.rglob("*") if f.is_file() and not f.is_symlink()) // 1024
     (racine / "DEBIAN").mkdir()
     (racine / "DEBIAN" / "control").write_text(CONTROLE.format(version=version, taille=kio), encoding="utf-8")
     sortie = c.CONSTRUCTION / f"goldenbrain_{version}_amd64.deb"
     subprocess.run(["dpkg-deb", "--root-owner-group", "-Zxz", "--build", str(racine), str(sortie)], check=True)
+    c.controler_artefact(sortie)
     print(f"Paquet : {sortie}")
     return sortie
 

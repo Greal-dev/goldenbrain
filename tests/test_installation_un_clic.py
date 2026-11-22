@@ -173,3 +173,33 @@ def test_lanceur_parle_la_langue_du_systeme_et_la_reporte_dans_la_configuration(
     assert r.returncode == 0, r.stderr
     assert "GoldenBrain: primera instalación en" in r.stdout
     assert 'langue = "es"' in (t / "donnees" / "app" / "config.toml").read_text(encoding="utf-8")
+
+
+def test_controle_refuse_le_chemin_du_poste_dans_un_shebang_un_pyc_ou_un_nom(tmp_path):
+    for nom, donnees in (("bin/outil", b"#!" + str(construction.RACINE).encode() + b"/python\n"),
+                         ("lib/__pycache__/x.cpython-312.pyc", b"\0" + str(construction.RACINE).encode() + b"/lib/x.py"),
+                         ("lib/autre.txt", b"dans " + str(Path.home()).encode())):
+        fichier = tmp_path / nom
+        fichier.parent.mkdir(parents=True, exist_ok=True)
+        fichier.write_bytes(donnees)
+    with pytest.raises(construction.ErreurConstruction) as e:
+        construction.controler_propre(tmp_path)
+    message = str(e.value)
+    assert "shebang" in message and "bytecode" in message and "bin/outil" in message
+    assert str(construction.RACINE) not in message and str(Path.home()) not in message  # jamais la valeur
+
+
+def test_controle_accepte_un_arbre_propre_et_scanne_aussi_un_zip(tmp_path, monkeypatch):
+    import zipfile
+    (tmp_path / "ok.pyc").write_bytes(b"/opt/goldenbrain/python/lib/x.py")
+    construction.controler_propre(tmp_path)
+    monkeypatch.setattr(construction, "CONSTRUCTION", tmp_path)
+    sale = tmp_path / "sale.zip"
+    with zipfile.ZipFile(sale, "w") as z:
+        z.writestr("App/bin/uvicorn", "#!" + str(construction.RACINE) + "/python\n")
+    with pytest.raises(construction.ErreurConstruction):
+        construction.controler_artefact(sale)
+    propre = tmp_path / "propre.zip"
+    with zipfile.ZipFile(propre, "w") as z:
+        z.writestr("App/bin/uvicorn", "#!/usr/bin/env python3\n")
+    construction.controler_artefact(propre)

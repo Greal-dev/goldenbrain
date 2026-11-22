@@ -13,14 +13,18 @@ INV-PAQUET-2 (tout composant téléchargé est vérifié par empreinte SHA-256 a
 from __future__ import annotations
 
 import gzip
+import getpass
 import hashlib
 import os
+import re
 import shutil
 import struct
 import subprocess
 import sys
 import tarfile
+import tempfile
 import urllib.request
+import zipfile
 from pathlib import Path
 
 RACINE = Path(__file__).resolve().parents[1]
@@ -103,7 +107,83 @@ def installer_dependances(site_packages: Path, plateformes: list[str], supplemen
         commande += ["--platform", p]
     subprocess.run(commande + DEPENDANCES + list(supplements), check=True)
     # Lanceurs pip inutiles au paquet, dont le shebang porterait le chemin du poste de construction.
-    shutil.rmtree(site_packages / "bin", ignore_errors=True)
+    for dossier in (site_packages / "bin", site_packages / "Scripts"):  # Scripts : pip sous Windows
+        shutil.rmtree(dossier, ignore_errors=True)
+
+
+def recompiler_bytecode(python: Path, lib: Path, racine: Path, prefixe: str = "/") -> None:
+    """Recompile TOUTE la bibliothèque (stdlib comprise : l'exécution du Python embarqué y a déjà posé
+    des .pyc au chemin du poste) en ne retenant que le chemin installé : `racine` est retiré, `prefixe` ajouté."""
+    subprocess.run([str(python), "-m", "compileall", "-q", "-f", "-s", str(racine), "-p", prefixe, str(lib)],
+                   check=True)
+
+
+def termes_interdits() -> list[bytes]:
+    """Ce qui ne doit jamais figurer dans un artefact : chemin du poste de construction, dossier personnel."""
+    termes = {str(RACINE), str(Path.home()), str(CONSTRUCTION)}
+    return sorted(t.encode() for t in termes if t not in ("", "/"))
+
+
+def _utilisateur() -> str:
+    try:
+        return getpass.getuser()
+    except (KeyError, OSError):
+        return ""
+
+
+def controler_propre(dossier: Path) -> None:
+    """Garde-fou : échoue si le chemin du poste, `/home/<utilisateur>` ou le nom d'utilisateur (mot entier)
+    apparaît dans un fichier de `dossier` — .pyc et shebangs compris, noms de fichiers aussi.
+    Message : fichier et nature seulement, jamais la valeur trouvée."""
+    termes = termes_interdits()
+    nom = _utilisateur()
+    mot = re.compile(rb"(?<![A-Za-z0-9])" + re.escape(nom.encode()) + rb"(?![A-Za-z0-9])") if len(nom) >= 3 else None
+    fautes = []
+    for chemin in dossier.rglob("*"):
+        rel = chemin.relative_to(dossier).as_posix()
+        if ".git" in chemin.relative_to(dossier).parts:
+            continue  # objets git compressés : l'historique public n'est pas le sujet
+        if any(t in rel.encode() for t in termes) or (mot and mot.search(rel.encode())):
+            fautes.append(f"{rel} (nom de fichier)")
+        if chemin.is_symlink():
+            cible = os.readlink(chemin).encode()
+            if any(t in cible for t in termes):
+                fautes.append(f"{rel} (cible de lien)")
+            continue
+        if not chemin.is_file():
+            continue
+        donnees = chemin.read_bytes()
+        if any(t in donnees for t in termes):
+            nature = "bytecode" if chemin.suffix == ".pyc" else "shebang" if donnees.startswith(b"#!") else "contenu"
+            fautes.append(f"{rel} ({nature} : chemin du poste)")
+        elif mot and mot.search(donnees):
+            fautes.append(f"{rel} (contenu : nom d'utilisateur)")
+    if fautes:
+        resume = "; ".join(fautes[:20]) + (f"; … {len(fautes)} au total" if len(fautes) > 20 else "")
+        raise ErreurConstruction(f"chemin du poste de construction dans l'artefact : {resume}")
+
+
+def controler_artefact(fichier: Path) -> None:
+    """Décompresse l'artefact fini (.zip, .deb, .exe via 7z si possible) dans un dossier temporaire et le scanne."""
+    with tempfile.TemporaryDirectory(prefix="controle-", dir=CONSTRUCTION) as tmp:
+        sortie = Path(tmp)
+        if fichier.suffix == ".zip":
+            with zipfile.ZipFile(fichier) as z:
+                for info in z.infolist():  # sans extractall : liens et droits n'importent pas ici
+                    if not info.is_dir():
+                        cible = sortie / info.filename
+                        cible.parent.mkdir(parents=True, exist_ok=True)
+                        cible.write_bytes(z.read(info))
+        elif fichier.suffix == ".deb":
+            subprocess.run(["dpkg-deb", "-R", str(fichier), str(sortie)], check=True)
+        elif not (shutil.which("7z") and subprocess.run(["7z", "x", "-y", f"-o{sortie}", str(fichier)],
+                                                         capture_output=True).returncode == 0):
+            # Installateur Inno Setup (données LZMA) : non décompressable hors Windows. Le contrôle de fond
+            # est celui de l'arbre source avant compilation ; ici, seul l'en-tête non compressé est scanné.
+            (sortie / fichier.name).write_bytes(fichier.read_bytes())
+        if not any(sortie.rglob("*")):
+            raise ErreurConstruction(f"{fichier.name} : rien d'extrait, contrôle impossible")
+        controler_propre(sortie)
 
 
 def graine(dest: Path, source: str = DEPOT_PUBLIC, branche: str = BRANCHE_DIFFUSION, crlf: bool = False) -> Path:

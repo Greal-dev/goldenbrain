@@ -35,6 +35,7 @@ def preparer(source: str, branche: str) -> tuple[Path, str]:
     for script in ("deja_lance.py", "langue.py"):
         shutil.copy2(c.INSTALLATION / script, dossier / script)
     c.ico(c.RACINE / "web" / "icone-192.png", dossier / "GoldenBrain.ico")
+    c.controler_propre(dossier)
     return dossier, c.version(app)
 
 
@@ -62,6 +63,7 @@ def compiler(dossier: Path, version: str) -> Path:
     subprocess.run(["wine", str(compilateur), "/Q", f"/DSource=Z:{dossier}", f"/DVersion={version}",
                     f"/OZ:{c.CONSTRUCTION}", f"Z:{c.INSTALLATION / 'goldenbrain.iss'}"], check=True, env=env)
     sortie = c.CONSTRUCTION / "GoldenBrain-installation.exe"
+    c.controler_artefact(sortie)
     print(f"Installateur : {sortie}")
     return sortie
 

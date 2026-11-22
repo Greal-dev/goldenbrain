@@ -40,6 +40,7 @@ def construire_app(arch: str, source: str, branche: str) -> Path:
     (contenu / "MacOS" / "GoldenBrain").chmod(0o755)
     plist = (c.INSTALLATION / "Info.plist").read_text(encoding="utf-8")
     (contenu / "Info.plist").write_text(plist.replace("@VERSION@", c.version(app).split("+")[0]), encoding="utf-8")
+    c.controler_propre(racine)
     return racine / "GoldenBrain.app"
 
 
@@ -73,6 +74,7 @@ def main() -> None:
     app = construire_app(a.arch, a.source, a.branche)
     sortie = c.CONSTRUCTION / f"GoldenBrain-macos-{a.arch}.zip"
     zipper(app, sortie)
+    c.controler_artefact(sortie)
     print(f"Application : {sortie}")
 
 
