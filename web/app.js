@@ -17,6 +17,7 @@ import { dessinerReglages, etatReglages, fixerAncreReglages, hashReglages } from
 import { chargerInterface, ouvert, simple } from './interface.js';
 import { dessinerAujourdhui } from './aujourdhui.js';
 import { dessinerCompagnon } from './compagnon.js';
+import { dessinerTravail } from './travail.js';
 import { dessinerTravaux, actualiserTravaux } from './travaux.js';
 import { dessinerDecisions } from './decisions.js';
 import { dessinerGuide, hashGuide, fixerAncre } from './guide.js';
@@ -125,7 +126,7 @@ function bannière() {
 // L'URL reflète le volet droit : #t=<tâche> · #n=<note> · #q=<recherche> · #g[=<centre>] (graphe) · #equipe. Chaque navigation ajoute une entrée d'historique.
 const enc = encodeURIComponent;
 const dec = (s) => { try { return decodeURIComponent(s); } catch { return s; } };
-const hashCourant = () => (S.selection ? `#t=${enc(S.selection)}` : S.vue === 'equipe' ? '#equipe' : S.vue === 'reglages' ? hashReglages() : S.vue === 'aujourdhui' ? '#aujourdhui' : S.vue === 'compagnon' ? '#compagnon' : S.vue === 'travaux' ? '#en-cours' : S.vue === 'decisions' ? '#decisions' : S.vue === 'guide' ? hashGuide() : S.vue === 'note' && S.note ? `#n=${enc(S.note)}`
+const hashCourant = () => (S.selection ? `#t=${enc(S.selection)}` : S.vue === 'equipe' ? '#equipe' : S.vue === 'reglages' ? hashReglages() : S.vue === 'aujourdhui' ? '#aujourdhui' : S.vue === 'compagnon' ? '#compagnon' : S.vue === 'travail' ? (S.portee ? `#travail=${enc(S.portee)}` : '#travail') : S.vue === 'travaux' ? '#en-cours' : S.vue === 'decisions' ? '#decisions' : S.vue === 'guide' ? hashGuide() : S.vue === 'note' && S.note ? `#n=${enc(S.note)}`
   : S.vue === 'recherche' && S.requete ? `#q=${enc(S.requete)}` : S.vue === 'graphe' ? (S.centre ? `#g=${enc(S.centre)}` : '#g') : '');
 function pousserUrl(initial) {
   const hs = hashCourant();
@@ -139,6 +140,7 @@ function majVoletDroit() {
   else if (S.vue === 'reglages') dessinerReglages(droit());
   else if (S.vue === 'aujourdhui') dessinerAujourdhui(droit());
   else if (S.vue === 'compagnon') dessinerCompagnon(droit()); // INV-COMPAGNON-1
+  else if (S.vue === 'travail') dessinerTravail(droit(), S.portee); // INV-COMPAGNON-2
   else if (S.vue === 'travaux') dessinerTravaux(droit());
   else if (S.vue === 'decisions') dessinerDecisions(droit());
   else if (S.vue === 'guide') dessinerGuide(droit()); // INV-GUIDE-1
@@ -168,7 +170,7 @@ function depuisUrl() {
   const m = /^#(t|n|q)=(.*)$/.exec(location.hash);
   const g = /^#g(?:=(.*))?$/.exec(location.hash);
   const v = m ? dec(m[2]) : '';
-  let ok = true, gd, rg;
+  let ok = true, gd, rg, tv;
   if (m && m[1] === 't' && v) { if (S.selection !== v) ok = ouvrir(v); }
   else if (m && m[1] !== 't' && !ouvert('notes')) { if (S.selection || S.vue !== 'cascade') ok = ouvrir(null); }
   else if (m && m[1] === 'n' && v) { if (S.vue !== 'note' || S.note !== v || S.selection) ok = ouvrirNote(v); }
@@ -183,6 +185,7 @@ function depuisUrl() {
   else if ((gd = /^#guide(?:=(.*))?$/.exec(location.hash))) { fixerAncre(dec(gd[1] || '')); ok = ouvrirVue('guide'); }
   else if (location.hash === '#aujourdhui') { if (S.vue !== 'aujourdhui' || S.selection) ok = ouvrirVue('aujourdhui'); }
   else if (location.hash === '#compagnon') { if (S.vue !== 'compagnon' || S.selection) ok = ouvrirVue('compagnon'); }
+  else if ((tv = /^#travail(?:=(.+))?$/.exec(location.hash))) { const id = tv[1] ? dec(tv[1]) : null; if (S.vue !== 'travail' || S.portee !== id || S.selection) ok = ouvrirVue('travail', id); }
   else if (location.hash === '#en-cours') { if (S.vue !== 'travaux' || S.selection) ok = ouvrirVue('travaux'); }
   else if (S.selection || S.vue !== 'cascade') ok = ouvrir(null);
   if (!ok) history.pushState(null, '', hashCourant() || location.pathname + location.search); // navigation refusée (note modifiée) : l'URL reste fidèle à l'écran
@@ -192,7 +195,7 @@ async function demarrer() {
   try { await chargerInterface(); } catch (e) { erreur(e.message); } // avant le premier rendu : rien ne s'affiche pour être retiré aussitôt
   S.toutes = localStorage.getItem('orch.toutes') === '1';
   bannière();
-  const h0 = /^#(t|n|q)=(.+)$/.exec(location.hash);
+  const h0 = /^#(t|n|q)=(.+)$/.exec(location.hash), tv0 = /^#travail(?:=(.+))?$/.exec(location.hash);
   const sansNotes = !ouvert('notes');
   if (h0 && h0[1] === 't') S.selection = dec(h0[2]);
   else if (h0 && h0[1] !== 't' && sansNotes) { /* notes fermées : lien ignoré */ }
@@ -203,6 +206,7 @@ async function demarrer() {
   else if (/^#reglages(\/|$)/.test(location.hash)) { S.vue = 'reglages'; fixerAncreReglages(dec(location.hash.slice(10))); }
   else if (location.hash === '#aujourdhui') S.vue = 'aujourdhui';
   else if (location.hash === '#compagnon') S.vue = 'compagnon';
+  else if (tv0) { S.vue = 'travail'; S.portee = tv0[1] ? dec(tv0[1]) : null; }
   else if (location.hash === '#en-cours') S.vue = 'travaux';
   else if (location.hash === '#decisions') S.vue = 'decisions';
   else if (/^#guide(=|$)/.test(location.hash)) { S.vue = 'guide'; fixerAncre(dec(location.hash.slice(7))); }

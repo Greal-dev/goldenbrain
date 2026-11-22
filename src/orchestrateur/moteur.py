@@ -23,7 +23,7 @@ from collections import defaultdict, deque
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 
-from . import (apprendre, instrumentation, agents_cc, langues, catalogue, codespace, depot, echecs, economie, executant, executeurs, fiches, incidents, liens, natif, ordonnancement, pilotage,
+from . import (apprendre, instrumentation, agents_cc, langues, catalogue, codespace, decisions, depot, echecs, economie, executant, executeurs, fiches, incidents, liens, natif, ordonnancement, pilotage,
                quota, regroupement, reprise, reseau, retour, sessions, simultanes, temps, transformations)
 from .propagation import MixinPropagation
 from .config import RACINE_DEPOT, Config
@@ -174,7 +174,7 @@ class Moteur(retour.MixinRetour, MixinVerrou, MixinControle, MixinCompactage, Mi
         if self.etat_de(ident) != "en_cours" and ident not in self.retenus:
             self.etats[ident] = "en_file"
         self.en_file_depuis.setdefault(ident, maintenant())
-        self._sauver_actifs()  # INV-EXEC-9 : la file survit à un redémarrage
+        self._sauver_actifs(); decisions.noter(self, ident)  # INV-EXEC-9 : la file survit ; INV-DECISIONS-2 : réponse notée
         self.publier("arbre")  # INV-VERROU-1 : la tâche occupée paraît aussitôt à l'écran
         self._lancer_boucle(ident)
         return self.etats[ident]

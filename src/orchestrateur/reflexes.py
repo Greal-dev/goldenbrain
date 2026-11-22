@@ -23,7 +23,7 @@ from pathlib import Path
 from . import langues
 from .config import RACINE_DEPOT
 
-VERSION = 2  # à relever quand le texte du bloc change : les blocs posés deviennent « ancien »
+VERSION = 3  # à relever quand le texte du bloc change : les blocs posés deviennent « ancien »
 FIN = "<!-- goldenbrain:reflexes fin -->"
 DEBUT = re.compile(r"^<!-- goldenbrain:reflexes debut v(\d+) -->\r?$", re.M)
 LIGNE_FIN = re.compile(r"^" + re.escape(FIN) + r"(?=\r?$)", re.M)
@@ -37,7 +37,7 @@ CIBLES = {
 }
 LIBELLES = {"claude": "Claude Code", "codex": "Codex", "opencode": "OpenCode",
             "agy": "Antigravity / Gemini", "copilot": "Copilot"}
-CLES = ("titre", "avertissement", "tache", "tracer", "lier", "resultat", "decision")
+CLES = ("titre", "avertissement", "tache", "ranger", "tracer", "lier", "resultat", "decision")
 
 
 def maison() -> Path:

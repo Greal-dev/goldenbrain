@@ -65,7 +65,7 @@ def cle(titre: str) -> str:
 def _texte_fiche(t) -> str:
     f = t.fiche or {}
     return " ".join([*(f.get(k) or "" for k in ("situation", "fait", "reste", "prochain_pas")),
-                     *(s.get("texte") or "" for s in f.get("sous_taches") or [])])
+                     *(s.get("texte") or "" for s in [*(f.get("sous_taches") or []), *(f.get("lignes") or [])])])
 
 
 def _clos_recemment(t, maintenant: datetime) -> bool:

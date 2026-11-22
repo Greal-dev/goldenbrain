@@ -23,7 +23,7 @@ def routes(config, moteur) -> APIRouter:
 
     @r.get("/instantane")
     async def instantane(request: Request):
-        contenu = await asyncio.to_thread(compagnon.instantane, moteur)
+        contenu = await asyncio.to_thread(compagnon.instantane, moteur, config.distant.resume)
         etag = f'"{compagnon.empreinte(contenu)}"'
         entetes = {"ETag": etag, "Cache-Control": "no-store"}
         if request.headers.get("if-none-match") == etag:

@@ -13,8 +13,8 @@ from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
-from . import langues, liens, rapprochement
-from .vault import exiger_description
+from . import langues, liens, rangement, rapprochement
+from .vault import Invalide, exiger_description
 
 
 class CorpsComplement(BaseModel):
@@ -34,10 +34,28 @@ def creer(moteur, tache, c, source: str | None):
             mesure.refus(c.titre, cands)
             return JSONResponse(status_code=409, content={
                 "detail": langues.t("serveur.api_rapprochement.proche"), "candidates": cands})
+    if c.genre and not rangement.valide(c.genre):
+        raise Invalide(langues.t("serveur.rangement.nature_inconnue", genre=c.genre))
+    genre = rangement.valide(c.genre) or rangement.deduire(c.titre, c.description)  # INV-NATURE-1
+    if not c.forcer and not c.groupe:  # INV-PLAFOND-1, INV-NATURE-1 : ranger plutôt qu'empiler
+        rang = rangement.propositions(moteur.vault, moteur.config.rangement, c.titre, c.description,
+                                      c.conteneur, c.parent, genre)
+        if rang:
+            return JSONResponse(status_code=409, content={
+                "detail": langues.t(f"serveur.api_rapprochement.rangement_{rang['raison']}",
+                                    ouvertes=rang["ouvertes"], plafond=rang["plafond"]), "rangement": rang})
     if c.de or source:  # créée par un agent (corps `de` ou en-tête de `orch`)
         c.description = exiger_description(c.description, "tâche")
-    ident = moteur.creer(c.titre, c.description, c.conteneur, c.parent, c.lancer,
+    parent, conteneur = c.parent, c.conteneur
+    if c.groupe:  # le regroupement demandé naît sous le parent ; la tâche s'y range
+        parent = moteur.creer(c.groupe, langues.t("serveur.rangement.groupe_description", titre=c.titre),
+                              conteneur, parent)
+        if genre:
+            moteur.vault.modifier(parent, {"genre": genre})
+    ident = moteur.creer(c.titre, c.description, conteneur, parent, c.lancer,
                          c.harnais, c.modele, c.echeance, c.priorite, c.mission)
+    if genre:
+        moteur.vault.modifier(ident, {"genre": genre})
     liens.relier_integration(moteur.vault, ident)  # INV-INTEG-2 : UI, `orch creer`, `orch deleguer`
     mesure.creation(c.titre)
     return tache(ident)

@@ -18,7 +18,7 @@ const ACTIONS = {
 function maj() {
   const e = ecran();
   document.body.dataset.ecran = e;
-  const courant = S.selection ? null : e === 'liste' ? 'taches' : S.vue === 'compagnon' ? 'accueil' : S.vue in ACTIONS ? S.vue : null;
+  const courant = S.selection ? null : e === 'liste' ? 'taches' : S.vue === 'compagnon' || S.vue === 'travail' ? 'accueil' : S.vue in ACTIONS ? S.vue : null;
   for (const b of document.querySelectorAll('#barre-basse [data-tel]')) {
     if (b.dataset.tel === courant) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current');
   }

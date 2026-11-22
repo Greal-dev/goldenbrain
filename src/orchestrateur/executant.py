@@ -19,7 +19,7 @@ from . import fiches, langues
 
 HUMAIN, IA = "humain", "ia"
 # Seule écriture d'agent admise sur une tâche tenue par l'humain : un lien.
-PERMIS_AGENT = ("liens",)
+PERMIS_AGENT = ("liens", "lignes")  # INV-LIGNES-1 : une ligne s'ajoute, même sur une tâche tenue par l'humain
 _ROUTE = re.compile(r"^/api/taches/([^/]+)(?:/([^/]+))?(?:/[^/]+)?/?$")
 _ENTETE = re.compile(r"^<!-- note (\d{4}-\d{2}-\d{2} \d{2}:\d{2})(?: · modifiée (\d{4}-\d{2}-\d{2} \d{2}:\d{2}))? -->\r?$")
 _MARQUEUR = re.compile(r"^(<!-- (?:note |orchestrateur:))", re.M)

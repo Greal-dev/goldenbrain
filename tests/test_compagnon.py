@@ -76,3 +76,20 @@ def test_appareil_non_appaire_refuse_appaire_admis_revoque_refuse(poste):
         ident = local.get("/api/appareils").json()["appareils"][0]["id"]
         assert local.delete(f"/api/appareils/{ident}", headers=H).status_code == 200
     assert tel.get(URL).status_code == 401
+
+
+def _validation_factice(monkeypatch):
+    ligne = {"id": "v1", "genre": "validation", "libelle": "À valider", "tache": "t1", "titre": "Livrée", "projet": "P",
+             "question": "", "echeance": None, "retard": False, "fait": "x" * 300}
+    monkeypatch.setattr(compagnon.decisions, "rassembler", lambda moteur: {"decisions": [ligne]})
+
+
+def test_resume_absent_par_defaut_court_si_active(config, vault, faux, monkeypatch):
+    _validation_factice(monkeypatch)
+    with TestClient(_local(config, vault, faux), base_url=f"http://127.0.0.1:{PORT}") as c:
+        j = c.get(URL).json()
+    assert j["decisions"] and all("resume" not in d for d in j["decisions"])  # INV-COMPAGNON-1 : rien ne sort sans réglage
+    with TestClient(_local(config, vault, faux, resume=True), base_url=f"http://127.0.0.1:{PORT}") as c:
+        r = c.get(URL)
+    assert r.headers["cache-control"] == "no-store"
+    assert len(r.json()["decisions"][0]["resume"]) <= compagnon.RESUME_MAX

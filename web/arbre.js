@@ -7,6 +7,7 @@ import { brancher, actionsLigne } from './glisser.js';
 import { repereIA, compteIA, surOccupees } from './verrou.js';
 import { rendreChangeable } from './statut.js';
 import { pastilleMoi } from './executant.js';
+import { pastilleNature, compteLignes } from './lignes.js';
 import { pastilleRetard } from './integration.js';
 import { appliquer, actif as filtreActif, badgeStatut, libelleCourt, compteur, initFiltres } from './filtres.js';
 
@@ -81,6 +82,8 @@ function ligne({ n, niveau }) {
   indicateur(n),
   n.type === 'tache' ? repereIA(n.id) : null,
   n.type === 'tache' ? pastilleMoi(n) : null, // INV-EXECUTANT-1
+  n.type === 'tache' ? pastilleNature(n) : null, // INV-NATURE-1
+  n.type === 'tache' ? compteLignes(n) : null, // INV-LIGNES-1
   compteIA(n),
   (enfants || n.type !== 'tache') && n.ouvertes > 0 ? h('span', { class: 'compte', title: t('arbre.ouvertes_titre', { n: n.ouvertes }) }, n.ouvertes) : null,
   n.type === 'groupe' ? null : actionsLigne(n));

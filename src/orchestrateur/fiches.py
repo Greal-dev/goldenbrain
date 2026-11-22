@@ -23,10 +23,14 @@ FIN = "<!-- orchestrateur:fin -->"
 # Bloc géré des notes de l'utilisateur (INV-EXECUTANT-2), distinct du bloc fiche.
 NOTES_DEBUT = "<!-- orchestrateur:notes -->"
 NOTES_FIN = "<!-- orchestrateur:notes-fin -->"
+# Bloc géré des lignes de tâche (INV-LIGNES-1) : travaux courts cochables, distincts du bloc fiche
+# (qu'un agent réécrit en entier) et des notes de l'utilisateur.
+LIGNES_DEBUT = "<!-- orchestrateur:lignes -->"
+LIGNES_FIN = "<!-- orchestrateur:lignes-fin -->"
 CLES_GEREES = ("statut", "updated", "harnais", "session", "parent", "projet", "casquette", "tags",
                "alimente", "prerequis", "voir_aussi", "modele", "echeance", "priorite", "echec_tour", "ou", "controle",
                "moteur_impose", "moteur_motif", "execution", "validation", "validation_accord",
-               "nature", "programme", "routine", "contexte", "rattrapage",
+               "nature", "genre", "programme", "routine", "contexte", "rattrapage",
                "executant", "apprendre", "chaine", "chaine_phase")  # INV-ROUTINE-2, INV-EXECUTANT-1, INV-APPRENDRE-1, INV-CHAINE-1
 CHAMPS = (("fait", "Fait"), ("resultat", "Résultat"), ("essai", "Essai"),
           ("situation", "Situation"), ("reste", "Reste à faire"), ("prochain_pas", "Prochain pas"))
@@ -201,22 +205,75 @@ def _bornes_bloc(texte: str) -> tuple[int, int] | None:
     return (debuts[-1].start(), fin.start() + len(FIN)) if fin else None
 
 
-def bornes_notes(texte: str) -> tuple[int, int] | None:
-    """Bornes du bloc des notes (même règle que le bloc fiche : dernier début seul sur sa ligne)."""
-    debuts = list(re.finditer(rf"^{re.escape(NOTES_DEBUT)}\r?$", texte, re.M))
+def _bornes_geres(texte: str, debut: str, fin_marque: str) -> tuple[int, int] | None:
+    """Bornes d'un bloc géré (même règle que le bloc fiche : dernier début seul sur sa ligne)."""
+    debuts = list(re.finditer(rf"^{re.escape(debut)}\r?$", texte, re.M))
     if not debuts:
         return None
-    fin = re.compile(rf"^{re.escape(NOTES_FIN)}\r?$", re.M).search(texte, debuts[-1].end())
-    return (debuts[-1].start(), fin.start() + len(NOTES_FIN)) if fin else None
+    fin = re.compile(rf"^{re.escape(fin_marque)}\r?$", re.M).search(texte, debuts[-1].end())
+    return (debuts[-1].start(), fin.start() + len(fin_marque)) if fin else None
+
+
+def bornes_notes(texte: str) -> tuple[int, int] | None:
+    return _bornes_geres(texte, NOTES_DEBUT, NOTES_FIN)
+
+
+def bornes_lignes(texte: str) -> tuple[int, int] | None:
+    return _bornes_geres(texte, LIGNES_DEBUT, LIGNES_FIN)
+
+
+# Une ligne : `- [x] texte · AAAA-MM-JJ · Moi|IA[ · lien]` ; le texte peut contenir « · » (lecture ancrée à droite).
+_LIGNE = re.compile(r"^- \[([ xX])\] (.*?) · (\d{4}-\d{2}-\d{2}) · (Moi|IA)(?: · (.+))?$")
+
+
+def lire_lignes(texte: str) -> list[dict]:
+    if not (b := bornes_lignes(texte)):
+        return []
+    sortie = []
+    for brut in texte[b[0]:b[1]].split("\n"):
+        if m := _LIGNE.match(brut.rstrip("\r")):
+            sortie.append({"fait": m.group(1) != " ", "texte": m.group(2).strip(), "date": m.group(3),
+                           "auteur": m.group(4).lower(), "lien": (m.group(5) or "").strip()})
+    return sortie
+
+
+def rendre_lignes(lignes: list[dict], eol: str = "\n") -> str:
+    corps = [f"- [{'x' if x['fait'] else ' '}] {_une_ligne(x['texte'])} · {x['date']} · "
+             f"{'IA' if x['auteur'] == 'ia' else 'Moi'}" + (f" · {_une_ligne(x['lien'])}" if x.get("lien") else "")
+             for x in lignes]
+    return eol.join([LIGNES_DEBUT, "## Lignes", *corps, LIGNES_FIN])
+
+
+def ecrire_lignes(texte: str, lignes: list[dict]) -> str:
+    """Remplace le bloc des lignes, ou l'insère avant le bloc fiche (sinon en fin de fichier) ; le reste
+    est restitué tel quel (INV-VAULT-1). Liste vide : le bloc disparaît."""
+    eol = fin_de_ligne(texte)
+    if b := bornes_lignes(texte):
+        if not lignes:
+            avant, apres = texte[:b[0]], texte[b[1]:]
+            apres = apres[2 * len(eol):] if apres.startswith(eol * 2) else apres[len(eol):] if apres.startswith(eol) else apres
+            if not apres and avant.endswith(eol * 2):  # le bloc fermait le fichier : sa ligne vide d'appui part avec lui
+                avant = avant[:-len(eol)]
+            return avant + apres
+        return texte[:b[0]] + rendre_lignes(lignes, eol) + texte[b[1]:]
+    if not lignes:
+        return texte
+    bloc = rendre_lignes(lignes, eol)
+    if fb := _bornes_bloc(texte):
+        return texte[:fb[0]] + bloc + eol + eol + texte[fb[0]:]
+    if texte and not texte.endswith("\n"):
+        texte += eol
+    return texte + eol + bloc + eol
 
 
 def fiche_vide() -> dict:
     return {"fait": "", "resultat": "", "essai": "", "situation": "", "reste": "",
-            "prochain_pas": "", "sous_taches": []}
+            "prochain_pas": "", "sous_taches": [], "lignes": []}
 
 
 def lire_fiche(texte: str) -> dict:
     fiche = fiche_vide()
+    fiche["lignes"] = lire_lignes(texte)
     bornes = _bornes_bloc(texte)
     if not bornes:
         return fiche
@@ -281,7 +338,7 @@ def ajouter_a_section(texte: str, titre: str, ligne: str) -> str:
 
 def corps_sans_fiche(texte: str) -> str:
     corps = decouper(texte)[3]
-    for bornes_de in (_bornes_bloc, bornes_notes):  # les notes s'affichent dans leur panneau
+    for bornes_de in (_bornes_bloc, bornes_notes, bornes_lignes):  # les notes s'affichent dans leur panneau
         if bornes := bornes_de(corps):
             corps = corps[:bornes[0]] + corps[bornes[1]:]
     return corps.strip()

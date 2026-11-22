@@ -17,6 +17,7 @@ from pathlib import Path
 from .config_compactage import ConfigCompactage  # noqa: F401  (réexport)
 from .config_distant import ConfigDistant, ConfigExecuteurs  # noqa: F401  (réexport)
 from .apprendre import ConfigApprendre
+from .config_rangement import ConfigRangement
 from .consigne_tri import TRI
 from .etoile import ConfigEtoile
 
@@ -396,6 +397,7 @@ class Config:
     economie: ConfigEconomie = field(default_factory=ConfigEconomie)
     compactage: ConfigCompactage = field(default_factory=ConfigCompactage)
     apprendre: ConfigApprendre = field(default_factory=ConfigApprendre)
+    rangement: ConfigRangement = field(default_factory=ConfigRangement)
     moteurs_par_role: dict[str, ConfigRole] = field(default_factory=dict)
     telegram: ConfigTelegram = field(default_factory=ConfigTelegram)
     credits: dict[str, list[str]] = field(default_factory=lambda: {k: list(v) for k, v in CREDITS_DEFAUT.items()})
@@ -476,6 +478,7 @@ def charger(chemin: Path | str | None = None) -> Config:
         economie=ConfigEconomie(**brut.get("economie", {})),
         compactage=ConfigCompactage(**brut.get("compactage", {})),
         apprendre=ConfigApprendre(**brut.get("apprendre", {})),
+        rangement=ConfigRangement(**brut.get("rangement", {})),
         moteurs_par_role=_roles(brut.get("moteurs_par_role", {})),
         credits=_credits(brut.get("credits", {})),
         telegram=ConfigTelegram(**brut.get("telegram", {})),

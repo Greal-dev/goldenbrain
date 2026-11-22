@@ -85,7 +85,7 @@ def test_application_installable_sans_cache_des_donnees(navigateur, serveur):
     ctx, page = _telephone(navigateur)
     try:
         man = page.request.get(serveur.url + "/manifest.json").json()
-        assert man["display"] == "standalone" and man["start_url"] == "./"
+        assert man["display"] == "standalone" and man["start_url"] == "./#compagnon"
         for icone in man["icons"]:
             assert page.request.get(serveur.url + "/" + icone["src"]).ok
         page.goto(serveur.url + "/")

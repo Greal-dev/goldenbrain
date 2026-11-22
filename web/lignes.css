@@ -1,0 +1,18 @@
+/* Lignes de tâche, nature, rangement (INV-LIGNES-1, INV-NATURE-1, INV-PLAFOND-1). Couleurs : variables du thème (clair et sombre). */
+.lignes { margin: 8px 0; }
+.lignes h3 { display: flex; gap: 8px; align-items: baseline; }
+.lignes-liste { list-style: none; margin: 4px 0; padding: 0; }
+.lignes-liste li { display: flex; flex-wrap: wrap; gap: 6px 8px; align-items: center; padding: 3px 0; border-bottom: 1px solid var(--bord); }
+.lignes-liste li.fait .ligne-texte { text-decoration: line-through; color: var(--texte-2); }
+.ligne-texte { flex: 1 1 14em; min-width: 0; overflow-wrap: anywhere; }
+.ligne-meta, .ligne-lien { color: var(--texte-2); font-size: .85em; }
+.ligne-ajout { display: flex; gap: 6px; margin-top: 6px; }
+.ligne-saisie { flex: 1; min-width: 0; }
+.nature { display: inline-block; padding: 0 5px; border-radius: var(--r-pastille); border: 1px solid var(--bord-fort); color: var(--texte-2); font-size: .72em; line-height: 1.5; }
+.nat-developpement { border-color: var(--accent); color: var(--accent-texte); background: var(--accent-fond); }
+.nat-operation { border-color: var(--ok); }
+.nat-pilotage { border-color: var(--c-attente); }
+.compte-lignes { color: var(--texte-2); font-size: .75em; white-space: nowrap; }
+.rg-rangement { display: grid; gap: 8px; }
+.rg-rangement .rg-ligne { display: flex; gap: 8px; align-items: center; }
+.rg-rangement input[type=number] { width: 5em; }

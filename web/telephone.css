@@ -53,6 +53,11 @@
   .d-meta select, .d-meta input { max-width: 100%; }
   .cl-tete > :nth-child(n+3) { display: none; }
   .decisions { padding: 10px 12px; }
+  /* Décisions en pile verticale : titre sur toute la largeur, boutons à hauteur de pouce, motif de rang discret. */
+  .dc-tete { flex-wrap: wrap; }
+  .dc-titre { flex: 1 1 100%; order: 5; text-align: left; overflow-wrap: anywhere; }
+  .dc-motif { display: none; }
+  .dc-actions .btn { flex: 1 1 40%; min-height: 44px; }
   .d-defile { padding: 10px 12px 14px; }
   .composer { padding: 8px 12px calc(8px + env(safe-area-inset-bottom)); }
   .composer .rappel { max-width: 34vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

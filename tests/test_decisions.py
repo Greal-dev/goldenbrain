@@ -148,3 +148,28 @@ def test_proposition_tache_ou_ticket_sans_motif_refusee_et_motif_devient_descrip
     monde.trancher(p["n"], True)
     neuve = next(t for t in vault.index()[0].values() if t.titre == "Nouvelle")
     assert "Documenter le flux de reprise" in neuve.chemin.read_text("utf-8")
+
+
+def test_decision_repondue_reste_affichee_tant_que_le_tour_n_a_pas_demarre(monde):
+    """Symptôme (22/11) : la réponse est envoyée, le tour attend (verrou, poste, file) ; la tâche reste au statut
+    de retour et la décision continue de s'afficher. Elle doit quitter la liste dès la réponse."""
+    import asyncio
+
+    async def scenario():
+        bloc = asyncio.Event()
+
+        async def attente(_ident):  # le tour ne démarre pas : verrou tenu par un autre
+            await bloc.wait()
+        monde._attendre_verrou = attente
+        assert "q-comm" in par_tache(decisions.rassembler(monde))
+        monde.soumettre("q-comm", "Option A", humain=True)
+        await asyncio.sleep(0.05)
+        assert monde.vault.tache("q-comm").statut == "retour-humain"  # le tour n'a rien levé
+        res = decisions.rassembler(monde)
+        assert "q-comm" not in par_tache(res) and decisions.compter(monde) == res["total"] == 5
+        assert [r["tache"] for r in res["reprises"]] == ["q-comm"]  # mention discrète : « l'agent reprend »
+        assert "q-pas" in par_tache(res)  # les autres décisions restent
+        bloc.set()
+        await monde.arreter("q-comm")
+
+    asyncio.run(scenario())

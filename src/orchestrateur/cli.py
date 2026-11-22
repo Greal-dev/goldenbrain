@@ -28,7 +28,7 @@ import urllib.error
 import urllib.parse
 import urllib.request
 
-from . import cli_chaines, cli_reflexes
+from . import cli_chaines, cli_lignes, cli_reflexes
 
 
 class ErreurCli(Exception):
@@ -85,11 +85,11 @@ def rendre_proches(corps) -> str:
     """INV-RAPPROCHEMENT-1 : liste des tâches proches d'un refus 409, et le geste à faire."""
     cands = corps.get("candidates") if isinstance(corps, dict) else None
     if not cands:
-        return ""
+        return cli_lignes.rendre_rangement(corps)  # INV-PLAFOND-1 : parent plein ou nature mélangée
     lignes = [f"\n- {c['id']} [{c.get('statut') or '?'}] {c['titre']} ({' > '.join(c['fil_ariane'])})"
               f" — proximité {c['score']}" + (" — FORTE" if c["forte"] else "") for c in cands]
-    return ("".join(lignes) + "\nComplète la tâche trouvée : orch dire <id> \"<ton complément>\" ; "
-            "ne crée une nouvelle tâche (--nouvelle) que si c'est vraiment un autre sujet.")
+    return ("".join(lignes) + "\nComplète la tâche trouvée : orch dire <id> \"<ton complément>\", ou, si c'est un travail court, "
+            "orch ligne <id> \"<ce qui est fait>\" ; ne crée une nouvelle tâche (--nouvelle) que si c'est vraiment un autre sujet.")
 
 
 def rendre_arbre(noeuds: list[dict], niveau: int = 0) -> list[str]:
@@ -255,7 +255,7 @@ def main(argv: list[str] | None = None) -> int:
     d.add_argument("id")
     d.add_argument("message")
     sous.add_parser("chercher", help="tâches dont le titre, la fiche ou la place contiennent tous les mots").add_argument("mots")
-    for m in (cli_reflexes, cli_chaines): m.ajouter(sous)  # reflexes, tracer, chaine : INV-REFLEXES-1, INV-TRACE-1, INV-CHAINE-3
+    for m in (cli_reflexes, cli_chaines, cli_lignes): m.ajouter(sous)  # reflexes, tracer, chaine, ligne : INV-REFLEXES-1, INV-TRACE-1, INV-CHAINE-3
     de = sous.add_parser("deleguer", help="confier un travail à une tâche enfant, lancée par GoldenBrain")
     de.add_argument("titre")
     de.add_argument("brief", help="objectif, contexte utile, livrable attendu")
@@ -379,7 +379,7 @@ def main(argv: list[str] | None = None) -> int:
     except ValueError:
         sauts = 1
     try:
-        if m := next((m for m in (cli_reflexes, cli_chaines) if a.commande in m.COMMANDES), None):
+        if m := next((m for m in (cli_reflexes, cli_chaines, cli_lignes) if a.commande in m.COMMANDES), None):
             sortie = m.executer(a, appeler, _q, source)
         elif a.commande == "arbre":
             sortie = rendre_arbre(appeler("GET", "/arbre")["noeuds"]) or ["(aucune tâche ouverte)"]

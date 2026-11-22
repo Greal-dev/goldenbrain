@@ -19,6 +19,7 @@ from . import api_travaux, decisions
 NOEUDS_MAX = 800            # au-delà, l'arbre est tronqué (et `tronque` le dit)
 DECISIONS_MAX = 50
 QUESTION_MAX = 160
+RESUME_MAX = 140   # résumé du résultat d'une tâche à valider : seulement si [distant] resume (INV-COMPAGNON-1)
 GENRES = ("reponse", "validation", "echeance")   # les décisions d'une tâche ; ni agents ni préconisations
 CHAMPS_NOEUD = ("id", "type", "titre", "statut", "etat_execution", "a_valider", "echeance", "priorite", "retard", "ouvertes")
 TTL_S = 7 * 86400           # durée de vie du stockage local, comptée depuis `genere`
@@ -45,11 +46,16 @@ def _arbre(moteur) -> tuple[list[dict], bool]:
     return plat, tronque
 
 
-def _decisions(moteur) -> list[dict]:
+def _decisions(moteur, resume: bool = False) -> list[dict]:
     lignes = [lg for lg in decisions.rassembler(moteur)["decisions"] if lg["genre"] in GENRES][:DECISIONS_MAX]
-    return [{"id": lg["id"], "genre": lg["genre"], "libelle": lg["libelle"], "tache": lg["tache"], "titre": lg["titre"],
-             "projet": lg["projet"], "question": _court(lg["question"], QUESTION_MAX),
-             "echeance": lg["echeance"], "retard": lg["retard"]} for lg in lignes]
+    sortie = [{"id": lg["id"], "genre": lg["genre"], "libelle": lg["libelle"], "tache": lg["tache"], "titre": lg["titre"],
+               "projet": lg["projet"], "question": _court(lg["question"], QUESTION_MAX),
+               "echeance": lg["echeance"], "retard": lg["retard"]} for lg in lignes]
+    if resume:   # champ absent (et non vide) quand le réglage est éteint : rien ne sort du poste
+        for s, lg in zip(sortie, lignes):
+            if lg["genre"] == "validation" and lg.get("fait"):
+                s["resume"] = _court(lg["fait"], RESUME_MAX)
+    return sortie
 
 
 def _travaux(moteur) -> dict:
@@ -59,10 +65,10 @@ def _travaux(moteur) -> dict:
             "en_file": len(t["file"])}
 
 
-def instantane(moteur) -> dict:
+def instantane(moteur, resume: bool = False) -> dict:
     """Le contenu de l'instantané, sans horodatage (l'empreinte n'en dépend donc pas)."""
     noeuds, tronque = _arbre(moteur)
-    return {"arbre": noeuds, "tronque": tronque, "decisions": _decisions(moteur), "travaux": _travaux(moteur)}
+    return {"arbre": noeuds, "tronque": tronque, "decisions": _decisions(moteur, resume), "travaux": _travaux(moteur)}
 
 
 def empreinte(contenu: dict) -> str:

@@ -100,6 +100,32 @@ def _retard(vault, t: Tache) -> bool:
     return temps.en_retard(vault, t)
 
 
+def _repondue(moteur, k: str) -> bool:
+    """Réponse envoyée : un tour attend ou court sur la tâche (INV-DECISIONS-2). Le statut de retour ne se lève qu'au
+    départ du tour (verrou, poste, file peuvent le retarder) : la décision ne doit pas rester affichée entre-temps."""
+    return moteur.etat_de(k) in ("en_cours", "en_file")
+
+
+def noter(moteur, k: str) -> None:
+    """Appelé à chaque envoi à une tâche (`Moteur.soumettre`) : si elle attendait une décision, on s'en souvient le
+    temps du tour pour la mention « l'agent reprend » (INV-DECISIONS-2)."""
+    vault = moteur.vault
+    t = vault.tache(k)
+    if t.statut == vault.retour or vault.a_valider(t):
+        if not hasattr(moteur, "repondues"):
+            moteur.repondues = set()
+        moteur.repondues.add(k)
+
+
+def reprises(moteur) -> list[dict]:
+    """Décisions auxquelles on a répondu, que l'agent reprend (tour en file ou en cours) : mention discrète."""
+    taches = moteur.vault.index()[0]
+    vives = {k for k in getattr(moteur, "repondues", set()) if k in taches and _repondue(moteur, k)}
+    if hasattr(moteur, "repondues"):
+        moteur.repondues = vives
+    return [{"tache": k, "titre": taches[k].titre} for k in sorted(vives)]
+
+
 def lignes(moteur) -> list[dict]:
     """Une ligne par décision, sans la question ni le rang (assez pour compter)."""
     vault = moteur.vault
@@ -109,6 +135,8 @@ def lignes(moteur) -> list[dict]:
     for k, t in taches.items():
         genre = ("reponse" if t.statut == vault.retour else "validation" if vault.a_valider(t)
                  else "echeance" if _retard(vault, t) else "")
+        if genre in ("reponse", "validation") and _repondue(moteur, k):
+            continue  # INV-DECISIONS-2 : l'agent reprend ; seule une nouvelle entrée la fera revenir
         if genre:
             prises.add(k)
             sortie.append(_ligne_tache(moteur, k, t, genre, parents))
@@ -204,7 +232,7 @@ def rassembler(moteur) -> dict:
         toutes.append(lg)
     for lg in toutes:
         lg.pop("_age")
-    return {"decisions": toutes, "total": len(toutes), "clos_auto": moteur.validation_auto.clos_recents()}
+    return {"decisions": toutes, "total": len(toutes), "reprises": reprises(moteur), "clos_auto": moteur.validation_auto.clos_recents()}
 
 
 def valider_lot(moteur, taches: list[str]) -> dict:

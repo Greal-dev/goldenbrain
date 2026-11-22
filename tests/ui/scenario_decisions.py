@@ -107,3 +107,38 @@ def test_page_decisions_question_decision_sur_place_et_lot(page, serveur):
         assert page.request.get(serveur.url + f"/api/taches/{t}").json()["statut"] == "cloture"
     assert p1["n"]
     assert not page.erreurs, page.erreurs
+
+
+def test_decision_repondue_disparait_et_ne_revient_pas_pendant_le_tour_de_l_agent(page, serveur):
+    """Symptôme (22/11) : après la réponse, la décision restait affichée jusqu'à la conclusion de l'agent
+    (INV-DECISIONS-2). Elle quitte la liste (mention « l'agent reprend ») et ne revient qu'en nouvelle entrée."""
+    fichier = "Projets/C1-Decis/taches/dc-r.md"
+    univers.ecrire(serveur.vault, "Projets/C1-Decis/contexte.md",
+                   "---\ntype: contexte\ncasquette: C1-Pro\nnom: Decis\n---\n")
+    univers.ecrire(serveur.vault, fichier, univers.tache("Reprise Decis", statut="retour-humain", extra='commentaire: "A ou B ?"\n'))
+    page.goto(page.url_serveur + "/#decisions")
+    c = carte(page, "Reprise Decis")
+    c.locator("textarea").fill("Option A [lent 20]")
+    c.get_by_role("button", name="Répondre").click()
+    expect(carte(page, "Reprise Decis")).to_have_count(0, timeout=5000)
+    expect(page.locator("[data-reprises]")).to_contain_text("Reprise Decis")
+    for _ in range(100):  # le tour court ; le fichier retrouve le statut de retour (écriture tardive) : toujours masquée
+        if page.request.get(serveur.url + "/api/taches/dc-r").json()["etat_execution"] == "en_cours":
+            break
+        page.wait_for_timeout(100)
+    univers.ecrire(serveur.vault, fichier, univers.tache("Reprise Decis", statut="retour-humain", extra='commentaire: "A ou B ?"\n'))
+    page.reload()
+    page.goto(page.url_serveur + "/#decisions")
+    expect(page.locator(".decisions")).to_contain_text("Décisions", timeout=5000)
+    expect(carte(page, "Reprise Decis")).to_have_count(0)
+    # L'agent s'arrête puis conclut à une nouvelle question : nouvelle entrée, nouvelle question.
+    page.request.post(serveur.url + "/api/taches/dc-r/arret", headers=H)
+    for _ in range(100):
+        if page.request.get(serveur.url + "/api/taches/dc-r").json()["etat_execution"] != "en_cours":
+            break
+        page.wait_for_timeout(100)
+    univers.ecrire(serveur.vault, fichier, univers.tache("Reprise Decis", statut="retour-humain", extra='commentaire: "Et pour B ?"\n'))
+    page.reload()
+    page.goto(page.url_serveur + "/#decisions")
+    expect(carte(page, "Reprise Decis")).to_contain_text("Et pour B ?", timeout=5000)
+    assert not page.erreurs, page.erreurs

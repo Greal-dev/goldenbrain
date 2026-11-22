@@ -6,10 +6,11 @@ import { t, tn, LOCALE } from './langues.js';
 import { h, $, remplacer, pourMoi, groupeStatut, RETOUR } from './dom.js';
 import { S, on, emit, cleNoeud, parcourir } from './store.js';
 import { rangPriorite, libellePriorite, ecartJours } from './temps.js';
+import { NATURES, libelleNature } from './lignes.js';
 import { badgeRoutine, libelleRoutine } from './routines.js';
 
 const CLE = 'orch.filtres';
-const VIDE = { statuts: [], priorite: '', echeance: '', portee: '', harnais: '', executant: '', ia: false, routines: false, amoi: false, groupe: '', tri: 'arbre' };
+const VIDE = { statuts: [], priorite: '', echeance: '', portee: '', harnais: '', executant: '', nature: '', ia: false, routines: false, amoi: false, groupe: '', tri: 'arbre' };
 let F = { ...VIDE, ...(() => { try { return JSON.parse(localStorage.getItem(CLE) || '{}'); } catch { return {}; } })() };
 F.statuts = Array.isArray(F.statuts) ? F.statuts : [];
 S.filtreAMoi = !!F.amoi;
@@ -29,7 +30,7 @@ const GROUPES = [['', t('filtres.g_arbre')], ['statut', t('filtres.g_statut')], 
 const TRIS = [['arbre', t('filtres.tri_arbre')], ['priorite', t('filtres.tri_priorite')]];
 
 const semaine = (n) => { if (!n.echeance) return false; const e = ecartJours(n.echeance); return e >= 0 && e <= 7; };
-const filtresActifs = () => F.statuts.length + ['priorite', 'echeance', 'portee', 'harnais', 'executant'].filter((k) => F[k]).length + (F.ia ? 1 : 0) + (F.routines ? 1 : 0) + (S.filtreAMoi ? 1 : 0);
+const filtresActifs = () => F.statuts.length + ['priorite', 'echeance', 'portee', 'harnais', 'executant', 'nature'].filter((k) => F[k]).length + (F.ia ? 1 : 0) + (F.routines ? 1 : 0) + (S.filtreAMoi ? 1 : 0);
 export const actif = () => filtresActifs() > 0 || !!F.groupe || F.tri !== 'arbre';
 
 function passe(n, chem) {
@@ -41,6 +42,7 @@ function passe(n, chem) {
   if (F.portee && !chem.includes(F.portee)) return false;
   if (F.harnais && n.harnais !== F.harnais) return false;
   if (F.executant && (n.executant || 'ia') !== F.executant) return false; // INV-EXECUTANT-1
+  if (F.nature && n.genre !== F.nature) return false; // INV-NATURE-1
   if (F.ia && !(S.etat.occupees || {})[n.id]) return false;
   if (F.routines && !n.routine) return false; // INV-ROUTINE-5
   return true;
@@ -129,6 +131,7 @@ export function dessinerBarre() {
       liste('f-portee', t('filtres.portee'), portees, F.portee, (v) => changer({ portee: v })),
       liste('f-harnais', t('filtres.assistant'), harnais, F.harnais, (v) => changer({ harnais: v })),
       liste('f-executant', t('filtres.executant'), [['', t('filtres.toutes')], ['humain', t('filtres.par_moi')], ['ia', t('filtres.par_ia')]], F.executant, (v) => changer({ executant: v })),
+      liste('f-nature', t('lignes.nature'), [['', t('filtres.toutes')], ...NATURES.map((g) => [g, libelleNature(g)])], F.nature, (v) => changer({ nature: v })),
       liste('f-groupe', t('filtres.grouper'), GROUPES, F.groupe, (v) => changer({ groupe: v })),
       liste('f-tri', t('filtres.trier'), TRIS, F.tri, (v) => changer({ tri: v }))),
     h('div', { class: 'f-pied' },

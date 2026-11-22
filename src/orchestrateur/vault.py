@@ -20,7 +20,7 @@ import unicodedata
 from dataclasses import dataclass, field, replace
 from pathlib import Path
 
-from . import arbre, fiches, langues
+from . import arbre, fiches, langues, rangement
 from .config import STATUTS_FIXES, ConfigVault
 
 log = logging.getLogger(__name__)
@@ -296,6 +296,7 @@ class Vault:
         return {"id": t.id, "chemin": str(t.chemin), "titre": t.titre, "conteneur": t.conteneur,
                 "fil_ariane": self.fil_ariane(ident), "fil": arbre.fil(self, ident),
                 "frontmatter": t.fm, "statut": t.statut,
+                "genre": rangement.nature_de(t), "genre_pose": bool(rangement.valide(t.fm.get("genre"))),  # INV-NATURE-1
                 "statut_verrouille": t.verrouille, "harnais": str(t.fm.get("harnais") or ""),
                 "session": str(t.fm.get("session") or ""), "fiche": fiches.lire_fiche(texte),
                 "corps": fiches.corps_sans_fiche(texte), "enfants": self.enfants(ident),

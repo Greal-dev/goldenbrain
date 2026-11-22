@@ -14,6 +14,7 @@ import { PRIORITES } from './temps.js';
 import { dessinerAlertes } from './vigie.js';
 import { ouvrirGuide } from './guide.js';
 import { galerieModeles } from './modeles.js';
+import { dialogueRangement } from './lignes.js';
 
 function pastilleTour(x) {
   // INV-VIGIE-1 : phrase d'activité et fraîcheur ; un silence prolongé se dit à la place.
@@ -175,8 +176,8 @@ async function nouvelleTache() {
     if (v.priorite) corps.priorite = v.priorite;
     let nt;
     try { nt = await post('/taches', corps); } catch (e) {
-      if (e.statut !== 409 || !e.corps?.candidates) throw e;
-      nt = await confirmerDoublon(corps, e.corps.candidates);
+      if (e.statut !== 409 || !(e.corps?.candidates || e.corps?.rangement)) throw e;
+      nt = e.corps.candidates ? await confirmerDoublon(corps, e.corps.candidates) : await dialogueRangement(corps, e.corps.rangement);
       if (!nt) return;
     }
     emit('recharger');
@@ -199,7 +200,11 @@ async function confirmerDoublon(corps, candidates) {
     corps: h('ul', { class: 'props proches', 'data-id': 'doublon' }, candidates.map((c) => carteProche(c, completer))),
   });
   if (complete) return { id: complete };
-  return ok ? post('/taches', { ...corps, forcer: true }) : null;
+  if (!ok) return null;
+  try { return await post('/taches', { ...corps, forcer: true }); } catch (e) {
+    if (e.statut !== 409 || !e.corps?.rangement) throw e;
+    return dialogueRangement(corps, e.corps.rangement);
+  }
 }
 
 const RYTHMES = { 'a-la-demande': t('bandeau.rythme_demande'), quotidien: t('bandeau.rythme_quotidien'), hebdomadaire: t('bandeau.rythme_hebdo') };

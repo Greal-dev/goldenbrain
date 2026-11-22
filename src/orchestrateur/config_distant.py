@@ -44,12 +44,14 @@ class ConfigDistant:
     `gestes` : arrêt, redémarrage, suppression depuis un appareil — `interdire` ou `confirmer` ;
     `nom_hote` : nom accepté en plus de l'adresse (celui du certificat Tailscale, `machine.reseau.ts.net`) ;
     `certificat` / `cle` : fichiers de `tailscale cert` ; posés, l'adresse distante sert en HTTPS ;
+    `resume` : autorise la sortie du poste d'un résumé court (140 caractères) du résultat d'une tâche à valider (désactivé par défaut) ;
     `hors_ligne` : autorise le stockage local de l'instantané du compagnon (désactivé par défaut)."""
     appareils: bool = False
     gestes: str = "interdire"
     nom_hote: str = ""
     certificat: str = ""
     cle: str = ""
+    resume: bool = False         # le compagnon affiche un résumé court du résultat des tâches à valider (INV-COMPAGNON-1)
     hors_ligne: bool = False     # le compagnon peut garder un instantané léger sur l'appareil (INV-PWA-2)
 
     def __post_init__(self):

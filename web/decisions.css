@@ -1,5 +1,7 @@
 /* Page « Décisions » : une carte par décision, groupes de projet repliables. */
 .decisions { max-width: 980px; }
+/* INV-DECISIONS-2 : mention discrète d'une réponse envoyée, l'agent reprend */
+.dc-reprises { margin: -8px 0 10px; font-size: 0.85em; color: var(--texte-2); }
 .dc-barre { display: flex; gap: 16px; align-items: center; margin: 0 0 12px; }
 .dc-groupe { margin: 0 0 14px; }
 .dc-groupe > summary { cursor: pointer; font-weight: 600; margin-bottom: 6px; }

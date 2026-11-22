@@ -16,7 +16,7 @@ import json
 import logging
 from collections.abc import Callable
 
-from . import fiches, langues
+from . import fiches, langues, rangement
 from .config import JOURS
 from .vault import Invalide, NonTrouve
 
@@ -102,8 +102,18 @@ class Jardinier:
     def _message(self) -> str:
         base = (self.cfg.message.strip() or self.cfg.titre).replace("{plafond}", str(self.cfg.plafond))
         recentes = self.recentes()
-        return base + (f"\n\nTâches récentes ({self.cfg.recentes_jours} jours) :\n" + "\n".join(recentes)
-                       if recentes else "")
+        return (base + (f"\n\nTâches récentes ({self.cfg.recentes_jours} jours) :\n" + "\n".join(recentes)
+                        if recentes else "") + self._excedents())
+
+    def _excedents(self) -> str:
+        """Parents au-dessus du plafond (INV-PLAFOND-1) : le jardinier propose d'y ranger, sans rien déplacer."""
+        cfg = self.moteur.config.rangement
+        trop = rangement.excedents(self.moteur.vault, cfg)
+        if not trop:
+            return ""
+        lignes = [f"- {e['id']} — {e['titre']} : {e['ouvertes']} ouvertes"
+                  + (f" ({', '.join(e['natures'])})" if e["natures"] else "") for e in trop]
+        return "\n\n" + langues.t("serveur.jardinage.excedents", plafond=cfg.plafond) + "\n" + "\n".join(lignes)
 
     def lancer(self) -> str:
         """Soumet une revue maintenant ; crée la tâche permanente si elle n'existe pas (plus)."""

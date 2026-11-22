@@ -19,7 +19,7 @@ from collections import defaultdict
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from . import executant, fiches, langues, temps
+from . import executant, fiches, langues, rangement, temps
 from . import vault as V
 
 log = logging.getLogger(__name__)
@@ -204,6 +204,8 @@ def rendre(vault, toutes: bool, etat) -> list[dict]:
                 "echec": str(t.fm.get("echec_tour") or ""), "ouvertes": n_ouv, "enfants": kids,
                 "situation": t.fiche.get("situation") or "",
                 "maj": str(t.fm.get("updated") or ""),
+                "genre": rangement.nature_de(t),  # INV-NATURE-1 : repère et filtre de l'arbre
+                "lignes": [sum(x["fait"] for x in t.fiche["lignes"]), len(t.fiche["lignes"])],  # INV-LIGNES-1
                 "harnais": str(t.fm.get("harnais") or ""),
                 "modele": str(t.fm.get("modele") or ""), "a_valider": vault.a_valider(t),
                 "executant": executant.de(t),  # INV-EXECUTANT-1 : pastille et filtre « Moi / IA »

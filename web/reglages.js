@@ -8,6 +8,7 @@
 // INV-REGLAGES-1 : un événement 'etat' ne redessine que les parties qui en dépendent (moteurs, version, résumés) ;
 //        la page entière ne se reconstruit qu'à l'ouverture ou au changement de mode, et garde alors sections ouvertes,
 //        recherche, champ en cours de saisie et focus.
+import { sectionRangement } from './lignes.js';
 import { h, remplacer } from './dom.js';
 import { S, on, erreur } from './store.js';
 import { FAMILLES, changerInterface, simple, ouvert } from './interface.js';
@@ -79,6 +80,7 @@ const GROUPES = [
       ['compactage', t('reglages.compactage'), t('reglages.compactage_aide'), sectionCompactage()[1]],
       ['apprendre', t('apprendre.titre'), null, sectionApprendre()[1]],
       ['reflexes', t('reflexes.titre'), t('reflexes.aide'), sectionReflexes()],
+      ['rangement', t('lignes.rangement'), t('lignes.rangement_aide'), sectionRangement()],
       ['moteurs', t('reglages.moteurs'), t('reglages.moteurs_aide'), h('div', { 'data-id': 'moteurs' }, moteursParRole())]] },
   { id: 'validation', titre: t('reglages.validation'), aide: t('reglages.validation_aide'),
     resume: () => (POLITIQUES.find(([v]) => v === (S.interface?.propositions ?? 'montrer')) || POLITIQUES[0])[1],
@@ -103,7 +105,7 @@ const GROUPES = [
       ['accueil', t('accueil.titre'), null, h('div', null, ...sectionAccueil().slice(1))]] },
 ];
 // Sous-section → groupe, pour l'ancre #reglages/<sous-section>.
-const ANCRES = { mode: 'affichage', theme: 'affichage', familles: 'fonctions', simultanes: 'agents', economie: 'agents', compactage: 'agents', apprendre: 'agents', reflexes: 'agents',
+const ANCRES = { mode: 'affichage', theme: 'affichage', familles: 'fonctions', simultanes: 'agents', economie: 'agents', compactage: 'agents', apprendre: 'agents', reflexes: 'agents', rangement: 'agents',
   moteurs: 'agents', propositions: 'validation', telegram: 'connexions', appareils: 'connexions', executeurs: 'connexions',
   installation: 'installation', langue: 'affichage', version: 'installation', etoile: 'affichage', evitable: 'validation', integration: 'validation',
   'maj-auto': 'installation', signaler: 'installation', accueil: 'installation', 'premiers-pas': 'installation' };

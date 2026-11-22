@@ -6,7 +6,8 @@
 import { h, remplacer, pastille } from './dom.js';
 import { post } from './api.js';
 import { formulaire } from './dialogue.js';
-import { ouvrir, ouvrirVue, on, erreur } from './store.js';
+import { estEpingle, basculerEpingle, epingles } from './epingles.js';
+import { ouvrir, ouvrirVue, on } from './store.js';
 import { libelleEcheance } from './temps.js';
 import { t, tn } from './langues.js';
 
@@ -41,7 +42,7 @@ async function charger() {
     else if (r.ok) {
       const d = await r.json();
       etat = { donnees: d, enligne: true, verifie: new Date() };
-      if (d.hors_ligne && voulu()) await ecrireLocal(d); else await effacerLocal(); // le serveur retire la permission : rien ne reste
+      if (d.hors_ligne && voulu()) await ecrireLocal({ ...d, decisions: d.decisions.map(({ resume, ...x }) => x) }); else await effacerLocal(); // le serveur retire la permission : rien ne reste ; le résumé ne se garde jamais (INV-COMPAGNON-1)
     } else throw new Error(String(r.status));
   } catch {
     etat = { donnees: garde, enligne: false, verifie: garde ? new Date(garde.genere) : null };
@@ -49,7 +50,7 @@ async function charger() {
 }
 
 // --- affichage ---------------------------------------------------------------------------------
-const heureCourte = (d) => d.toLocaleString(undefined, { day: 'numeric', month: 'numeric', hour: '2-digit', minute: '2-digit' });
+const heureCourte = (d) => d.toLocaleString(document.documentElement.lang || undefined, { day: 'numeric', month: 'numeric', hour: '2-digit', minute: '2-digit' });
 
 function ouvrirTache(id) { if (etat.enligne) ouvrir(id); }
 
@@ -86,23 +87,33 @@ async function renvoyer(d) {
 function carteDecision(d) {
   const enCours = envoi === d.tache;
   const actions = d.genre === 'validation' && etat.enligne ? h('div', { class: 'co-actions' },
-    h('button', { type: 'button', class: 'btn primaire', disabled: !!envoi, 'aria-busy': enCours ? 'true' : null, onclick: () => valider(d) },
+    h('button', { type: 'button', class: 'btn primaire', disabled: !!envoi, 'aria-busy': enCours ? 'true' : null, 'aria-label': `${t('decisions.valider')} : ${d.titre}`, onclick: () => valider(d) },
       enCours ? t('compagnon.envoi') : t('decisions.valider')),
-    h('button', { type: 'button', class: 'btn', disabled: !!envoi, onclick: () => renvoyer(d) }, t('decisions.renvoyer'))) : null;
-  return h('li', null, h('button', { class: 'co-carte', type: 'button', disabled: !etat.enligne, onclick: () => ouvrirTache(d.tache) },
+    h('button', { type: 'button', class: 'btn', disabled: !!envoi, 'aria-label': `${t('decisions.renvoyer')} : ${d.titre}`, onclick: () => renvoyer(d) }, t('decisions.renvoyer'))) : null;
+  return h('li', { class: `co-decision ${d.genre}${d.retard ? ' retard' : ''}` }, h('button', { class: 'co-carte', type: 'button', disabled: !etat.enligne, onclick: () => ouvrirTache(d.tache) },
     h('span', { class: 'co-genre' }, d.libelle), h('span', { class: 'co-titre' }, d.titre),
     d.question ? h('span', { class: 'co-q' }, d.question) : null,
+    d.resume ? h('span', { class: 'co-q' }, d.resume) : null,
     h('span', { class: `co-meta${d.retard ? ' retard' : ''}` }, [d.projet, libelleEcheance(d.echeance, d.retard)].filter(Boolean).join(' · '))), actions);
 }
 
+function boutonEpingle(id) {
+  const pin = h('button', { class: 'btn-discret tr-pin', type: 'button', 'aria-pressed': String(estEpingle(id)), 'aria-label': t('travail.epingle'),
+    onclick: () => { pin.setAttribute('aria-pressed', String(basculerEpingle(id))); majCompteTravail(); } }, '★');
+  return pin;
+}
+const majCompteTravail = () => { const n = coque?.querySelector('.co-travail .n'); if (n) n.textContent = epingles().length; };
+
 function ligneNoeud(n) {
   const dossier = n.type !== 'tache';
-  return h('li', null, h('button', { class: 'co-ligne', type: 'button', disabled: !dossier && !etat.enligne,
+  const ligne = h('button', { class: 'co-ligne', type: 'button', disabled: !dossier && !etat.enligne,
     onclick: () => { if (dossier) { parent = `${n.type}:${n.id}`; dessiner(); } else ouvrirTache(n.id); } },
     dossier ? h('span', { class: 'co-dossier', 'aria-hidden': 'true' }, '▸') : pastille(n.statut),
     h('span', { class: 'co-titre' }, n.titre),
     n.a_valider ? h('span', { class: 'tag' }, t('compagnon.a_valider')) : null,
-    dossier && n.ouvertes ? h('span', { class: 'n' }, n.ouvertes) : h('span', { class: `co-meta${n.retard ? ' retard' : ''}` }, libelleEcheance(n.echeance, n.retard))));
+    dossier && n.ouvertes ? h('span', { class: 'n' }, n.ouvertes) : h('span', { class: `co-meta${n.retard ? ' retard' : ''}` }, libelleEcheance(n.echeance, n.retard)));
+  if (dossier) return h('li', null, ligne);
+  return h('li', { class: 'tr-ligne' }, ligne, boutonEpingle(n.id));
 }
 
 function fil(arbre) {
@@ -140,15 +151,18 @@ function dessiner() {
     h('button', { type: 'button', class: 'btn-discret', 'aria-label': t('compagnon.fermer'), onclick: () => { message = null; dessiner(); } }, '×')) : null;
   if (!d) return remplacer(coque, h('h2', { class: 'casc-titre' }, t('compagnon.titre')), etatLigne);
   remplacer(coque, h('h2', { class: 'casc-titre' }, t('compagnon.titre')), etatLigne, bandeau,
+    h('button', { type: 'button', class: 'btn co-travail', onclick: () => ouvrirVue('travail') }, t('travail.titre'), ' ', h('span', { class: 'n' }, epingles().length)),
     h('section', { class: 'co-section' }, h('h3', null, t('compagnon.a_decider'), ' ', h('span', { class: 'n' }, d.decisions.length)),
       d.decisions.length ? h('ul', { class: 'co-liste' }, d.decisions.map(carteDecision)) : h('p', { class: 'vide' }, t('compagnon.rien_a_decider')),
       enligne && d.decisions.length ? h('button', { type: 'button', class: 'btn', onclick: () => ouvrirVue('decisions') }, t('compagnon.tout_traiter')) : null),
     h('section', { class: 'co-section' }, h('h3', null, t('compagnon.en_cours'), ' ', h('span', { class: 'n' }, d.travaux.tours.length)),
-      d.travaux.tours.length ? h('ul', { class: 'co-liste' }, d.travaux.tours.map((x) => h('li', null, h('button', { class: 'co-ligne', type: 'button', disabled: !enligne, onclick: () => ouvrirTache(x.tache) },
-        h('span', { class: 'co-titre' }, x.titre), h('span', { class: 'co-meta' }, x.projet))))) : h('p', { class: 'vide' }, t('compagnon.rien_en_cours')),
+      d.travaux.tours.length ? h('ul', { class: 'co-liste' }, d.travaux.tours.map((x) => h('li', { class: 'tr-ligne' }, h('button', { class: 'co-ligne', type: 'button', disabled: !enligne, onclick: () => ouvrirTache(x.tache) },
+        h('span', { class: 'co-titre' }, x.titre), h('span', { class: 'co-meta' }, x.projet)), boutonEpingle(x.tache)))) : h('p', { class: 'vide' }, t('compagnon.rien_en_cours')),
       d.travaux.en_file ? h('p', { class: 'co-meta' }, tn('compagnon.en_file', d.travaux.en_file)) : null),
     sectionArbre(d.arbre), reglage());
 }
+
+export async function lireInstantane() { await charger(); return etat; }
 
 async function actualiser() {
   const v = ++version;

@@ -108,6 +108,7 @@ intervalle_s = 15
 # nom_hote = "poste.exemple.ts.net"
 # certificat = "/chemin/poste.exemple.ts.net.crt"
 # cle = "/chemin/poste.exemple.ts.net.key"
+# resume = false      # true : la carte d'une tâche à valider montre un résumé de 140 caractères de son résultat (il quitte le poste ; jamais gardé hors ligne)
 # hors_ligne = false   # true : le compagnon mobile garde 7 jours un instantané léger (titres, statuts, décisions)
 
 # Compactage automatique des conversations (page Réglages, INV-COMPACT-1) : seuil en % de la fenêtre
@@ -235,6 +236,13 @@ famille = "rapide"
 # Coût : explications = quelques lignes de plus par étape et une consigne plus longue, donc un peu plus de jetons.
 [apprendre]
 actif = false
+
+# Rangement de l'arbre : au plus `plafond` tâches ouvertes directement sous un même parent (tâche ou projet) ; au-delà,
+# la création propose de ranger (ligne d'une tâche, sous-groupe, regroupement). Les natures de tâches (développement,
+# opération, pilotage) ne se mélangent pas sous un parent quand `natures_separees` est vrai.
+[rangement]
+plafond = 10
+natures_separees = true
 
 [consigne]
 gabarit = """

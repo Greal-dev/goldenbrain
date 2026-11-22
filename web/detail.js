@@ -9,6 +9,7 @@ import { notesLiees } from './notes-liees.js';
 import { api, post } from './api.js';
 import { formulaire } from './dialogue.js';
 import { carteLiens } from './liens.js';
+import { carteLignes, selecteurNature, enLigne } from './lignes.js';
 import { carteRevues, solliciter } from './revues.js';
 import { chargerHarnais, selecteurMoteur, libelleMoteur } from './moteur.js';
 import { blocEconomie } from './economie.js';
@@ -45,6 +46,7 @@ function squelette() {
   r.tete = h('div', { class: 'd-tete' });
   r.vie = h('div', { class: 'd-vie' });
   r.fiche = h('section', { class: 'fiche' });
+  r.lignes = h('div', { class: 'liens f-lignes' });
   r.liens = h('div', { class: 'liens f-liens' });
   r.revues = h('div', { class: 'liens f-equipe' });
   r.corps = h('details', { class: 'corps' }, h('summary', null, t('detail.corps')), (r.corpsMd = h('div', { class: 'md' })));
@@ -56,7 +58,7 @@ function squelette() {
   });
   r.etapes = h('button', { class: 'btn petit btn-etapes', type: 'button', 'aria-pressed': String(etapesAffichees()), onclick: basculerEtapes,
     title: t('detail.etapes_titre') }, h('span', { class: 'sw', 'aria-hidden': 'true' }), t('detail.etapes'));
-  r.defile = h('div', { class: 'd-defile' }, r.fiche, r.liens, r.revues, r.corps, h('div', { class: 'conv-tete' }, (r.convTitre = h('h3', { class: 'conv-titre' }, t('detail.echanges'))), r.etapes), r.conv);
+  r.defile = h('div', { class: 'd-defile' }, r.fiche, r.lignes, r.liens, r.revues, r.corps, h('div', { class: 'conv-tete' }, (r.convTitre = h('h3', { class: 'conv-titre' }, t('detail.echanges'))), r.etapes), r.conv);
   r.defile.addEventListener('scroll', () => { colle = r.defile.scrollHeight - r.defile.scrollTop - r.defile.clientHeight < 48; r.bas.hidden = colle; });
   r.bas = h('button', { class: 'btn petit retour-bas', type: 'button', hidden: true, onclick: () => descendre(true) }, t('detail.direct'));
   r.ta = h('textarea', { rows: 2, 'aria-label': t('detail.message_agent'), placeholder: t('detail.message_placeholder') });
@@ -155,6 +157,8 @@ function dessinerTete() {
       editeurTemps(tk, appliquer),
       selecteurMoteur(tk.harnais || '', modeleDe(tk), changerMoteur),
       selecteurApprendre(tk, appliquer),  // INV-APPRENDRE-1
+      selecteurNature(tk, appliquer),  // INV-NATURE-1
+      tk.fil?.length > 1 ? b(t('lignes.en_ligne'), async () => { if (await enLigne(tk)) { emit('recharger'); rafraichir(); } }, { titre: t('lignes.en_ligne_titre') }) : null,
       blocEconomie(tk, (vers) => changerMoteur(vers, '')),  // INV-ECO-1 : bascule acceptée d'un geste
       blocCodespace(tk, appliquer),
       h('span', { class: 'session' }, tk.session ? t('detail.session', { id: tk.session.slice(0, 8) }) : t('detail.sans_session')),
@@ -208,6 +212,7 @@ function dessinerFiche() {
 }
 function dessiner() {
   dessinerTete(); dessinerFiche();
+  remplacer(r.lignes, carteLignes(tache, () => rafraichir()));
   remplacer(r.liens, carteLiens(tache, appliquer));
   remplacer(r.revues, carteRevues(tache));
   rendreMd(r.corpsMd, tache.corps || '');

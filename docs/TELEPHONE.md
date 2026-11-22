@@ -59,9 +59,10 @@ Cinq codes faux d'affilée verrouillent l'appairage une minute.
 
 ## 4. Ce que le téléphone peut faire
 
-- **Accueil** (bouton de la barre basse, `#compagnon`) : à décider, en cours, arbre allégé, en lecture seule, sauf « Valider » / « Renvoyer » sur une tâche terminée par son agent (en ligne, après confirmation).
+- **Accueil** (bouton de la barre basse, `#compagnon`) : à décider, en cours, arbre allégé, en lecture seule, sauf « Valider » / « Renvoyer » sur une tâche terminée par son agent (en ligne, après confirmation) ; la PWA installée s'ouvre sur cet Accueil (`start_url` du manifeste), et le raccourci « Décisions » de l'icône mène à `#decisions`.
   Option hors ligne : `[distant] hors_ligne = true` puis case à cocher sur l'appareil ; titres, statuts et
   décisions seulement, 7 jours, effacés à la révocation (INV-PWA-2).
+- **Travail en cours** (`#travail`, bouton de l'Accueil) : étoile ★ sur une tâche pour l'épingler sur CE téléphone ; la vue ne liste que les tâches épinglées, chacune ouvre son chat (conversation + envoi d'un message à l'agent, comme `orch dire`). Réglage de l'appareil, rien d'écrit sur le poste (INV-COMPAGNON-2).
 - Tout l'usage courant : arbre, tâches, conversations, décisions, notes.
 - Réservé au poste : la gestion des appareils, l'installation, les jetons et l'appairage des
   exécuteurs, les terminaux.
@@ -75,6 +76,10 @@ Cinq codes faux d'affilée verrouillent l'appairage une minute.
 - Le journal des connexions distantes (même section) montre appairages, connexions, refus et
   révocations.
 - Un téléphone perdu : le révoquer, et le retirer aussi du réseau Tailscale (console Tailscale).
+
+## Résumé du résultat (facultatif)
+
+Par défaut, la carte d'une tâche à valider ne montre que son titre et sa question. `[distant] resume = true` y ajoute un résumé de 140 caractères au plus de ce que l'agent déclare avoir fait : ce texte **quitte le poste** (vers le téléphone appairé, par le réseau privé). Il n'est servi qu'en `no-store`, n'entre ni dans le cache du service worker ni dans l'aperçu hors ligne, et l'option est éteinte dans toute instance de test.
 
 ## 6. Mise en place pas à pas sur un poste Linux (Debian/Ubuntu)
 

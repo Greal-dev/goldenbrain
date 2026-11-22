@@ -2,6 +2,8 @@
 allégé ; stockage local absent par défaut, garde seulement une fois la case cochée (titres sans corps de fiche), perte du
 poste montrée avec la date des données, puis effacement. Serveur dédié : `[distant] hors_ligne = true`."""
 
+import re
+
 import pytest
 import univers
 from aides_arbre import nettoyer_vault  # noqa: F401  (fixture autouse)
@@ -60,7 +62,7 @@ def test_accueil_compagnon_et_stockage_optionnel(navigateur, poste):
         # Poste injoignable : l'aperçu reste, daté ; les gestes sont désactivés.
         ctx.set_offline(True)
         page.locator(".co-etat .btn-discret").tap()
-        expect(page.locator(".co-etat")).to_contain_text("injoignable")
+        expect(page.locator(".co-etat")).to_contain_text("Hors connexion")
         expect(page.locator(".co-carte", has_text="Question Compagnon")).to_be_disabled()
         ctx.set_offline(False)
 
@@ -101,5 +103,39 @@ def test_valider_depuis_l_accueil(navigateur, poste):
         page.locator("dialog .dlg-actions .primaire").tap()
         expect(page.locator(".co-retour-geste.ko")).to_contain_text("panne")
         expect(page.locator(".compagnon li", has_text="Autre à valider")).to_have_count(1)
+    finally:
+        ctx.close()
+
+
+def test_travail_epingle_et_chat(navigateur, poste):
+    """Jalon 3 : seules les tâches épinglées sur l'appareil paraissent dans « Travail en cours » ; chacune ouvre son chat."""
+    _monde(poste)
+    ctx = navigateur.new_context(viewport={"width": 412, "height": 839}, is_mobile=True, has_touch=True)
+    page = ctx.new_page()
+    try:
+        page.goto(poste.url + "/#travail")
+        expect(page.locator(".compagnon.travail .vide")).to_contain_text("Aucune tâche épinglée")
+        expect(page.locator("#barre-basse [data-tel=accueil]")).to_have_attribute("aria-current", "page")
+
+        page.goto(poste.url + "/#compagnon")
+        page.locator(".compagnon .co-ligne:has(.co-dossier)", has_text="C1").tap()   # casquette, puis projet
+        page.locator(".compagnon .co-ligne:has(.co-dossier) .co-titre", has_text=re.compile(r"^Co$")).tap()
+        page.locator(".compagnon .tr-ligne", has_text="Tâche Compagnon").locator(".tr-pin").tap()
+        page.locator(".co-travail").tap()
+        expect(page.locator(".compagnon.travail .co-liste li")).to_have_count(1)
+        expect(page.locator(".compagnon.travail .co-liste")).to_contain_text("Tâche Compagnon")
+        expect(page.locator(".compagnon.travail .co-liste")).not_to_contain_text("Question Compagnon")
+
+        page.locator(".compagnon.travail .co-ligne").tap()
+        expect(page.locator(".tr-tete .co-titre")).to_have_text("Tâche Compagnon")
+        page.locator(".tr-saisie textarea").fill("Bonjour depuis le téléphone")
+        page.locator(".tr-saisie button[type=submit]").tap()
+        expect(page.locator(".tr-conv")).to_contain_text("Bonjour depuis le téléphone", timeout=8000)
+        assert page.evaluate("document.documentElement.scrollWidth <= window.innerWidth")
+
+        # Retrait : l'étoile du chat retire la tâche de la liste.
+        page.locator(".tr-tete .tr-pin").tap()
+        page.locator(".tr-tete .co-retour").tap()
+        expect(page.locator(".compagnon.travail .vide")).to_be_visible()
     finally:
         ctx.close()

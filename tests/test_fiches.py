@@ -109,7 +109,7 @@ def test_bloc_fiche_ajoute_puis_remplace_en_place():
     une = fiches.ecrire_fiche(ORIGINAL, fiche)
     assert une.startswith(ORIGINAL)
     assert "\r\n### Sous-tâches\r\n- [x] x\r\n- [ ] y\r\n" in une
-    assert fiches.lire_fiche(une) == fiche
+    assert fiches.lire_fiche(une) == {**fiche, "lignes": []}  # les lignes (INV-LIGNES-1) ont leur bloc
     une += "Après le bloc.\r\n"
     deux = fiches.ecrire_fiche(une, {**fiche, "situation": "nouvelle", "sous_taches": []})
     assert deux.endswith(fiches.FIN + "\r\nAprès le bloc.\r\n")
