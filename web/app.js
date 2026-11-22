@@ -16,6 +16,7 @@ import { dessinerEquipe } from './equipe.js';
 import { dessinerReglages, etatReglages, fixerAncreReglages, hashReglages } from './reglages.js';
 import { chargerInterface, ouvert, simple } from './interface.js';
 import { dessinerAujourdhui } from './aujourdhui.js';
+import { dessinerCompagnon } from './compagnon.js';
 import { dessinerTravaux, actualiserTravaux } from './travaux.js';
 import { dessinerDecisions } from './decisions.js';
 import { dessinerGuide, hashGuide, fixerAncre } from './guide.js';
@@ -124,7 +125,7 @@ function bannière() {
 // L'URL reflète le volet droit : #t=<tâche> · #n=<note> · #q=<recherche> · #g[=<centre>] (graphe) · #equipe. Chaque navigation ajoute une entrée d'historique.
 const enc = encodeURIComponent;
 const dec = (s) => { try { return decodeURIComponent(s); } catch { return s; } };
-const hashCourant = () => (S.selection ? `#t=${enc(S.selection)}` : S.vue === 'equipe' ? '#equipe' : S.vue === 'reglages' ? hashReglages() : S.vue === 'aujourdhui' ? '#aujourdhui' : S.vue === 'travaux' ? '#en-cours' : S.vue === 'decisions' ? '#decisions' : S.vue === 'guide' ? hashGuide() : S.vue === 'note' && S.note ? `#n=${enc(S.note)}`
+const hashCourant = () => (S.selection ? `#t=${enc(S.selection)}` : S.vue === 'equipe' ? '#equipe' : S.vue === 'reglages' ? hashReglages() : S.vue === 'aujourdhui' ? '#aujourdhui' : S.vue === 'compagnon' ? '#compagnon' : S.vue === 'travaux' ? '#en-cours' : S.vue === 'decisions' ? '#decisions' : S.vue === 'guide' ? hashGuide() : S.vue === 'note' && S.note ? `#n=${enc(S.note)}`
   : S.vue === 'recherche' && S.requete ? `#q=${enc(S.requete)}` : S.vue === 'graphe' ? (S.centre ? `#g=${enc(S.centre)}` : '#g') : '');
 function pousserUrl(initial) {
   const hs = hashCourant();
@@ -137,6 +138,7 @@ function majVoletDroit() {
   else if (S.vue === 'equipe') dessinerEquipe(droit());
   else if (S.vue === 'reglages') dessinerReglages(droit());
   else if (S.vue === 'aujourdhui') dessinerAujourdhui(droit());
+  else if (S.vue === 'compagnon') dessinerCompagnon(droit()); // INV-COMPAGNON-1
   else if (S.vue === 'travaux') dessinerTravaux(droit());
   else if (S.vue === 'decisions') dessinerDecisions(droit());
   else if (S.vue === 'guide') dessinerGuide(droit()); // INV-GUIDE-1
@@ -180,6 +182,7 @@ function depuisUrl() {
   else if (location.hash === '#decisions') { if (S.vue !== 'decisions' || S.selection) ok = ouvrirVue('decisions'); }
   else if ((gd = /^#guide(?:=(.*))?$/.exec(location.hash))) { fixerAncre(dec(gd[1] || '')); ok = ouvrirVue('guide'); }
   else if (location.hash === '#aujourdhui') { if (S.vue !== 'aujourdhui' || S.selection) ok = ouvrirVue('aujourdhui'); }
+  else if (location.hash === '#compagnon') { if (S.vue !== 'compagnon' || S.selection) ok = ouvrirVue('compagnon'); }
   else if (location.hash === '#en-cours') { if (S.vue !== 'travaux' || S.selection) ok = ouvrirVue('travaux'); }
   else if (S.selection || S.vue !== 'cascade') ok = ouvrir(null);
   if (!ok) history.pushState(null, '', hashCourant() || location.pathname + location.search); // navigation refusée (note modifiée) : l'URL reste fidèle à l'écran
@@ -199,6 +202,7 @@ async function demarrer() {
   else if (location.hash === '#equipe' && ouvert('equipe')) S.vue = 'equipe';
   else if (/^#reglages(\/|$)/.test(location.hash)) { S.vue = 'reglages'; fixerAncreReglages(dec(location.hash.slice(10))); }
   else if (location.hash === '#aujourdhui') S.vue = 'aujourdhui';
+  else if (location.hash === '#compagnon') S.vue = 'compagnon';
   else if (location.hash === '#en-cours') S.vue = 'travaux';
   else if (location.hash === '#decisions') S.vue = 'decisions';
   else if (/^#guide(=|$)/.test(location.hash)) { S.vue = 'guide'; fixerAncre(dec(location.hash.slice(7))); }

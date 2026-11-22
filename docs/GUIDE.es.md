@@ -1,6 +1,6 @@
 # Guía de GoldenBrain
 
-Actualizado el 2026-11-20.
+Actualizado el 2026-11-22.
 
 GoldenBrain es un puesto de mando: usted confía tareas a agentes de IA (Claude Code, Codex, OpenCode, Copilot, Antigravity), cada una guardada en su lugar dentro de su vault (una carpeta de notas en Markdown). GoldenBrain organiza y supervisa; el agente trabaja en su propia conversación, que usted puede retomar en cualquier momento.
 
@@ -171,7 +171,7 @@ El vault es su **segundo cerebro**: notas corrientes (archivos Markdown) que Gol
 ### Decisiones {#decisions}
 
 - **Para qué sirve**: un único lugar para resolver todo lo que espera a una persona.
-- **Cómo se hace**: botón «Decisiones». Para cada elemento: «Validar», «Devolver…», responder al agente, aplazar (fecha), «Aceptar» o «Rechazar» una propuesta. El jardinero de IA (revisión de coherencia) y los agentes también proponen aquí **renombrar** una tarea cuyo título no dice de qué trata realmente («Renombrar «ventas AFC» como «API/MCP ventas AFC»», con su motivo): el título solo cambia si usted acepta. Varias tareas marcadas se aprueban de una vez.
+- **Cómo se hace**: botón «Decisiones». Para cada elemento: «Validar», «Devolver…», responder al agente, aplazar (fecha), «Aceptar» o «Rechazar» una propuesta. El jardinero de IA (revisión de coherencia) y los agentes también proponen aquí **renombrar** una tarea cuyo título no dice de qué trata realmente («Renombrar «ventas del club» como «API/MCP ventas del club»», con su motivo): el título solo cambia si usted acepta. Varias tareas marcadas se aprueban de una vez.
 - **Conviene saber**: los cierres automáticos de los últimos 7 días figuran ahí bajo «Cerradas automáticamente», cada uno con «Reabrir». La etiqueta «¿evitable?» señala una pregunta o una aprobación que el agente habría podido resolver solo (mera información, no se modifica nada); Ajustes → Etiqueta «¿evitable?» la apaga o ajusta su umbral.
 
 ### Hoy {#aujourd-hui}
@@ -185,6 +185,12 @@ El vault es su **segundo cerebro**: notas corrientes (archivos Markdown) que Gol
 - **Para qué sirve**: ver de un vistazo lo que hacen sus asistentes de IA en este momento, y lo que espera.
 - **Cómo se hace**: pulse «En curso» (con el número de seguimiento), en la barra superior (dirección `#en-cours`). Para cada asistente en funcionamiento: la tarea y su proyecto, el asistente y su modelo, desde cuándo, lo que hace («ejecuta las pruebas», «escribe build.py», «ha modificado 3 archivos»), el avance de su lista de pasos cuando la lleva, y las ayudas que ha lanzado con su estado y su duración. Gestos: «Abrir», «Poner en pausa» y luego «Reanudar», «Detener» (se pide confirmación). Debajo: las tareas en espera y su motivo (memoria, crédito de uso, requisito previo, puesto en la cola), las rutinas próximas, las incidencias abiertas.
 - **Conviene saber**: la pantalla se actualiza sola cuando un asistente avanza; nada se ejecuta cuando está cerrada. Las ayudas lanzadas se siguen para Claude Code y OpenCode; el avance, para Claude Code, OpenCode y Codex. Una pausa manual congela al asistente sin perder nada; solo se reanuda con «Reanudar» (la regulación de memoria no la toca).
+
+### Compañero móvil {#compagnon}
+
+- **Para qué sirve**: consultar desde el teléfono, de un vistazo, lo que espera su decisión, lo que está trabajando y el árbol de proyectos (solo lectura, salvo una acción: validar o devolver una tarea terminada por su agente, en línea y tras confirmación).
+- **Cómo hacerlo**: el acceso pasa por la red privada Tailscale y un teléfono emparejado (Ajustes → Dispositivos; paso a paso: `docs/TELEPHONE.md`). En el teléfono, el botón « Inicio » de la barra inferior (dirección `#compagnon`): « Por decidir » (la pregunta de cada decisión), « En curso » (asistentes trabajando) y « Proyectos y tareas » (toque un proyecto para abrirlo, « ‹ » para subir). Tocar una decisión o una tarea la abre en la pantalla habitual.
+- **Conviene saber**: la pantalla se actualiza sola mientras está abierta e indica si está conectada o si muestra datos de una hora dada. El modo sin conexión es opcional y está desactivado por defecto: ponga `hors_ligne = true` en `[distant]` de `config.toml` y marque « Guardar una vista previa sin conexión en este dispositivo »; solo se guardan títulos, estados y decisiones, 7 días, nunca el contenido de las fichas ni de las conversaciones. La vista previa se borra al revocar el dispositivo o con « Borrar los datos de este dispositivo ». Sin conexión, los gestos están desactivados: requieren el equipo.
 
 ### Notas {#notes}
 

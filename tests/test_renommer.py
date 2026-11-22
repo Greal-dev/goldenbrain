@@ -13,9 +13,9 @@ ENTETE = "---\ntype: tache\nstatut: a-faire\ncle_perso:   garde  l'espace # comm
 
 
 def test_renommer_titre_ne_touche_que_le_titre():
-    texte = ENTETE + "\nIntro\n\n# Ventes AFC  \n\nSuite `# pas un titre`\n# Autre\n"
-    sortie = fiches.renommer_titre(texte, "API/MCP ventes AFC")
-    assert sortie == ENTETE + "\nIntro\n\n# API/MCP ventes AFC  \n\nSuite `# pas un titre`\n# Autre\n"
+    texte = ENTETE + "\nIntro\n\n# Ventes du club  \n\nSuite `# pas un titre`\n# Autre\n"
+    sortie = fiches.renommer_titre(texte, "API/MCP ventes du club")
+    assert sortie == ENTETE + "\nIntro\n\n# API/MCP ventes du club  \n\nSuite `# pas un titre`\n# Autre\n"
 
 
 def test_renommer_titre_conserve_les_fins_de_ligne_crlf():

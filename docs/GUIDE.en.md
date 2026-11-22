@@ -1,6 +1,6 @@
 # GoldenBrain guide
 
-Updated on 2026-11-20.
+Updated on 2026-11-22.
 
 GoldenBrain is a control station: you hand tasks to AI agents (Claude Code, Codex, OpenCode, Copilot, Antigravity), each filed in its proper place in your vault (a folder of Markdown notes). GoldenBrain organises and supervises; the agent works in its own conversation, which you can pick up again at any time.
 
@@ -171,7 +171,7 @@ The vault is your **second brain**: ordinary notes (Markdown files) that GoldenB
 ### Decisions {#decisions}
 
 - **What it is for**: a single place to settle everything that awaits a human.
-- **How to do it**: “Decisions” button. For each item: “Approve”, “Send back…”, reply to the agent, postpone (date), “Accept” or “Decline” a suggestion. The AI gardener (consistency review) and the agents also suggest **renaming** a task whose title does not say what it is really about (“Rename “AFC sales” to “AFC sales API/MCP””, with its reason): the title only changes if you accept. Several ticked tasks can be approved at once.
+- **How to do it**: “Decisions” button. For each item: “Approve”, “Send back…”, reply to the agent, postpone (date), “Accept” or “Decline” a suggestion. The AI gardener (consistency review) and the agents also suggest **renaming** a task whose title does not say what it is really about (“Rename “club sales” to “club sales API/MCP””, with its reason): the title only changes if you accept. Several ticked tasks can be approved at once.
 - **Good to know**: the automatic closures of the last 7 days appear there under “Closed automatically”, each with “Reopen”. The “avoidable?” badge flags a question or an approval that the agent could have settled alone (information only, nothing is changed); Settings → “Avoidable?” badge switches it off or sets its threshold.
 
 ### Today {#aujourd-hui}
@@ -185,6 +185,12 @@ The vault is your **second brain**: ordinary notes (Markdown files) that GoldenB
 - **What it is for**: seeing at a glance what your AI assistants are doing right now, and what is waiting.
 - **How to do it**: click “In progress” (followed by the number), in the top bar (address `#en-cours`). For each assistant at work: the task and its project, the assistant and its model, since when, what it is doing (“runs the tests”, “writes build.py”, “changed 3 files”), the progress of its list of steps when it keeps one, and the helpers it started with their state and duration. Actions: “Open”, “Pause” then “Resume”, “Stop” (confirmation requested). Below: the waiting tasks and their reason (memory, usage allowance, prerequisite, queue position), the upcoming routines, the open incidents.
 - **Good to know**: the screen updates by itself when an assistant progresses; nothing runs while it is closed. The helpers started are tracked for Claude Code and OpenCode; progress, for Claude Code, OpenCode and Codex. A manual pause freezes the assistant without losing anything; it resumes only on “Resume” (memory regulation does not touch it).
+
+### Mobile companion {#compagnon}
+
+- **What it is for**: check from your phone, at a glance, what awaits your decision, what is working, and the project tree (read-only, except one action: approve or send back a task finished by its agent, online and after confirmation).
+- **How to**: access goes through the private Tailscale network and a paired phone (Settings → Devices; step by step: `docs/TELEPHONE.md`). On the phone, the « Home » button of the bottom bar (address `#compagnon`): « To decide » (each decision's question), « In progress » (assistants at work), then « Projects and tasks » (tap a project to open it, « ‹ » to go up). Tapping a decision or a task opens it in the usual screen.
+- **Good to know**: the screen refreshes by itself while open, and tells whether it is connected or showing data from a given time. Offline use is optional and off by default: set `hors_ligne = true` under `[distant]` in `config.toml`, then tick « Keep an offline preview on this device »; only titles, statuses and decisions are kept, for 7 days, never the content of notes or conversations. The preview is erased when the device is revoked or with « Erase this device's data ». Offline, actions are disabled: they need the computer.
 
 ### Notes {#notes}
 

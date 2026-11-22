@@ -41,6 +41,7 @@ SECTIONS: dict[str, str] = {
     "decisions": "Décisions",
     "aujourd-hui": "Aujourd'hui",
     "en-cours": "En cours",
+    "compagnon": "Compagnon mobile",
     "notes": "Notes",
     "routines": "Routines",
     "chaines": "Chaînes",

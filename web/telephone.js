@@ -1,4 +1,4 @@
-// Rôle : usage au téléphone — barre basse (Tâches, Décisions, Recherche, Réglages), un seul écran à la fois
+// Rôle : usage au téléphone — barre basse (Accueil, Tâches, Décisions, Recherche, Réglages), un seul écran à la fois
 //        (liste ou détail, `body[data-ecran]`), manifeste et service worker de l'application installable.
 // Frontières : navigue seulement par store.js (ouvrir, ouvrirVue) ; la mise en page vit dans telephone.css (≤ 480 px),
 //        sans effet visible au-delà. INV-PWA-1 : le cache du service worker est l'affaire de sw.js seul.
@@ -8,6 +8,7 @@ import { $ } from './dom.js';
 // Écran « liste » = l'arbre ; tout le reste (tâche, projet, Décisions, Réglages, note, résultats) occupe l'écran entier.
 const ecran = () => (S.selection || S.vue !== 'cascade' || S.portee ? 'detail' : 'liste');
 const ACTIONS = {
+  accueil: () => ouvrirVue('compagnon'),
   taches: () => ouvrir(null),
   decisions: () => ouvrirVue('decisions'),
   recherche: () => $('#recherche').focus(), // les résultats se déroulent sous le champ, au-dessus de l'écran courant
@@ -17,7 +18,7 @@ const ACTIONS = {
 function maj() {
   const e = ecran();
   document.body.dataset.ecran = e;
-  const courant = S.selection ? null : e === 'liste' ? 'taches' : S.vue in ACTIONS ? S.vue : null;
+  const courant = S.selection ? null : e === 'liste' ? 'taches' : S.vue === 'compagnon' ? 'accueil' : S.vue in ACTIONS ? S.vue : null;
   for (const b of document.querySelectorAll('#barre-basse [data-tel]')) {
     if (b.dataset.tel === courant) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current');
   }

@@ -102,6 +102,8 @@ def installer_dependances(site_packages: Path, plateformes: list[str], supplemen
     for p in plateformes:
         commande += ["--platform", p]
     subprocess.run(commande + DEPENDANCES + list(supplements), check=True)
+    # Lanceurs pip inutiles au paquet, dont le shebang porterait le chemin du poste de construction.
+    shutil.rmtree(site_packages / "bin", ignore_errors=True)
 
 
 def graine(dest: Path, source: str = DEPOT_PUBLIC, branche: str = BRANCHE_DIFFUSION, crlf: bool = False) -> Path:

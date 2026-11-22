@@ -1,6 +1,6 @@
 # GoldenBrain-Anleitung
 
-Aktualisiert am 2026-11-20.
+Aktualisiert am 2026-11-22.
 
 GoldenBrain ist ein Steuerpult: Sie übergeben Aufgaben an KI-Agenten (Claude Code, Codex, OpenCode, Copilot, Antigravity), und jede Aufgabe wird an ihrem Platz in Ihrem Vault (einem Ordner mit Markdown-Notizen) abgelegt. GoldenBrain organisiert und beaufsichtigt; der Agent arbeitet in seiner eigenen Unterhaltung, die Sie jederzeit wieder aufnehmen können.
 
@@ -171,7 +171,7 @@ Der Vault ist Ihr **zweites Gehirn**: gewöhnliche Notizen (Markdown-Dateien), d
 ### Entscheidungen {#decisions}
 
 - **Wozu es dient**: ein einziger Ort, um alles zu entscheiden, was auf einen Menschen wartet.
-- **So geht es**: Schaltfläche „Entscheidungen“. Für jedes Element: „Bestätigen“, „Zurücksenden …“, dem Agenten antworten, verschieben (Datum), einen Vorschlag „Annehmen“ oder „Ablehnen“. Der KI-Gärtner (Kohärenzprüfung) und die Agenten schlagen hier auch vor, eine Aufgabe **umzubenennen**, deren Titel nicht sagt, worum es eigentlich geht („„AFC-Verkäufe“ in „API/MCP AFC-Verkäufe“ umbenennen“, mit Begründung): Der Titel ändert sich nur, wenn Sie annehmen. Mehrere angekreuzte Aufgaben werden in einem Zug bestätigt.
+- **So geht es**: Schaltfläche „Entscheidungen“. Für jedes Element: „Bestätigen“, „Zurücksenden …“, dem Agenten antworten, verschieben (Datum), einen Vorschlag „Annehmen“ oder „Ablehnen“. Der KI-Gärtner (Kohärenzprüfung) und die Agenten schlagen hier auch vor, eine Aufgabe **umzubenennen**, deren Titel nicht sagt, worum es eigentlich geht („„Vereinsverkäufe“ in „API/MCP Vereinsverkäufe“ umbenennen“, mit Begründung): Der Titel ändert sich nur, wenn Sie annehmen. Mehrere angekreuzte Aufgaben werden in einem Zug bestätigt.
 - **Gut zu wissen**: Die automatischen Abschlüsse der letzten 7 Tage stehen dort unter „Automatisch abgeschlossen“, jeweils mit „Wieder öffnen“. Das Etikett „vermeidbar?“ weist auf eine Frage oder Bestätigung hin, die der Agent allein hätte entscheiden können (reine Information, nichts wird verändert); Einstellungen → „Etikett „vermeidbar?““ schaltet es aus oder stellt seine Schwelle ein.
 
 ### Heute {#aujourd-hui}
@@ -185,6 +185,12 @@ Der Vault ist Ihr **zweites Gehirn**: gewöhnliche Notizen (Markdown-Dateien), d
 - **Wozu es dient**: auf einen Blick sehen, was Ihre KI-Assistenten gerade tun und was wartet.
 - **So geht es**: In der oberen Leiste auf „Laufend“ klicken (mit Zähler; Adresse `#en-cours`). Für jeden arbeitenden Assistenten: die Aufgabe und ihr Projekt, der Assistent und sein Modell, seit wann, was er tut („führt die Tests aus“, „schreibt build.py“, „hat 3 Dateien geändert“), der Fortschritt seiner Schrittliste, sofern er eine führt, und die von ihm gestarteten Helfer mit Zustand und Dauer. Handlungen: „Öffnen“, „Pausieren“, dann „Fortsetzen“, „Anhalten“ (mit Rückfrage). Darunter: die wartenden Aufgaben und ihr Grund (Speicher, Nutzungskontingent, Voraussetzungen, Rang), die anstehenden Routinen, die offenen Störungen.
 - **Gut zu wissen**: Der Bildschirm aktualisiert sich von selbst, wenn ein Assistent vorankommt; bei geschlossenem Bildschirm läuft nichts. Die gestarteten Helfer werden bei Claude Code und OpenCode verfolgt, der Fortschritt bei Claude Code, OpenCode und Codex. Eine manuelle Pause friert den Assistenten ein, ohne etwas zu verlieren; er macht nur mit „Fortsetzen“ weiter (die Speicherregelung rührt ihn nicht an).
+
+### Mobiler Begleiter {#compagnon}
+
+- **Wozu**: vom Smartphone aus auf einen Blick sehen, was auf Ihre Entscheidung wartet, was arbeitet, und den Projektbaum (nur lesen, mit einer Ausnahme: eine vom Agenten erledigte Aufgabe freigeben oder zurückgeben, online und nach Bestätigung).
+- **So geht's**: Der Zugriff läuft über das private Tailscale-Netz und ein gekoppeltes Smartphone (Einstellungen → Geräte; Schritt für Schritt: `docs/TELEPHONE.md`). Auf dem Smartphone die Schaltfläche « Start » der unteren Leiste (Adresse `#compagnon`): « Zu entscheiden » (die Frage jeder Entscheidung), « Laufend » (Assistenten bei der Arbeit), dann « Projekte und Aufgaben » (ein Projekt antippen, « ‹ » geht eine Ebene hoch). Eine Entscheidung oder Aufgabe antippen öffnet sie im gewohnten Bildschirm.
+- **Gut zu wissen**: Der Bildschirm aktualisiert sich selbst, solange er offen ist, und zeigt, ob er verbunden ist oder Daten von einem bestimmten Zeitpunkt zeigt. Offline ist optional und standardmäßig aus: `hors_ligne = true` unter `[distant]` in `config.toml` setzen, dann « Offline-Vorschau auf diesem Gerät behalten » ankreuzen; gespeichert werden nur Titel, Status und Entscheidungen, 7 Tage lang, nie der Inhalt von Karten oder Gesprächen. Die Vorschau wird beim Sperren des Geräts oder mit « Daten dieses Geräts löschen » gelöscht. Offline sind Aktionen deaktiviert: sie brauchen den Rechner.
 
 ### Notizen {#notes}
 

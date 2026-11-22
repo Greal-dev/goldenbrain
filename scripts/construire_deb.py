@@ -42,7 +42,9 @@ def construire(source: str, branche: str) -> Path:
     site = python / "lib" / "python3.12" / "site-packages"
     c.installer_dependances(site, ["manylinux2014_x86_64", "manylinux_2_17_x86_64"])
     # /opt est en lecture seule pour l'utilisateur : le bytecode doit y être déjà.
-    subprocess.run([str(python / "bin" / "python3"), "-m", "compileall", "-q", str(site)], check=True)
+    # -s/-p : le bytecode retient le chemin installé (/opt/…), pas celui du poste de construction.
+    subprocess.run([str(python / "bin" / "python3"), "-m", "compileall", "-q", "-s", str(racine), "-p", "/",
+                    str(site)], check=True)
     app = c.graine(opt / "app", source, branche)
     shutil.copy2(c.INSTALLATION / "goldenbrain.sh", opt / "goldenbrain.sh")
     (opt / "goldenbrain.sh").chmod(0o755)

@@ -108,6 +108,7 @@ intervalle_s = 15
 # nom_hote = "poste.exemple.ts.net"
 # certificat = "/chemin/poste.exemple.ts.net.crt"
 # cle = "/chemin/poste.exemple.ts.net.key"
+# hors_ligne = false   # true : le compagnon mobile garde 7 jours un instantané léger (titres, statuts, décisions)
 
 # Compactage automatique des conversations (page Réglages, INV-COMPACT-1) : seuil en % de la fenêtre
 # du modèle ; plafond absolu en jetons facultatif (0 = aucun) ; le premier seuil atteint déclenche.
@@ -257,7 +258,7 @@ Cohérence d'ensemble : au premier tour d'une tâche, cherche ses connexes (`{or
 - liens sans hiérarchie : `{orch} proposer lier <id> alimente <cible>` (quand <id> avance, <cible> doit être mise à jour) ; `{orch} proposer lier <id> prerequis <cible>` (<id> ne démarre pas tant que <cible> n'est pas terminée) ; `{orch} proposer lier <id> voir_aussi <cible>` (simple repère) ;
 - périmètre d'une autre tâche : `{orch} proposer perimetre <id> "<périmètre révisé>"` ;
 - échéance : `{orch} proposer echeance <id> AAAA-MM-JJ` (tu ne l'écris jamais toi-même : l'échéance est une décision de l'utilisateur).
-- titre : `{orch} proposer renommer <id> "<titre explicite>" --motif "<pourquoi>"` quand le travail révèle que le titre d'une tâche est trompeur ou ne dit pas le fond du sujet (ex. « ventes AFC » dont le contenu est un accès MCP/API devient « API/MCP ventes AFC ») ; seul l'utilisateur renomme, d'un clic.
+- titre : `{orch} proposer renommer <id> "<titre explicite>" --motif "<pourquoi>"` quand le travail révèle que le titre d'une tâche est trompeur ou ne dit pas le fond du sujet (ex. « ventes du club » dont le contenu est un accès MCP/API devient « API/MCP ventes du club ») ; seul l'utilisateur renomme, d'un clic.
 Si l'utilisateur demande dans la conversation un rangement, un lien ou un découpage, même à demi-mot, dépose aussitôt la proposition correspondante et dis-le.
 
 Poste : avant une porte locale complète ou toute épreuve lourde, `{orch} poste reserver "<motif>"` ; la réservation est rendue d'office à la fin de ton tour (`{orch} poste liberer` pour la rendre plus tôt). Pendant ce temps, une tâche marquée `epreuves: lourdes` attend.

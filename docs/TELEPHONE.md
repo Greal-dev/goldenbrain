@@ -24,6 +24,7 @@ ecoute = "100.x.y.z"     # l'adresse Tailscale du poste — jamais 0.0.0.0
 
 [distant]
 appareils = true          # désactivé par défaut
+hors_ligne = false      # true : le compagnon peut garder un aperçu léger sur le téléphone
 gestes = "interdire"      # ou "confirmer" : arrêt, redémarrage, suppression depuis le téléphone
 ```
 
@@ -58,6 +59,9 @@ Cinq codes faux d'affilée verrouillent l'appairage une minute.
 
 ## 4. Ce que le téléphone peut faire
 
+- **Accueil** (bouton de la barre basse, `#compagnon`) : à décider, en cours, arbre allégé, en lecture seule, sauf « Valider » / « Renvoyer » sur une tâche terminée par son agent (en ligne, après confirmation).
+  Option hors ligne : `[distant] hors_ligne = true` puis case à cocher sur l'appareil ; titres, statuts et
+  décisions seulement, 7 jours, effacés à la révocation (INV-PWA-2).
 - Tout l'usage courant : arbre, tâches, conversations, décisions, notes.
 - Réservé au poste : la gestion des appareils, l'installation, les jetons et l'appairage des
   exécuteurs, les terminaux.
@@ -71,6 +75,51 @@ Cinq codes faux d'affilée verrouillent l'appairage une minute.
 - Le journal des connexions distantes (même section) montre appairages, connexions, refus et
   révocations.
 - Un téléphone perdu : le révoquer, et le retirer aussi du réseau Tailscale (console Tailscale).
+
+## 6. Mise en place pas à pas sur un poste Linux (Debian/Ubuntu)
+
+Chaque commande est lancée **par vous**, dans un terminal. `sudo` demande votre mot de passe à l'écran ;
+GoldenBrain ne le voit jamais (INV-INSTALL-2). La connexion au compte Tailscale se fait dans le navigateur,
+par vous.
+
+1. **Installer Tailscale** (script officiel, droits administrateur) :
+   `curl -fsSL https://tailscale.com/install.sh | sh`
+   Alternative sans script : ajouter le dépôt de paquets décrit sur https://tailscale.com/kb/1031/install-linux
+   puis `sudo apt-get install -y tailscale`.
+2. **Se connecter au réseau privé** : `sudo tailscale up`. Un lien s'affiche : l'ouvrir, se connecter au
+   compte Tailscale, accepter. Ne pas ajouter `--shields-up` (il bloquerait les connexions du téléphone) ;
+   ne jamais lancer `tailscale funnel` ni `tailscale serve`.
+3. **Console Tailscale** (https://login.tailscale.com/admin/dns) : vérifier que MagicDNS est actif, puis
+   activer « HTTPS Certificates ».
+4. **Relever les deux noms** : `tailscale ip -4` (adresse `100.x.y.z`) et
+   `tailscale status --json | python3 -c "import json,sys; print(json.load(sys.stdin)['Self']['DNSName'].rstrip('.'))"`
+   (nom `<poste>.<tailnet>.ts.net`).
+5. **Obtenir le certificat**, dans un dossier lisible par vous seul :
+   `mkdir -p ~/.config/goldenbrain/tls && chmod 700 ~/.config/goldenbrain/tls`
+   `sudo tailscale set --operator=$USER` (une fois : permet les commandes suivantes sans `sudo`)
+   `tailscale cert --cert-file ~/.config/goldenbrain/tls/poste.crt --key-file ~/.config/goldenbrain/tls/poste.key <poste>.<tailnet>.ts.net`
+   `chmod 600 ~/.config/goldenbrain/tls/poste.key`
+6. **`config.toml`** (chemins absolus) :
+   ```toml
+   [executeurs]
+   ecoute = "100.x.y.z"
+   [distant]
+   appareils = true
+   nom_hote = "<poste>.<tailnet>.ts.net"
+   certificat = "/home/<vous>/.config/goldenbrain/tls/poste.crt"
+   cle = "/home/<vous>/.config/goldenbrain/tls/poste.key"
+   hors_ligne = false   # true seulement si vous voulez l'aperçu hors ligne
+   ```
+   Redémarrer GoldenBrain.
+7. **Vérifier qu'aucune porte n'est ouverte au monde** : `ss -tlnp | grep 8300` ne doit montrer que
+   `127.0.0.1:8300` et `100.x.y.z:8300`, jamais `0.0.0.0` ni `*`. Aucune redirection de port sur la box.
+   Depuis le poste : `curl -sk -o /dev/null -w "%{http_code}\n" https://<poste>.<tailnet>.ts.net:8300/api/arbre`
+   doit répondre `401` (appareil non appairé).
+8. **Téléphone** : installer Tailscale (Play Store), se connecter au même compte ; ouvrir
+   `https://<poste>.<tailnet>.ts.net:8300` (refus attendu) ; puis appairer (§ 3) ; enfin, dans Chrome,
+   menu ⋮ → « Installer l'application » (disponible grâce au HTTPS).
+9. **Renouvellement** : le certificat dure 90 jours ; relancer la commande de l'étape 5 puis redémarrer
+   GoldenBrain. Retrait complet : `sudo tailscale down`, retirer les lignes `[distant]`/`[executeurs]`.
 
 ## Essai pas à pas
 

@@ -1,6 +1,6 @@
 # Guide de GoldenBrain
 
-Mis à jour le 2026-11-20.
+Mis à jour le 2026-11-22.
 
 GoldenBrain est un poste de pilotage : vous confiez des tâches à des agents IA (Claude Code, Codex, OpenCode, Copilot, Antigravity), chacune rangée à sa place dans votre vault (un dossier de notes Markdown). GoldenBrain organise et supervise ; l'agent travaille dans sa propre conversation, que vous pouvez reprendre à tout moment.
 
@@ -171,7 +171,7 @@ Le vault est votre **second cerveau** : des notes ordinaires (fichiers Markdown)
 ### Décisions
 
 - **À quoi ça sert** : un seul endroit pour trancher tout ce qui attend un humain.
-- **Comment faire** : bouton « Décisions ». Pour chaque élément : « Valider », « Renvoyer… », répondre à l'agent, reporter (date), « Accepter » ou « Refuser » une proposition. Le jardinier IA (revue de cohérence) et les agents y proposent aussi de **renommer** une tâche dont le titre ne dit pas le fond du sujet (« Renommer « ventes AFC » en « API/MCP ventes AFC » », avec son motif) : le titre ne change que si vous acceptez. Plusieurs tâches cochées se valident d'un coup.
+- **Comment faire** : bouton « Décisions ». Pour chaque élément : « Valider », « Renvoyer… », répondre à l'agent, reporter (date), « Accepter » ou « Refuser » une proposition. Le jardinier IA (revue de cohérence) et les agents y proposent aussi de **renommer** une tâche dont le titre ne dit pas le fond du sujet (« Renommer « ventes du club » en « API/MCP ventes du club » », avec son motif) : le titre ne change que si vous acceptez. Plusieurs tâches cochées se valident d'un coup.
 - **À savoir** : les clôtures automatiques des 7 derniers jours y figurent sous « Clos automatiquement », chacune avec « Rouvrir ». La pastille « évitable ? » signale une question ou une validation que l'agent aurait pu trancher seul (simple information, rien n'est modifié) ; Réglages → « Pastille « évitable ? » » l'éteint ou règle son seuil.
 
 ### Aujourd'hui
@@ -185,6 +185,12 @@ Le vault est votre **second cerveau** : des notes ordinaires (fichiers Markdown)
 - **À quoi ça sert** : voir d'un coup d'œil ce que font vos assistants IA en ce moment, et ce qui attend.
 - **Comment faire** : cliquer sur « En cours » (suivi du nombre), dans la barre du haut (adresse `#en-cours`). Pour chaque assistant au travail : la tâche et son projet, l'assistant et son modèle, depuis quand, ce qu'il fait (« lance les tests », « écrit build.py », « a modifié 3 fichiers »), l'avancement de sa liste d'étapes quand il en tient une, et les aides qu'il a lancées avec leur état et leur durée. Gestes : « Ouvrir », « Mettre en pause » puis « Reprendre », « Arrêter » (confirmation demandée). Dessous : les tâches en attente et leur raison (mémoire, crédit d’utilisation, prérequis, rang), les routines à venir, les incidents ouverts.
 - **À savoir** : l'écran se met à jour seul quand un assistant avance ; rien ne tourne quand il est fermé. Les aides lancées sont suivies pour Claude Code et OpenCode ; l'avancement, pour Claude Code, OpenCode et Codex. Une pause à la main fige l'assistant sans rien perdre ; il ne reprend que sur « Reprendre » (la régulation de mémoire n'y touche pas).
+
+### Compagnon mobile {#compagnon}
+
+- **À quoi ça sert** : consulter depuis le téléphone, d'un coup d'œil, ce qui attend votre décision, ce qui travaille et l'arbre des projets (consultation ; seul geste : valider ou renvoyer une tâche terminée par son agent, en ligne, après confirmation).
+- **Comment faire** : l'accès passe par le réseau privé Tailscale et un téléphone appairé (Réglages → Appareils ; pas à pas : `docs/TELEPHONE.md`). Sur le téléphone, bouton « Accueil » de la barre basse (adresse `#compagnon`) : « À décider » (la question de chaque décision), « En cours » (les assistants au travail), puis « Projets et tâches » (touchez un projet pour l'ouvrir, « ‹ » pour remonter). Toucher une décision ou une tâche l'ouvre dans l'écran habituel.
+- **À savoir** : l'écran se met à jour seul tant qu'il est ouvert, et dit s'il est connecté ou s'il montre les données d'une heure donnée. Le hors-ligne est facultatif et désactivé par défaut : il faut `hors_ligne = true` dans `[distant]` de `config.toml`, puis cocher « Garder un aperçu hors ligne sur cet appareil » ; seuls les titres, statuts et décisions sont gardés, 7 jours, jamais le contenu des fiches ni des conversations. L'aperçu s'efface à la révocation de l'appareil ou par « Effacer les données de cet appareil ». Hors ligne, les gestes sont désactivés : ils exigent le poste.
 
 ### Notes
 

@@ -43,12 +43,14 @@ class ConfigDistant:
     """Téléphones appairés (INV-DISTANT-5 à 8) sur l'adresse `executeurs.ecoute`. `appareils` : admis ou non ;
     `gestes` : arrêt, redémarrage, suppression depuis un appareil — `interdire` ou `confirmer` ;
     `nom_hote` : nom accepté en plus de l'adresse (celui du certificat Tailscale, `machine.reseau.ts.net`) ;
-    `certificat` / `cle` : fichiers de `tailscale cert` ; posés, l'adresse distante sert en HTTPS."""
+    `certificat` / `cle` : fichiers de `tailscale cert` ; posés, l'adresse distante sert en HTTPS ;
+    `hors_ligne` : autorise le stockage local de l'instantané du compagnon (désactivé par défaut)."""
     appareils: bool = False
     gestes: str = "interdire"
     nom_hote: str = ""
     certificat: str = ""
     cle: str = ""
+    hors_ligne: bool = False     # le compagnon peut garder un instantané léger sur l'appareil (INV-PWA-2)
 
     def __post_init__(self):
         if self.gestes not in GESTES:

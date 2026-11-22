@@ -10,7 +10,7 @@ export const S = {
   etat: { tours: [], en_file: 0, a_moi: 0, en_retard: 0, propositions: 0 }, props: [],
   toutes: false, selection: null, recherche: '', filtreAMoi: false,
   vue: 'cascade', portee: null, centre: null, filtres: new Set(), marque: null, // marque : clé du dernier élément déplacé (mise en évidence brève)
-  // volet droit sans tâche : 'reglages' | 'cascade' (portée = "type:id" ou null) | 'aujourdhui' | 'decisions' | 'equipe' | 'note' (S.note = chemin) | 'recherche' (S.requete)
+  // volet droit sans tâche : 'reglages' | 'cascade' (portée = "type:id" ou null) | 'aujourdhui' | 'compagnon' | 'decisions' | 'equipe' | 'note' (S.note = chemin) | 'recherche' (S.requete)
   onglet: localStorage.getItem('orch.onglet') === 'notes' ? 'notes' : 'taches', note: null, requete: '',
   interface: null, // {mode, familles, propositions} : valeurs effectives du serveur (interface.js)
   garde: null, // () => bool : l'éditeur de note y refuse (ou fait confirmer) toute navigation qui perdrait des modifications
