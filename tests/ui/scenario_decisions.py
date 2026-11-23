@@ -142,3 +142,27 @@ def test_decision_repondue_disparait_et_ne_revient_pas_pendant_le_tour_de_l_agen
     page.goto(page.url_serveur + "/#decisions")
     expect(carte(page, "Reprise Decis")).to_contain_text("Et pour B ?", timeout=5000)
     assert not page.erreurs, page.erreurs
+
+
+def test_decision_reportee_disparait_jusqu_a_sa_date_puis_reapparait(page, serveur):
+    """Symptôme (23/11) : « Reporter » ne retirait pas l'entrée ni sa pastille avant la nouvelle date (INV-DECISIONS-3)."""
+    univers.ecrire(serveur.vault, "Projets/C1-Decis/contexte.md",
+                   "---\ntype: contexte\ncasquette: C1-Pro\nnom: Decis\n---\n")
+    fichier = "Projets/C1-Decis/taches/dc-p.md"
+    univers.ecrire(serveur.vault, fichier, univers.tache("Report Decis", statut="retour-humain", extra='commentaire: "Plus tard ?"\n'))
+    page.goto(page.url_serveur + "/#decisions")
+    c = carte(page, "Report Decis")
+    expect(c).to_have_count(1)
+    expect(page.locator("#n-decisions")).not_to_have_text("0")
+    avant = int(page.locator("#n-decisions").inner_text())
+    c.locator(".dc-report input[type=date]").fill("2031-05-05")
+    c.get_by_role("button", name="Reporter").click()
+    expect(carte(page, "Report Decis")).to_have_count(0, timeout=5000)
+    expect(page.locator("#n-decisions")).to_have_text(str(avant - 1), timeout=5000)
+    # La date atteinte (ici : la veille), l'entrée revient d'elle-même.
+    univers.ecrire(serveur.vault, fichier, univers.tache(
+        "Report Decis", statut="retour-humain", extra='commentaire: "Plus tard ?"\necheance: 2020-01-01\nreporte_jusqu_au: 2020-01-01\n'))
+    page.goto(page.url_serveur + "/#decisions")
+    page.reload()
+    expect(carte(page, "Report Decis")).to_have_count(1, timeout=5000)
+    assert not page.erreurs, page.erreurs

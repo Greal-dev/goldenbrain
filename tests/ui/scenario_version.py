@@ -99,6 +99,16 @@ def test_mise_a_jour_disponible_bandeau_et_pluriel(page):
     assert not page.erreurs, page.erreurs
 
 
+def test_mise_a_jour_disponible_masquee_sur_telephone(page):
+    """Compagnon : la mise à jour ne se fait que depuis le poste, la bande est masquée sous 480 px."""
+    _maj(page, {**MAJ_RIEN, "retard": 2})
+    page.set_viewport_size({"width": 390, "height": 800})
+    _charger(page)
+    page.wait_for_timeout(600)
+    assert page.locator("#maj-dispo").is_hidden()
+    assert not page.erreurs, page.erreurs
+
+
 def test_mise_a_jour_refusee_affiche_le_motif(page):
     _maj(page, {**MAJ_RIEN, "retard": 1})
     page.route("**/api/mise-a-jour", lambda route: route.fulfill(

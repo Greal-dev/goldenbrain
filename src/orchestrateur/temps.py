@@ -22,9 +22,9 @@ HORIZON_JOURS = 7
 GROUPES = ("retard", "aujourdhui", "semaine", "amoi")
 
 
-def echeance_de(fm: dict) -> dt.date | None:
+def echeance_de(fm: dict, cle: str = "echeance") -> dt.date | None:
     """Date lue dans le frontmatter ; toute valeur illisible vaut « pas d'échéance »."""
-    v = fm.get("echeance")
+    v = fm.get(cle)
     if isinstance(v, dt.datetime):
         return v.date()
     if isinstance(v, dt.date):
@@ -53,6 +53,24 @@ def vue(vault: V.Vault, t: V.Tache) -> dict:
     e = echeance_de(t.fm)
     return {"echeance": e.isoformat() if e else "", "priorite": priorite_de(t.fm),
             "retard": en_retard(vault, t)}
+
+
+def reportee(t: V.Tache) -> bool:
+    """INV-DECISIONS-3 : décision reportée, masquée (page, pastilles) jusqu'à la date, puis de retour d'elle-même."""
+    d = echeance_de(t.fm, "reporte_jusqu_au")
+    return bool(d and d > V.aujourdhui())
+
+
+def poser(vault: V.Vault, ident: str, echeance, priorite) -> dict:
+    """Pose le temps ; une échéance future donnée à une décision en attente est un report (INV-DECISIONS-3).
+    Voie unique de l'interface, du téléphone et de Telegram."""
+    maj = valider(echeance, priorite)
+    if "echeance" in maj:
+        t, e = vault.tache(ident), maj["echeance"]
+        attend = t.statut == vault.retour or vault.a_valider(t) or en_retard(vault, t)
+        maj["reporte_jusqu_au"] = e if e and e > V.aujourdhui() and attend else None
+    vault.poser_temps(ident, maj)
+    return maj
 
 
 def valider(echeance, priorite) -> dict:

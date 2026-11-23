@@ -12,20 +12,23 @@ export function titreEditable(tk, appliquer, suffixe = null) {
     'data-id': 'titre-tache' }, tk.titre, suffixe);
   const ouvrir = () => {
     const champ = h('input', { class: 'd-titre-champ', type: 'text', value: tk.titre, 'aria-label': t('renommer.champ'),
-      autocomplete: 'off', 'data-id': 'titre-champ' });
-    let fini = false;
+      autocomplete: 'off', enterkeyhint: 'done', 'data-id': 'titre-champ' });
+    let fini = false, envoi = false;
     const fermer = () => { fini = true; champ.replaceWith(titre); titre.focus(); };
     const valider = async () => {
+      if (envoi) return;
       const nouveau = champ.value.trim();
       if (!nouveau) return erreur(t('renommer.vide'));
       if (nouveau === tk.titre) return fermer();
+      envoi = true;
       try { const r = await post(`/taches/${encodeURIComponent(tk.id)}/renommer`, { titre: nouveau }); fini = true; appliquer(r); }
-      catch (e) { erreur(e.message); }
+      catch (e) { envoi = false; erreur(e.message); }
     };
     champ.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') { e.preventDefault(); valider(); } else if (e.key === 'Escape') { e.preventDefault(); fermer(); }
     });
-    champ.addEventListener('blur', () => { if (!fini) fermer(); });
+    // Au téléphone, « OK » du clavier ou un toucher ailleurs ferme le champ sans Entrée : le titre tapé est gardé (seul Échap annule).
+    champ.addEventListener('blur', () => { if (fini || envoi) return; if (champ.value.trim() && champ.value.trim() !== tk.titre) valider(); else fermer(); });
     titre.replaceWith(champ);
     champ.focus();
     champ.select();

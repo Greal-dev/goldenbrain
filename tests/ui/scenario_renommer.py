@@ -51,3 +51,17 @@ def test_proposition_renommer_acceptee_sur_la_page_decisions(page, serveur):
     texte = serveur.vault.joinpath("Projets/C1-RenomProp/taches/rp-un.md").read_text(encoding="utf-8")
     assert "# API/MCP ventes du club RP" in texte
     assert not page.erreurs, page.erreurs
+
+
+def test_renommer_enregistre_aussi_en_quittant_le_champ(page, serveur):
+    """Téléphone : « OK » du clavier ou toucher ailleurs ferme le champ sans Entrée ; le titre tapé doit être gardé."""
+    projet(serveur, "C1-RenomTel", {"rt-un": ("Ventes du club RT", "")})
+    fichier = serveur.vault / "Projets" / "C1-RenomTel" / "taches" / "rt-un.md"
+    charger(page)
+    ligne(page, "Ventes du club RT").click()
+    page.locator(".d-titre").click()
+    page.locator("[data-id=titre-champ]").fill("Titre modifié au pouce")
+    page.locator("[data-id=titre-champ]").blur()
+    expect(page.locator(".d-titre")).to_have_text("Titre modifié au pouce")
+    assert "# Titre modifié au pouce" in fichier.read_text(encoding="utf-8")
+    assert not page.erreurs, page.erreurs

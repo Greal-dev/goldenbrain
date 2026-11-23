@@ -47,7 +47,7 @@ def routes(vault: Vault, publier, tache) -> APIRouter:
 
     @r.post("/taches/{ident}/temps")
     async def poser(ident: str, c: CorpsTemps):
-        vault.poser_temps(ident, temps.valider(c.echeance, c.priorite))
+        temps.poser(vault, ident, c.echeance, c.priorite)
         publier("arbre")
         return tache(ident)
 

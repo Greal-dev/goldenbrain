@@ -53,6 +53,8 @@
   .d-meta select, .d-meta input { max-width: 100%; }
   .cl-tete > :nth-child(n+3) { display: none; }
   .decisions { padding: 10px 12px; }
+  /* La mise à jour de GoldenBrain ne se fait que depuis le poste : la bande « mise à jour disponible » n'a rien à offrir ici. */
+  #maj-dispo { display: none !important; }
   /* Décisions en pile verticale : titre sur toute la largeur, boutons à hauteur de pouce, motif de rang discret. */
   .dc-tete { flex-wrap: wrap; }
   .dc-titre { flex: 1 1 100%; order: 5; text-align: left; overflow-wrap: anywhere; }

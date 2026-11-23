@@ -135,6 +135,8 @@ def lignes(moteur) -> list[dict]:
     for k, t in taches.items():
         genre = ("reponse" if t.statut == vault.retour else "validation" if vault.a_valider(t)
                  else "echeance" if _retard(vault, t) else "")
+        if genre and temps.reportee(t):
+            continue  # INV-DECISIONS-3 : reportée, elle revient d'elle-même à sa date
         if genre in ("reponse", "validation") and _repondue(moteur, k):
             continue  # INV-DECISIONS-2 : l'agent reprend ; seule une nouvelle entrée la fera revenir
         if genre:

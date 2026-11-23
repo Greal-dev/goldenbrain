@@ -139,8 +139,8 @@ def appliquer(moteur, choix: str, g: dict) -> tuple[str, str]:
     if cle == "statut":  # INV-TELEGRAM-3 : geste humain, comme POST /statut
         moteur.vault.poser_statut(tache, valeur, humain=True)
     else:
-        moteur.vault.poser_temps(tache, temps.valider(valeur if cle == "echeance" else None,
-                                                      valeur if cle == "priorite" else None))
+        temps.poser(moteur.vault, tache, valeur if cle == "echeance" else None,
+                    valeur if cle == "priorite" else None)  # INV-DECISIONS-3 : un report masque la décision
     moteur.publier("arbre")
     return langues.t("serveur.telegram_assistant.fait", cle=cle,
                      valeur=valeur or langues.t("serveur.telegram_assistant.retire")), \

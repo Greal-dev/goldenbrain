@@ -31,7 +31,7 @@ CLES_GEREES = ("statut", "updated", "harnais", "session", "parent", "projet", "c
                "alimente", "prerequis", "voir_aussi", "modele", "echeance", "priorite", "echec_tour", "ou", "controle",
                "moteur_impose", "moteur_motif", "execution", "validation", "validation_accord",
                "nature", "genre", "programme", "routine", "contexte", "rattrapage",
-               "executant", "apprendre", "chaine", "chaine_phase")  # INV-ROUTINE-2, INV-EXECUTANT-1, INV-APPRENDRE-1, INV-CHAINE-1
+               "executant", "apprendre", "chaine", "chaine_phase", "reporte_jusqu_au")  # INV-DECISIONS-3, INV-ROUTINE-2, INV-EXECUTANT-1, INV-APPRENDRE-1, INV-CHAINE-1
 CHAMPS = (("fait", "Fait"), ("resultat", "Résultat"), ("essai", "Essai"),
           ("situation", "Situation"), ("reste", "Reste à faire"), ("prochain_pas", "Prochain pas"))
 # INV-APPRENDRE-1 : champ facultatif, hors CHAMPS (les autres lecteurs de la fiche l'ignorent) ; une seule ligne.
