@@ -151,7 +151,7 @@ function dessiner() {
     h('button', { type: 'button', class: 'btn-discret', 'aria-label': t('compagnon.fermer'), onclick: () => { message = null; dessiner(); } }, '×')) : null;
   if (!d) return remplacer(coque, h('h2', { class: 'casc-titre' }, t('compagnon.titre')), etatLigne);
   remplacer(coque, h('h2', { class: 'casc-titre' }, t('compagnon.titre')), etatLigne, bandeau,
-    h('button', { type: 'button', class: 'btn co-travail', onclick: () => ouvrirVue('travail') }, t('travail.titre'), ' ', h('span', { class: 'n' }, epingles().length)),
+    h('button', { type: 'button', class: 'btn co-travail', onclick: () => ouvrirVue('travail') }, t('compagnon.epingles'), ' ', h('span', { class: 'n' }, epingles().length)),
     h('section', { class: 'co-section' }, h('h3', null, t('compagnon.a_decider'), ' ', h('span', { class: 'n' }, d.decisions.length)),
       d.decisions.length ? h('ul', { class: 'co-liste' }, d.decisions.map(carteDecision)) : h('p', { class: 'vide' }, t('compagnon.rien_a_decider')),
       enligne && d.decisions.length ? h('button', { type: 'button', class: 'btn', onclick: () => ouvrirVue('decisions') }, t('compagnon.tout_traiter')) : null),

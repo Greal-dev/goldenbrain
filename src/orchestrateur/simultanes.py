@@ -28,6 +28,13 @@ from .vault import Conflit
 log = logging.getLogger(__name__)
 GO = 1024 ** 3
 MOTIF_REPLI = "mis en pause pour libérer la RAM, la suspension ayant échoué"
+# Seuils de sûreté (audit L1, C2 et C6). earlyoom tue à 10 % de RAM libre : GoldenBrain agit avant
+# lui (plafond effectif 85 %). Une coupure ne se relance qu'après une descente de 5 % du total sous
+# le seuil (hystérésis : sans elle, le tour coupé repartait à la mesure suivante et se faisait
+# recouper). Un démarrage suppose de la marge pour un tour (Claude + MCP : ~600 Mo mesurés).
+PLAFOND_MAX_PCT = 85
+HYSTERESIS_PCT = 5
+COUT_TOUR = 600 * 1024 ** 2
 
 
 @dataclass
@@ -51,6 +58,7 @@ class Creneaux:
         self.pris = 0
         self.bloque = False
         self.gele = False  # INV-MAJ-3
+        self.refroidir = False  # INV-SIMULT-1 : un repli a coupé un tour ; attend la descente sous le seuil de relance
         self.pauses: dict[str, Pause] = {}  # clé du tour ; ordre d'insertion = ordre des pauses
         self.manuelles: dict[str, Pause] = {}  # INV-TRAVAUX-2 : tâche -> pause demandée à la main
         self.mesure: poste_ram.Mesure | None = None
@@ -75,7 +83,12 @@ class Creneaux:
         """RAM occupée à ne pas dépasser (octets)."""
         if self.cfg.mode == "optimiser":
             return int(m.total * (1 - self.cfg.marge_pct / 100))
-        return int(self.cfg.plafond * GO if self.cfg.unite == "go" else m.total * self.cfg.plafond / 100)
+        voulu = int(self.cfg.plafond * GO if self.cfg.unite == "go" else m.total * self.cfg.plafond / 100)
+        return min(voulu, int(m.total * PLAFOND_MAX_PCT / 100))
+
+    def sous_relance(self, m: poste_ram.Mesure) -> bool:
+        """Hystérésis : RAM redescendue nettement sous le seuil de coupure."""
+        return m.occupee <= self.seuil(m) - int(m.total * HYSTERESIS_PCT / 100)
 
     def depasse(self, m: poste_ram.Mesure, en_plus: int = 0) -> bool:
         return m.occupee + en_plus > self.seuil(m)
@@ -87,7 +100,8 @@ class Creneaux:
             return True
         # INV-SIMULT-1 : la file attend tant qu'une pause dure ou que le seuil est dépassé ; un
         # seul démarrage par mesure, pour que la RAM du nouveau tour soit vue avant le suivant.
-        return not (self.pauses or self.demarres or self.depasse(self.mesure)
+        return not (self.pauses or self.demarres or self.depasse(self.mesure, COUT_TOUR)
+                    or (self.refroidir and not self.sous_relance(self.mesure))
                     or (self.cfg.mode == "optimiser" and self.mesure.cpu >= self.cfg.cpu_max_pct))
 
     # --- sémaphore -----------------------------------------------------------------------
@@ -192,6 +206,8 @@ class Creneaux:
     def veiller_une_fois(self) -> None:
         self.mesure, self.demarres = self.poste.mesurer(), 0
         self._purger()
+        if self.refroidir and (self.mesure is None or self.sous_relance(self.mesure)):
+            self.refroidir = False
         if not self.regule():
             for cle in reversed(list(self.pauses)):
                 self.reprendre(cle)
@@ -225,14 +241,16 @@ class Creneaux:
                 continue
             else:
                 self.poste.reprendre(pids)  # ceux que la suspension partielle a figés
+                self.refroidir = True
                 asyncio.get_running_loop().create_task(self._repli(cle, tour))
             return
 
     def _a_pauser(self) -> list:
         """INV-ORDO-2 : du moins prioritaire au plus prioritaire ; à rang égal, du plus récent
         (`tours` garde l'ordre des démarrages ; la date, à la seconde, ne départage pas)."""
+        res = self.m.poste.actuelle()  # INV-POSTE-1 : le titulaire de la réservation porte la porte lourde
         tours = [(c, t) for c, t in list(self.m.tours.items())
-                 if c not in self.pauses and not getattr(t, "exempt_ram", False) and not t.arrete
+                 if not (res and t.tache == res["tache"]) and c not in self.pauses and not getattr(t, "exempt_ram", False) and not t.arrete
                  and not self.en_pause_manuelle(t.tache)]
         candidats = [ordonnancement.Candidat(t.tache, ordonnancement.humain(self.m.envois.get(t.tache))
                                              and not t.persona, n) for n, (_, t) in enumerate(tours)]
@@ -254,8 +272,11 @@ class Creneaux:
             if self.m.tours.get(cle) is not tour and (boucle is None or boucle.done()):
                 break
             await asyncio.sleep(0.05)
+        if (self.m.interrompus.get(tour.tache) or {}).get("reprise"):
+            log.warning("tour %s recoupé sans progrès après sa remise en file : relance humaine", cle)
+            return  # INV-EXEC-1 : une seule reprise automatique par incident, repli compris
         try:
-            reprise._resoumettre(self.m, tour.tache, MOTIF_REPLI, auto=False)
+            reprise._resoumettre(self.m, tour.tache, MOTIF_REPLI, auto=True)
             self.m.files[tour.tache].rotate(1)  # le tour repris passe avant les messages en file
         except Exception as e:
             log.warning("remise en file de %s impossible : %s", tour.tache, e)

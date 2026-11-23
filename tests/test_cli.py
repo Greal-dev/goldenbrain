@@ -44,9 +44,9 @@ def test_dire_incremente_les_sauts(appels, capsys):
 
 
 def test_proposer(appels, capsys):
-    assert cli.main(["proposer", "ticket", "t1", "Sous"]) == 0
+    assert cli.main(["proposer", "ticket", "t1", "Sous", "--motif", "Une description de quatre mots."]) == 0
     assert appels[-1][2] == {"type": "ticket", "tache": "t1", "valeur": "Sous", "de": "t1",
-                             "motif": ""}
+                             "motif": "Une description de quatre mots."}
     assert "proposition n°3" in capsys.readouterr().out
 
 
@@ -133,7 +133,7 @@ def test_creer_sans_description_rend_le_refus_du_serveur(monkeypatch, capsys):
     def refus(methode, chemin, corps=None):
         raise cli.ErreurCli("erreur 400 : tâche sans description : écrivez au moins une phrase")
     monkeypatch.setattr(cli, "appeler", refus)
-    assert cli.main(["creer", "Nue"]) == 1
+    assert cli.main(["creer", "Nue", "--conteneur", "Projets/C1-Alpha"]) == 1
     assert "au moins une phrase" in capsys.readouterr().err
 
 

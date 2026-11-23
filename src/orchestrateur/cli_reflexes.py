@@ -12,6 +12,8 @@ from __future__ import annotations
 
 import os
 
+from .cli_erreurs import ErreurCli
+
 COMMANDES = ("reflexes", "tracer")
 HARNAIS = ("claude", "codex", "opencode", "agy", "copilot")  # = reflexes.CIBLES, sans l'importer à chaque appel
 ETATS = {"absent": "absent", "a_jour": "à jour", "ancien": "ancienne version", "retouche": "retouché à la main"}
@@ -23,7 +25,7 @@ def ajouter(sous) -> None:
     rf.add_argument("action", nargs="?", default="etat", choices=("etat", "apercu", "installer", "retirer"))
     rf.add_argument("--harnais", choices=HARNAIS)
     rf.add_argument("--dossier", help="consignes d'un projet (ce dossier) plutôt que les consignes globales")
-    rf.add_argument("--langue", default="fr", help="langue de l'utilisateur : fr, en, de, es")
+    rf.add_argument("--langue", default="fr", choices=("fr", "en", "de", "es"), help="langue de l'utilisateur : fr, en, de, es")
     rf.add_argument("--accord", action="store_true", help="l'utilisateur a vu l'aperçu et accepté")
     tr = sous.add_parser("tracer", help="consigner dans la fiche d'une tâche ce qui a été fait et ses documents")
     tr.add_argument("id")
@@ -43,7 +45,7 @@ def _reflexes(a) -> list[str]:
                       "--harnais <id> --accord (après l'accord de l'utilisateur)")
         return sortie
     if not a.harnais:
-        return [f"--harnais attendu : {', '.join(HARNAIS)}"]
+        raise ErreurCli(f"--harnais attendu : {', '.join(HARNAIS)}")  # B11 : code 1
     chemin = reflexes.fichier(a.harnais, a.dossier)
     action = "retirer" if a.action == "retirer" else "installer"
     if a.action == "apercu" or not a.accord:

@@ -8,6 +8,8 @@ Invariants portés : INV-CHAINE-3 (motif obligatoire, ajustement journalisé cô
 
 from __future__ import annotations
 
+from .cli_erreurs import ErreurCli
+
 COMMANDES = ("chaine",)
 
 
@@ -30,7 +32,7 @@ def _ligne(p: dict) -> str:
 def executer(a, appeler, quoter, source: str) -> list[str]:
     tache = a.tache or source
     if not tache:
-        return ["ORCH_TACHE absent : précise --tache <id>"]
+        raise ErreurCli("ORCH_TACHE absent : précise --tache <id>")  # B11 : code 1
     if a.action == "plan":
         r = appeler("GET", f"/chaines/executions/{quoter(tache)}")
     else:

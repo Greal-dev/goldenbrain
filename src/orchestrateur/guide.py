@@ -35,7 +35,7 @@ SECTIONS: dict[str, str] = {
     "premiers-pas": "Premiers pas",
     "organiser-votre-second-cerveau": "Organiser votre second cerveau",
     "fonctions-par-ecran": "Fonctions par écran",
-    "accueil": "Accueil",
+    "reprise-de-vos-projets": "Reprise de vos projets",
     "arbre-et-listes": "Arbre et listes",
     "tache": "Tâche",
     "decisions": "Décisions",

@@ -116,7 +116,7 @@ def test_plafond_demarre_un_tour_par_mesure_tant_que_la_ram_reste_sous_le_plafon
         m._sem.veiller_une_fois()
         await laisser()
         assert actifs(m) == ["enfant", "mere"]
-        poste.occuper(79)
+        poste.occuper(75)  # marge de 5 % : de quoi absorber un tour (COUT_TOUR)
         m._sem.veiller_une_fois()
         await laisser()
         assert len(m.tours) == 3  # garde (10) et non plus le nombre fixe (2)

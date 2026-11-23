@@ -184,8 +184,8 @@ def test_proposition_du_jardinier_appliquee_d_office_en_politique_accepter(confi
 
 def test_jardinier_depose_plus_que_son_plafond_par_passage(config, vault, faux, racine):
     m, j, ident = _jardin(config, vault, faux, racine, plafond=2)
-    for _ in range(2):
-        m.proposer("lier", "recente", "voir_aussi:cible", ident, "mentionnée")
+    for type_ in ("voir_aussi", "alimente"):  # deux propositions distinctes (une identique n'est déposée qu'une fois)
+        m.proposer("lier", "recente", f"{type_}:cible", ident, "mentionnée")
     with pytest.raises(Exception, match="plafond du jardinier"):
         m.proposer("lier", "ancienne", "voir_aussi:cible", ident, "mentionnée")
     m.proposer("lier", "ancienne", "voir_aussi:cible", "autre-agent", "hors jardinier")  # non concerné

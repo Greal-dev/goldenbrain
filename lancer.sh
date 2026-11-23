@@ -3,7 +3,21 @@
 # Python : première ligne de python.local (non suivi), sinon python3 du PATH.
 cd "$(dirname "$0")" || exit 1
 PY=python3
-[ -f python.local ] && read -r PY < python.local
+if [ -f python.local ]; then  # CRLF (fichier écrit sous Windows), espaces et guillemets de bord tolérés
+    read -r PY < python.local
+    PY=$(printf '%s' "$PY" | tr -d '\r' | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//' -e 's/^"\(.*\)"$/\1/')
+fi
+# Audit L2 (B9) : un Python introuvable ou sans dépendances s'explique en français, avec la piste de réparation.
+if ! command -v "$PY" > /dev/null 2>&1; then
+    echo "GoldenBrain ne démarre pas : Python introuvable (« $PY »)." >&2
+    echo "Corrigez la première ligne de python.local (chemin complet de python3, sans guillemets) ou supprimez ce fichier ; voir docs/GUIDE.md, section « Installer »." >&2
+    exit 1
+fi
+if ! "$PY" -c "import fastapi, uvicorn, yaml" > /dev/null 2>&1; then
+    echo "GoldenBrain ne démarre pas : il manque FastAPI, uvicorn ou PyYAML dans « $PY »." >&2
+    echo "Installez-les : \"$PY\" -m pip install fastapi uvicorn pyyaml ; voir docs/GUIDE.md, section « Installer »." >&2
+    exit 1
+fi
 # Premier lancement : crée config.toml (vos écarts seulement).
 [ -f config.toml ] || cp config.depart.toml config.toml
 # Adresse annoncée : le port de config.toml s'il y est réglé (installation à blanc, 19/11).

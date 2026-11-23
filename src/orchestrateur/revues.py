@@ -125,10 +125,16 @@ class Revues:
 
     # --- gestes humains ----------------------------------------------------------------
     def valider(self, tache: str) -> None:
+        statut = self.m.vault.tache(tache).statut  # B6 : on ne valide que ce qui est rendu à l'humain
+        if statut not in ("fait", self.m.vault.retour):
+            raise Conflit(langues.t("serveur.revues.valider_etat", statut=statut or "?"))
         self.m.vault.poser_statut(tache, "cloture", humain=True)  # 409 si verrouillée
         self._remettre_a_zero(tache)
 
     def renvoyer(self, tache: str, texte: str) -> None:
+        statut = self.m.vault.tache(tache).statut  # B6 : renvoyer une tâche arrêtée la rouvrirait en silence
+        if statut in ("cloture", "abandonne"):
+            raise Conflit(langues.t("serveur.revues.renvoyer_close", statut=statut))
         self.m.soumettre(tache, texte)
 
     def solliciter(self, tache: str, persona: str, question: str = "") -> None:

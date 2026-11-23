@@ -141,7 +141,7 @@ The vault is your **second brain**: ordinary notes (Markdown files) that GoldenB
 
 ## Features by screen {#fonctions-par-ecran}
 
-### Welcome {#accueil}
+### Import your projects {#reprise-de-vos-projets}
 
 - **What it is for**: on first launch, taking over what already exists (projects, agent conversations, vault) instead of starting from an empty tree.
 - **How to do it**: three steps, “Choose”, “Review”, “Confirm”. Tick the sources you want (a few questions, a designated folder, your Claude Code or Codex conversations, your Markdown vault), then “Suggest a structure”; rename, untick or drag the suggested items; “Confirm” writes, “Open my tree” finishes. “Later” closes without writing anything.

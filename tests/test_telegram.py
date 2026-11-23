@@ -445,7 +445,7 @@ def test_cli_creer_lancer_et_mission_transmis(monkeypatch):
         return {"id": "t9", "titre": "Payer la facture", "fil_ariane": ["C1"]}
 
     monkeypatch.setattr(cli, "appeler", appeler)
-    assert cli.main(["creer", "Déposer", "--lancer", "--mission", "Range le PDF"]) == 0
+    assert cli.main(["creer", "Déposer", "--conteneur", "Projets/C1-Alpha", "--lancer", "--mission", "Range le PDF"]) == 0
     assert journal[0][2]["lancer"] is True and journal[0][2]["mission"] == "Range le PDF"
     with pytest.raises(SystemExit):
         cli.main(["creer", "Déposer", "--mission", "Range le PDF"])  # mission attend --lancer

@@ -17,6 +17,7 @@ import { repereIA, compteIA, surOccupees } from './verrou.js';
 import { pastilleMoi } from './executant.js';
 import { boutonConversation, majConversation } from './pilotage.js';
 import { majReglageConteneur } from './execution.js';
+import { ouvrirAccueil } from './accueil.js';
 
 const CLE = 'orch.cascade.replis';
 let replis = (() => { try { return JSON.parse(localStorage.getItem(CLE) || '{}'); } catch { return {}; } })(); // {cle: true} = replié
@@ -175,6 +176,18 @@ function majProps() {
     h('ul', { class: 'props compact' }, l.map(carteProposition))) : null);
 }
 
+// Vault vide (premier lancement après « Plus tard ») : trois gestes plutôt qu'un « Chargement… » sans fin (audit L3, A1).
+function videGuide() {
+  const clic = (sel) => () => document.querySelector(sel)?.click();
+  return h('div', { class: 'vide-guide', 'data-id': 'vide-guide' },
+    h('strong', {}, t('cascade.vide_titre')),
+    h('span', {}, t('cascade.vide_texte')),
+    h('div', { class: 'vide-actions' },
+      h('button', { class: 'btn primaire', type: 'button', 'data-id': 'vide-creer', onclick: clic('#btn-nouvelle') }, t('cascade.vide_creer')),
+      h('button', { class: 'btn', type: 'button', 'data-id': 'vide-importer', onclick: () => ouvrirAccueil() }, t('cascade.vide_importer'))),
+    h('small', {}, t('cascade.vide_vault')));
+}
+
 function corps(racines) {
   const top = ref.defile.scrollTop;
   const actif = ref.defile.contains(document.activeElement) ? document.activeElement.dataset?.cle : null;
@@ -184,7 +197,8 @@ function corps(racines) {
   if (!rows.some((r) => cle(r.n) === cleFocus)) cleFocus = rows[0] ? cle(rows[0].n) : null;
   remplacer(ref.corps, rows.map(ligne));
   ref.vide.hidden = rows.length > 0;
-  ref.vide.textContent = filtreActif() ? t('cascade.aucune_correspondance') : (S.arbre.length ? t('cascade.aucune') : t('cascade.chargement'));
+  if (!filtreActif() && !S.arbre.length && S.arbreCharge) remplacer(ref.vide, videGuide());
+  else remplacer(ref.vide, filtreActif() ? t('cascade.aucune_correspondance') : (S.arbre.length ? t('cascade.aucune') : t('cascade.chargement')));
   ref.defile.scrollTop = top;
   if (actif) visibles.get(actif)?.el.focus({ preventScroll: true });
 }

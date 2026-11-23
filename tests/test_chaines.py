@@ -10,6 +10,7 @@ from fastapi.testclient import TestClient
 
 from conftest import RENDU, ecrire, scenario_ok
 from orchestrateur import api, chaines, cli_chaines, langues
+from orchestrateur.cli_erreurs import ErreurCli
 from orchestrateur.chaines_execution import Chaines
 from orchestrateur.moteur import Moteur
 from orchestrateur.vault import Conflit, Invalide, NonTrouve
@@ -298,7 +299,8 @@ def test_commande_chaine_plan_et_ajouter():
     cli_chaines.executer(a, appeler, lambda s: s, "t1")
     assert appels[-1][2] == {"de": "t1", "action": "ajouter", "motif": "BPU", "n": "1", "titre": "Chiffrage",
                              "consigne": "Chiffre."}
-    assert cli_chaines.executer(a, appeler, lambda s: s, "")[0].startswith("ORCH_TACHE")
+    with pytest.raises(ErreurCli, match="ORCH_TACHE"):  # B11 : code de sortie non nul
+        cli_chaines.executer(a, appeler, lambda s: s, "")
 
 
 def test_cles_serveur_existent_en_quatre_langues():

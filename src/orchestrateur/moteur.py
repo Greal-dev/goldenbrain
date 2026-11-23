@@ -23,7 +23,7 @@ from collections import defaultdict, deque
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 
-from . import (apprendre, instrumentation, agents_cc, langues, catalogue, codespace, decisions, depot, echecs, economie, executant, executeurs, fiches, incidents, liens, natif, ordonnancement, pilotage,
+from . import (apprendre, assistant_absent, instrumentation, agents_cc, langues, catalogue, codespace, decisions, depot, echecs, economie, executant, executeurs, fiches, incidents, liens, natif, ordonnancement, pilotage,
                quota, regroupement, reprise, reseau, retour, sessions, simultanes, temps, transformations)
 from .propagation import MixinPropagation
 from .config import RACINE_DEPOT, Config
@@ -423,12 +423,12 @@ class Moteur(retour.MixinRetour, MixinVerrou, MixinControle, MixinCompactage, Mi
               parent: str | None = None, lancer: bool = False, harnais: str | None = None,
               modele: str | None = None, echeance: str | None = None,
               priorite: str | None = None, mission: str = "") -> str:
-        harnais = harnais if self.config.interface.actif("moteurs") else None  # INV-INTERFACE-1
+        harnais = harnais if self.config.interface.actif("moteurs") or harnais in self.registre else None  # INV-INTERFACE-1 : sauf l'assistant choisi aux premiers pas
         if harnais and harnais not in self.registre:
             raise Invalide(langues.t("serveur.moteur.harnais_inconnu", nom=harnais))
         catalogue.modele_valide(modele or "")
-        ident = self.vault.creer(titre, conteneur, parent, description, harnais,
-                                 temps.valider(echeance or None, priorite or None))
+        if lancer: assistant_absent.exiger(self, None, harnais)  # INV-PREMIERS-PAS-2 : avant de créer
+        ident = self.vault.creer(titre, conteneur, parent, description, harnais, temps.valider(echeance or None, priorite or None))
         if modele: self.vault.modifier(ident, {"modele": modele})
         self.publier("arbre")
         if lancer:  # la mission (consigne du premier tour) l'emporte sur la description

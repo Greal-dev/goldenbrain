@@ -1,7 +1,7 @@
 """Commande `orch ligne` et rendu des refus de rangement, à l'usage de l'agent du client.
 
 Rôle : `orch ligne <id> "<texte>"` ajoute une ligne (travail court, sans livrable ni branche propres) à une
-tâche ; `--cocher N` coche ou décoche la ligne n° N (1 = la première) ; `rendre_rangement` dit à l'agent quoi
+tâche ; `--cocher N` s'assure que la ligne n° N est faite, `--decocher N` qu'elle ne l'est pas (1 = la première ; idempotents) ; `rendre_rangement` dit à l'agent quoi
 faire quand la création est refusée parce qu'un parent est plein ou qu'une autre nature s'y mélangerait.
 Frontières : passe par l'API (`POST /api/taches/{id}/lignes[/basculer]`), rien d'importé du moteur ni du vault.
 Invariants portés : INV-LIGNES-1, INV-PLAFOND-1, INV-NATURE-1.
@@ -10,6 +10,8 @@ Invariants portés : INV-LIGNES-1, INV-PLAFOND-1, INV-NATURE-1.
 from __future__ import annotations
 
 import os
+
+from .cli_erreurs import ErreurCli
 
 COMMANDES = ("ligne",)
 
@@ -20,18 +22,28 @@ def ajouter(sous) -> None:
     li.add_argument("texte", nargs="?", default="", help="ce qui est fait ou à faire, en une ligne")
     li.add_argument("--document", default="", help="document lié (chemin ou lien)")
     li.add_argument("--fait", action="store_true", help="la ligne est déjà faite")
-    li.add_argument("--cocher", type=int, default=0, help="cocher ou décocher la ligne n° N (1 = la première)")
+    li.add_argument("--cocher", type=int, default=0, help="s'assurer que la ligne n° N est faite (1 = la première)")
+    li.add_argument("--decocher", type=int, default=0, help="s'assurer que la ligne n° N n'est pas faite")
 
 
 def executer(a, appeler, quoter, source: str = "") -> list[str]:
     base = f"/taches/{quoter(a.id)}/lignes"
-    if a.cocher:
-        r = appeler("POST", f"{base}/basculer", {"index": a.cocher - 1})
+    if a.cocher or a.decocher:  # B12 : idempotent (on lit l'état, on ne bascule que si nécessaire) ; le texte n'est pas ignoré
+        if a.texte.strip() or (a.cocher and a.decocher):
+            raise ErreurCli("--cocher / --decocher ne se combinent ni avec un texte ni entre eux : "
+                            "une ligne s'ajoute (orch ligne <id> \"<texte>\") ou se coche, pas les deux")
+        n, voulu = (a.cocher, True) if a.cocher else (a.decocher, False)
+        lignes = appeler("GET", f"/taches/{quoter(a.id)}")["fiche"]["lignes"]
+        if not 1 <= n <= len(lignes):
+            raise ErreurCli(f"ligne n° {n} introuvable : {a.id} en compte {len(lignes)}")
+        r = {"lignes": lignes}
+        if bool(lignes[n - 1]["fait"]) != voulu:
+            r = appeler("POST", f"{base}/basculer", {"index": n - 1})
     elif a.texte.strip():
         lien = os.path.abspath(a.document) if a.document else ""  # le serveur ne connaît pas le dossier courant
         r = appeler("POST", base, {"texte": a.texte, "lien": lien, "fait": a.fait})
     else:
-        return ["texte attendu : orch ligne <id> \"<ce qui est fait ou à faire>\" (ou --cocher N)"]
+        raise ErreurCli("texte attendu : orch ligne <id> \"<ce qui est fait ou à faire>\" (ou --cocher N)")  # B11
     faites = sum(x["fait"] for x in r["lignes"])
     return [f"{a.id} : {len(r['lignes'])} ligne(s), {faites} faite(s)"]
 
@@ -53,5 +65,5 @@ def rendre_rangement(corps) -> str:
             lignes.append(f"- nouveau regroupement « {p['titre']} » : orch creer \"{p['titre']}\" --description \"…\""
                           + (f" --parent {rang['parent']}" if rang.get("parent") else "")
                           + ", puis orch creer \"<titre>\" --parent <ce regroupement>")
-    lignes.append("N'ajoute ici (--nouvelle) que si aucun de ces rangements ne convient.")
+    lignes.append("Ne passe outre (--hors-rangement) que si aucun de ces rangements ne convient.")  # B3
     return "\n".join(lignes)

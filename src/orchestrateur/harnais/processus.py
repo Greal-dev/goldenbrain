@@ -19,6 +19,8 @@ import sys
 from pathlib import Path
 from typing import AsyncIterator
 
+from .. import poste_ram
+
 LIMITE_LIGNE = 64 * 1024 * 1024  # une ligne d'événement dépasse souvent les 64 Ko par défaut
 
 
@@ -54,6 +56,13 @@ def resoudre(commande: str) -> list[str]:
 SESSION_PROPRE = {} if sys.platform == "win32" else {"start_new_session": True}
 
 
+def _groupe_de(pid: int) -> int | None:
+    try:
+        return os.getpgid(pid)
+    except OSError:
+        return None  # sorti entre le recensement et la lecture
+
+
 async def arreter_arbre(proc: asyncio.subprocess.Process) -> None:
     if proc.returncode is not None:
         return
@@ -66,10 +75,18 @@ async def arreter_arbre(proc: asyncio.subprocess.Process) -> None:
         return
     try:
         groupe = os.getpgid(proc.pid)
+        # Recensé AVANT le signal : un processus qui a changé de groupe (navigateur Playwright,
+        # serveur lancé par l'agent) échappe à `killpg` mais pas à la parenté ni à la session.
+        detaches = [p for p in poste_ram.arbre(proc.pid) if p != proc.pid and _groupe_de(p) not in (groupe, None)]
         if groupe == os.getpgrp():  # fils lancé sans session propre : ne jamais tuer notre groupe
             proc.kill()
         else:
             os.killpg(groupe, signal.SIGKILL)
+        for p in detaches:
+            try:
+                os.kill(p, signal.SIGKILL)
+            except OSError:
+                pass  # déjà parti
     except ProcessLookupError:
         pass  # déjà parti
     except PermissionError:

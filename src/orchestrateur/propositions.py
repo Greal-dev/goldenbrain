@@ -4,7 +4,8 @@ Rôle : stocker les propositions (`etat/propositions.json`), les créer, les tra
 acceptation, appeler la fonction du geste humain correspondant.
 Frontières : mélangé au `Moteur` (dont il emprunte vault, publier, soumettre, creer, deriver) ;
 pas de HTTP.
-Invariants portés : INV-EXEC-5 (une proposition n'est exécutée que sur geste humain).
+Invariants portés : INV-EXEC-5 (une proposition n'est exécutée que sur geste humain), INV-RAPPROCHEMENT-1,
+INV-PLAFOND-1 et INV-INTEG-2 (une tâche ou un ticket accepté passe les mêmes gardes que `orch creer`).
 """
 
 from __future__ import annotations
@@ -14,7 +15,7 @@ import json
 import logging
 from pathlib import Path
 
-from . import fiches, langues, liens, rattachement, temps, transformations
+from . import fiches, langues, liens, rangement, rapprochement, rattachement, temps, transformations
 from .vault import Conflit, Invalide, NonTrouve, exiger_description, titre_valide
 
 TYPES_PROPOSITION = ("deplacer", "ticket", "projet", "lier", "operation", "tache", "perimetre", "echeance", "fermer",
@@ -45,6 +46,7 @@ class Propositions:
     def __init__(self, chemin: Path):
         self.chemin = chemin
         self.liste: list[dict] = lire_liste(chemin)
+        self.en_cours: set[int] = set()  # C8 : propositions dont l'acceptation (asynchrone) est en train de s'appliquer
         for p in self.liste:  # propositions d'avant le lot 2 : pas de motif
             if isinstance(p, dict):
                 p.setdefault("motif", "")
@@ -52,6 +54,15 @@ class Propositions:
     def sauver(self) -> None:
         self.chemin.parent.mkdir(parents=True, exist_ok=True)
         fiches.ecrire_atomique(self.chemin, json.dumps(self.liste, ensure_ascii=False, indent=1))
+
+    def reserver(self, n: int) -> None:
+        """C8 : un second « accepter » pendant l'application du premier est refusé (409), pas rejoué."""
+        if n in self.en_cours:
+            raise Conflit(langues.t("serveur.propositions.en_cours", n=n))
+        self.en_cours.add(n)
+
+    def liberer(self, n: int) -> None:
+        self.en_cours.discard(n)
 
     def get(self, n: int) -> dict:
         try:
@@ -95,6 +106,13 @@ class MixinPropositions:
             tache = ids[0]
             annexe = {**(annexe or {}), "taches": ids, "titres": [self.vault.tache(i).titre for i in ids]}
         t = self.vault.tache(tache)
+        if type_ == "lier":  # B7 : refus à la création, pas à l'acceptation
+            if self.vault.tache(_lien_propose(valeur)[1]).id == t.id:
+                raise Conflit(langues.t("serveur.propositions.auto_lien"))
+        if q := next((q for q in self.propositions.liste if q["etat"] == "en_attente" and q["type"] == type_
+                      and q["tache"] == tache and q["valeur"] == valeur
+                      and (q.get("taches") or []) == ((annexe or {}).get("taches") or [])), None):
+            return {"type": type_, "tache": tache, "valeur": valeur, "etat": "deja_proposee", "n": q["n"]}
         if self._deja_fait(type_, tache, valeur, (annexe or {}).get("taches")):  # rien à décider : on ne dépose pas
             return {"type": type_, "tache": tache, "valeur": valeur, "etat": "deja_fait"}
         jardin = getattr(self, "jardinier", None)  # INV-JARD-2 : plafond par passage, jamais d'office
@@ -139,6 +157,25 @@ class MixinPropositions:
             self._executer(p["type"], p["tache"], p["valeur"], p["motif"], p.get("taches"))
         return self.conclure(p, accepter)
 
+    def _gardes_creation(self, titre: str, description: str, conteneur: str, parent: str | None, origine: str) -> str:
+        """C7 : une tâche ou un ticket accepté passe les gardes de `orch creer` : doublon (INV-RAPPROCHEMENT-1),
+        plafond et nature (INV-PLAFOND-1, INV-NATURE-1). Le geste humain tranche la proposition, pas ces refus :
+        l'acceptation échoue (409) et la proposition reste en attente. Rend la nature déduite."""
+        cands = rapprochement.proches(self.vault, titre, description, conteneur, exclure=(origine,))
+        if rapprochement.forte(cands):
+            raise Conflit(langues.t("serveur.propositions.doublon", titre=titre,
+                                    proches=", ".join(c["id"] for c in cands[:3])))
+        genre = rangement.deduire(titre, description)
+        if rang := rangement.propositions(self.vault, self.config.rangement, titre, description, conteneur, parent, genre):
+            raise Conflit(langues.t(f"serveur.api_rapprochement.rangement_{rang['raison']}",
+                                    ouvertes=rang["ouvertes"], plafond=rang["plafond"]))
+        return genre
+
+    def _apres_creation(self, ident: str, genre: str | None) -> None:
+        if genre:
+            self.vault.modifier(ident, {"genre": genre})
+        liens.relier_integration(self.vault, ident)  # INV-INTEG-2 : sans lien, la branche livrée n'est jamais intégrée
+
     def _deja_fait(self, type_: str, tache: str, valeur: str, taches: list | None = None) -> bool:
         """INV-DEJAFAIT-1 : l'effet de la proposition est-il déjà en place ? (lien présent, déjà rattachée, au bon endroit, déjà ce titre ou ce statut)"""
         try:
@@ -169,7 +206,10 @@ class MixinPropositions:
             self.vault.deplacer_conteneur(tache, valeur)
         elif type_ == "ticket":
             avec_fil = bool(self.vault.tache(tache).fm.get("session"))
-            self.deriver(tache, valeur, "enfant", avec_fil, description=motif)
+            conteneur = self.vault.tache(tache).conteneur
+            genre = self._gardes_creation(valeur, motif, conteneur, tache, tache)  # C7
+            ident = self.deriver(tache, valeur, "enfant", avec_fil, description=motif)
+            self._apres_creation(ident, genre)
         elif type_ == "projet":
             transformations.promouvoir(self, tache, valeur, decouper=True)
         elif type_ == "lier":
@@ -187,7 +227,10 @@ class MixinPropositions:
             rattachement.appliquer(self.vault, self.config.rangement, self.occupation, taches or [tache], valeur)
         elif type_ == "tache":
             conteneur = self.vault.tache(tache).conteneur
-            liens.lier(self.vault, self.creer(valeur, motif, conteneur=conteneur), "voir_aussi", tache)
+            genre = self._gardes_creation(valeur, motif, conteneur, None, tache)  # C7 : elle naît à la racine du projet
+            ident = self.creer(valeur, motif, conteneur=conteneur)
+            liens.lier(self.vault, ident, "voir_aussi", tache)
+            self._apres_creation(ident, genre)
         else:  # perimetre
             self.soumettre(tache, f"[Périmètre révisé, validé par l'utilisateur] {valeur}")
 

@@ -6,6 +6,7 @@ export const S = {
   get arbre() { return (arbreVu ??= S.vueArbre(arbreBrut)); },
   set arbre(v) { arbreBrut = v; arbreVu = null; },
   invaliderArbre() { arbreVu = null; },
+  arbreCharge: false, // vrai dès qu'une réponse de /arbre est arrivée : distingue « vault vide » de « en chargement »
   vueArbre: (n) => n,
   etat: { tours: [], en_file: 0, a_moi: 0, en_retard: 0, propositions: 0 }, props: [],
   toutes: false, selection: null, recherche: '', filtreAMoi: false,

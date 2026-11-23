@@ -101,5 +101,5 @@ def test_rendu_cli_du_409(monkeypatch, capsys):
 def test_creer_cli_transmet_forcer(monkeypatch):
     envoyes = []
     monkeypatch.setattr(cli, "appeler", lambda m, c, corps=None: envoyes.append(corps) or {"id": "n", "titre": "T"})
-    assert cli.main(["creer", "T", "--description", "Une phrase de description ici.", "--nouvelle"]) == 0
+    assert cli.main(["creer", "T", "--conteneur", "Projets/C1-Alpha", "--description", "Une phrase de description ici.", "--nouvelle"]) == 0
     assert envoyes[0]["forcer"] is True

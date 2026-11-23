@@ -103,6 +103,8 @@ class FeuxVerts:
             raise Invalide(langues.t("serveur.feux_verts.verdict_inconnu", geste=geste))
         if de != f["controleur"]:  # INV-FEU-1 : seul le contrôleur désigné tranche.
             raise Interdit(langues.t("serveur.feux_verts.controleur_seul", controleur=f["controleur"]))
+        if f["etat"] == "accorde":  # B15 : un feu vert accordé ne se rouvre pas ; « une nouvelle demande » serait faux
+            raise Conflit(langues.t("serveur.feux_verts.deja_accorde", sha=sha))
         if f["etat"] != "en_attente":
             raise Conflit(langues.t("serveur.feux_verts.deja_tranche", etat=f["etat"]))
         if not motif.strip():

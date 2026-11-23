@@ -141,7 +141,7 @@ El vault es su **segundo cerebro**: notas corrientes (archivos Markdown) que Gol
 
 ## Funciones por pantalla {#fonctions-par-ecran}
 
-### Bienvenida {#accueil}
+### Importar sus proyectos {#reprise-de-vos-projets}
 
 - **Para qué sirve**: en el primer inicio, retomar lo existente (proyectos, conversaciones de agentes, vault) en lugar de partir de un árbol vacío.
 - **Cómo se hace**: tres pasos, «Elegir», «Revisar», «Validar». Marque las fuentes deseadas (unas preguntas, una carpeta designada, sus conversaciones de Claude Code o Codex, su vault de Markdown) y luego «Proponer una estructura»; renombre, desmarque o arrastre los elementos propuestos; «Validar» escribe, «Abrir mi árbol» termina. «Más tarde» cierra sin escribir nada.

@@ -27,7 +27,8 @@ class CorpsTache(BaseModel):
     modele: str | None = None
     echeance: str | None = None
     priorite: str | None = None
-    forcer: bool = False  # INV-RAPPROCHEMENT-1 : créer malgré une tâche proche ; INV-PLAFOND-1 : malgré un parent plein
+    forcer: bool = False  # INV-RAPPROCHEMENT-1 : créer malgré une tâche proche ; interface : aussi malgré un parent plein
+    hors_rangement: bool = False  # INV-PLAFOND-1 : pour un agent, la seule dérogation au plafond / à la nature
     genre: str | None = None  # nature de la tâche (INV-NATURE-1) ; absente : déduite du titre
     groupe: str | None = None  # titre d'un regroupement à créer sous le parent pour y ranger la tâche (INV-PLAFOND-1)
 

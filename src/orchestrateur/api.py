@@ -420,10 +420,13 @@ def creer_app(config: Config, moteur: Moteur | None = None) -> FastAPI:
         if p["type"] == "operation" and p["etat"] == "en_attente":
             # INV-ARBRE-2 : le dossier du projet rejoint l'opération (plan, verrou, tout ou rien) ;
             # un refus (409) laisse la proposition en attente (INV-EXEC-5).
-            plan = await asyncio.to_thread(geste.planifier_operation, aligneur, p["tache"],
-                                           p["valeur"])
-            await routeur_arbre.appliquer(plan["jeton"])
-            return moteur.conclure(p, True)
+            moteur.propositions.reserver(n)  # C8 : le double clic ne rejoue pas le plan
+            try:
+                plan = await asyncio.to_thread(geste.planifier_operation, aligneur, p["tache"], p["valeur"])
+                await routeur_arbre.appliquer(plan["jeton"])
+                return moteur.conclure(p, True)
+            finally:
+                moteur.propositions.liberer(n)
         return moteur.trancher(n, True)
 
     @app.post("/api/propositions/{n}/refuser")

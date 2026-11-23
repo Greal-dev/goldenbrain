@@ -13,7 +13,8 @@ import datetime as dt
 import json
 import os
 import re
-import tempfile
+import stat
+import uuid
 from pathlib import Path
 
 import yaml
@@ -46,12 +47,18 @@ def lire(chemin: Path) -> str:
 
 def ecrire_atomique(chemin: Path, texte: str) -> None:
     # INV-VAULT-2 : temporaire dans le même dossier puis os.replace, jamais de fichier à moitié écrit.
-    fd, tmp = tempfile.mkstemp(dir=chemin.parent, prefix=".orch-", suffix=".tmp")
+    # C10 : mkstemp crée en 0600 ; une fiche réécrite garde ses droits d'origine (un fichier neuf, ceux du umask).
+    tmp = str(chemin.parent / f".orch-{uuid.uuid4().hex}.tmp")
+    fd = os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o666)
     try:
         with os.fdopen(fd, "wb") as f:
             f.write(texte.encode("utf-8", errors="surrogateescape"))
             f.flush()
             os.fsync(f.fileno())
+        try:
+            os.chmod(tmp, stat.S_IMODE(os.stat(chemin).st_mode))
+        except FileNotFoundError:
+            pass
         os.replace(tmp, chemin)
     except BaseException:
         Path(tmp).unlink(missing_ok=True)

@@ -29,27 +29,16 @@ import urllib.parse
 import urllib.request
 
 from . import cli_chaines, cli_lignes, cli_reflexes
+from .cli_divers import _agents_cc, _m365, natif  # noqa: F401  (réexportés : `orch natif`, `m365`, `agents-cc`)
+from .cli_erreurs import ErreurCli, ParseurFr
 
 
-class ErreurCli(Exception):
-    pass
-
-
-def natif(fichier: str) -> int:
-    """INV-NATIF-1 : écrit son PID (que GoldenBrain surveille) puis exécute le harnais au premier
-    plan de l'onglet ; sa fin, onglet fermé compris, est la fermeture de l'interface native."""
-    spec = json.loads(open(fichier, encoding="utf-8").read())
-    with open(os.path.splitext(fichier)[0] + ".pid", "w", encoding="utf-8") as f:
-        f.write(str(os.getpid()))
-    env = {**os.environ, **spec.get("env", {})}
-    if spec.get("argv"):
-        return subprocess.run(spec["argv"], cwd=spec.get("dossier"), env=env).returncode
-    return subprocess.run(spec["commande"], cwd=spec.get("dossier"), env=env,
-                          shell=True).returncode
 
 
 def appeler(methode: str, chemin: str, corps: dict | None = None):
-    base = os.environ.get("ORCH_URL", "http://127.0.0.1:8300").rstrip("/")
+    base = os.environ.get("ORCH_URL", "http://127.0.0.1:8300").strip().rstrip("/")
+    if base and "://" not in base:  # B10 : « 127.0.0.1:8300 » sans schéma est corrigé, pas un traceback
+        base = "http://" + base
     donnees = json.dumps(corps).encode("utf-8") if corps is not None else None
     req = urllib.request.Request(base + "/api" + chemin, data=donnees, method=methode, headers={
         "Content-Type": "application/json", "X-Orchestrateur": "1",
@@ -67,8 +56,10 @@ def appeler(methode: str, chemin: str, corps: dict | None = None):
         except ValueError:
             detail = e.reason
         raise ErreurCli(f"erreur {e.code} : {detail}" + rendre_proches(corps)) from None
-    except urllib.error.URLError as e:
-        raise ErreurCli(f"orchestrateur injoignable ({base}) : {e.reason}") from None
+    except (urllib.error.URLError, ValueError, OSError) as e:  # B10 : une piste, jamais un traceback
+        raison = getattr(e, "reason", e)
+        raise ErreurCli(f"orchestrateur injoignable ({base}) : {raison}. Lancez-le (./lancer.sh ; lancer.cmd sous "
+                        "Windows) ou vérifiez ORCH_URL (adresse complète, ex. http://127.0.0.1:8300).") from None
 
 
 def _q(ident: str) -> str:
@@ -213,37 +204,8 @@ def deleguer(titre: str, brief: str, source: str, sauts: int, forcer: bool = Fal
             f"son résultat te reviendra en message"]
 
 
-def _m365(a) -> int:
-    """Appel direct à Microsoft 365, sans le serveur GoldenBrain (INV-M365-1, INV-M365-3)."""
-    from . import m365  # import tardif : la commande ne charge le connecteur que si on l'emploie
-    try:
-        conf = m365.charger()
-        if a.action == "connecter":
-            m365.connecter(conf)
-            return 0
-        sortie = (m365.rendre_reponse(m365.demander(conf, a.question)) if a.action == "demander"
-                  else m365.rendre_contexte(m365.contexte(conf, a.question, a.source, a.nombre)))
-    except (m365.ErreurM365, ValueError) as e:
-        print(str(e), file=sys.stderr)
-        return 1
-    print("\n".join(sortie))
-    return 0
-
-
-def _agents_cc(r: dict) -> list[str]:
-    """Un groupe par ligne : nom, état, nombre de sessions, rattachement proposé."""
-    if not r["actif"]:
-        return ["relevé débrayé : réglez [agents_cc] dossier dans config.toml"]
-    sortie = [f"{len(r['groupes'])} agent(s) regroupé(s) — dernier relevé {r['derniere'] or 'jamais'}"]
-    for g in r["groupes"]:
-        cible = (f" -> {g['tache']}" if g["tache"] else "") + (" (ignoré)" if g["ignore"] else "")
-        sortie.append(f"{g['nom']} [{g['etat']}] {len(g['historique']) + 1} session(s) : {g['action']}{cible}"
-                      f" — {g['motif']}")
-    return sortie
-
-
 def main(argv: list[str] | None = None) -> int:
-    p = argparse.ArgumentParser(prog="orch", description="Pilotage des tâches de l'orchestrateur.")
+    p = ParseurFr(prog="orch", description="Pilotage des tâches de l'orchestrateur.")
     sous = p.add_subparsers(dest="commande", required=True)
     sous.add_parser("guide", help="guide d'utilisation (docs/GUIDE.md) : à lire d'abord")  # INV-GUIDE-1
     sous.add_parser("arbre", help="arbre des tâches ouvertes")
@@ -254,6 +216,7 @@ def main(argv: list[str] | None = None) -> int:
     d = sous.add_parser("dire", help="message à une autre tâche")
     d.add_argument("id")
     d.add_argument("message")
+    d.add_argument("--rouvrir", action="store_true", help="la tâche est close : la rouvrir en lui écrivant (sinon refusé)")
     sous.add_parser("chercher", help="tâches dont le titre, la fiche ou la place contiennent tous les mots").add_argument("mots")
     for m in (cli_reflexes, cli_chaines, cli_lignes): m.ajouter(sous)  # reflexes, tracer, chaine, ligne : INV-REFLEXES-1, INV-TRACE-1, INV-CHAINE-3
     de = sous.add_parser("deleguer", help="confier un travail à une tâche enfant, lancée par GoldenBrain")
@@ -267,6 +230,8 @@ def main(argv: list[str] | None = None) -> int:
     cr.add_argument("--parent", default=None, help="tâche parente")
     cr.add_argument("--envoi", type=int, default=0, help="n° de l'envoi Telegram rangé par cette tâche")
     cr.add_argument("--nouvelle", dest="forcer", action="store_true", help="créer malgré une tâche proche (sinon : orch dire)")
+    cr.add_argument("--hors-rangement", dest="hors_rangement", action="store_true",
+                    help="créer malgré un parent plein (10 ouvertes) ou d'une autre nature : à n'employer qu'après avoir écarté les rangements proposés")
     cr.add_argument("--lancer", action="store_true", help="lancer la tâche aussitôt (premier tour)")
     cr.add_argument("--mission", default="", help="consigne du premier tour (avec --lancer)")
     ra0 = sous.add_parser("rapprochement", help="tâches proches d'un titre ; sans titre : créations évitées")
@@ -326,7 +291,7 @@ def main(argv: list[str] | None = None) -> int:
     ms.add_argument("--source", default="", help="contexte : sharePoint, oneDriveBusiness, externalItem")
     ms.add_argument("--nombre", type=int, default=10, help="contexte : extraits au plus (1-25)")
     ex = sous.add_parser("executeur", help="faire de ce PC un exécuteur d'un GoldenBrain chef")
-    ex.add_argument("action", nargs="?", choices=["installer"], default="", help="installer : assistant d'installation des prérequis, étape par étape, avec accord")
+    ex.add_argument("action", nargs="?", choices=["installer"], default=None, help="installer : assistant d'installation des prérequis, étape par étape, avec accord")
     ex.add_argument("--harnais", default="claude", help="installer : harnais à installer, séparés par des virgules (claude, codex, copilot, opencode, agy)")
     ex.add_argument("--verifier", action="store_true", help="installer : seulement l'état de ce PC, rien n'est lancé")
     ex.add_argument("--serveur", default="", help="adresse du chef, ex. http://100.64.0.1:8300 (omise : celle de l'appairage)")
@@ -386,11 +351,26 @@ def main(argv: list[str] | None = None) -> int:
         elif a.commande == "lire":
             sortie = rendre_tache(appeler("GET", f"/taches/{_q(a.id)}"))
         elif a.commande == "dire":
+            close = False
+            try:  # B5 : écrire à une tâche close la rouvre ; on le dit avant, on ne le fait pas en silence
+                close = appeler("GET", f"/taches/{_q(a.id)}").get("statut") in ("cloture", "abandonne")
+            except ErreurCli:
+                pass  # l'envoi dira l'erreur réelle (tâche inconnue, serveur injoignable)
+            if close and not a.rouvrir:
+                raise ErreurCli(f"{a.id} est close : lui écrire la rouvrirait. Refais avec --rouvrir si c'est voulu "
+                                "(orch dire <id> \"…\" --rouvrir), ou crée une tâche (orch creer).")
             r = appeler("POST", f"/taches/{_q(a.id)}/messages",
                         {"texte": a.message, "de": source or None, "sauts": sauts})
-            sortie = [f"message transmis à {a.id} (état : {r['etat_execution']})"]
+            sortie = [f"message transmis à {a.id} (état : {r['etat_execution']})" + (" ; tâche rouverte" if close else "")]
         elif a.commande == "creer":
+            if not a.titre.strip():  # B18 : le diagnostic est le titre, pas la description
+                raise ErreurCli("titre attendu : orch creer \"<titre>\" --description \"…\"")
+            if not (a.conteneur or a.parent or source):  # B2 : hors tâche, aucun projet par défaut (jamais « ? › _meta »)
+                raise ErreurCli("--conteneur ou --parent attendu : hors d'une tâche, le projet n'est pas deviné "
+                                "(`orch conteneurs` les liste).")
             corps = {"titre": a.titre, "description": a.description, "de": source or "orch"}
+            if a.hors_rangement:
+                corps["hors_rangement"] = True  # B3 : --nouvelle ne lève que la proximité
             if a.conteneur:
                 corps["conteneur"] = a.conteneur
             if a.parent:
@@ -479,10 +459,15 @@ def main(argv: list[str] | None = None) -> int:
             print("\n".join(sortie), file=sys.stdout if code == 0 else sys.stderr)
             return code
         else:
+            if a.type in ("ticket", "tache") and not a.motif.strip():  # B8 : le motif vaut description
+                raise ErreurCli(f"{a.type} attend --motif \"<de quoi il s'agit, au moins une phrase>\" "
+                                "(il devient la description)")
             r = appeler("POST", "/propositions", {"type": a.type, "tache": a.id, "valeur": a.valeur, "de": source,
                                                   "motif": a.motif, **({"taches": a.aussi} if a.aussi else {})})
             if r.get("etat") == "deja_fait":  # l'effet est déjà en place : rien n'est déposé
                 sortie = ["rien à proposer : déjà fait"]
+            elif r.get("etat") == "deja_proposee":  # B7 : la même proposition attend déjà
+                sortie = [f"proposition identique déjà en attente (n°{r['n']}) : rien de nouveau déposé"]
             elif r.get("etat") == "ignoree":  # INV-INTERFACE-3 : mode simple, rien n'est mémorisé (installation à blanc, 19/11)
                 sortie = ["proposition ignorée : l'interface ne retient pas les propositions (mode simple ; Réglages > Propositions)"]
             else:

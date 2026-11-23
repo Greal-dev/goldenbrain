@@ -4,7 +4,8 @@ Rôle : brancher `rapprochement` sur l'API ; `creer` est le corps de POST /api/t
 rapprochement, puis création) ; `api.py` est plafonné à 500 lignes.
 Frontières : aucune ressemblance calculée ici (module `rapprochement`) ; la création reste `Moteur.creer`.
 Invariants portés : INV-RAPPROCHEMENT-1 (409 + `candidates` sur correspondance forte, sauf `forcer`),
-INV-RAPPROCHEMENT-2 (un complément est une création évitée), INV-INTEG-2 (lien d'office vers l'intégration).
+INV-RAPPROCHEMENT-2 (un complément est une création évitée), INV-INTEG-2 (lien d'office vers l'intégration),
+INV-PLAFOND-1 (un agent ne lève le rangement que par `hors_rangement`).
 """
 
 from __future__ import annotations
@@ -14,7 +15,7 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
 from . import langues, liens, rangement, rapprochement
-from .vault import Invalide, exiger_description
+from .vault import Invalide, NonTrouve, exiger_description
 
 
 class CorpsComplement(BaseModel):
@@ -27,6 +28,13 @@ class CorpsComplement(BaseModel):
 def creer(moteur, tache, c, source: str | None):
     """POST /api/taches. `source` : tâche de l'agent appelant (en-tête de `orch`), jamais candidate."""
     mesure = rapprochement.Mesure(moteur.config.donnees)
+    origine = source or (c.de if c.de not in (None, "", "orch") else None)  # tâche de l'agent appelant
+    if not c.conteneur and not c.parent and origine:  # B2 : sans projet dit, celui de la tâche courante
+        try:
+            c.conteneur = moteur.vault.tache(origine).conteneur
+        except NonTrouve:
+            pass
+    agent = bool(c.de or source)
     if not c.forcer:
         cands = rapprochement.proches(moteur.vault, c.titre, c.description, c.conteneur,
                                       exclure=(c.parent, source, c.de))
@@ -37,14 +45,16 @@ def creer(moteur, tache, c, source: str | None):
     if c.genre and not rangement.valide(c.genre):
         raise Invalide(langues.t("serveur.rangement.nature_inconnue", genre=c.genre))
     genre = rangement.valide(c.genre) or rangement.deduire(c.titre, c.description)  # INV-NATURE-1
-    if not c.forcer and not c.groupe:  # INV-PLAFOND-1, INV-NATURE-1 : ranger plutôt qu'empiler
+    # B3 : pour un agent, `forcer` (--nouvelle) ne lève que la proximité ; le rangement se dérogue par
+    # `hors_rangement`. L'interface (ni `de` ni en-tête) garde un `forcer` complet : dérogation humaine.
+    if not (c.hors_rangement if agent else c.forcer) and not c.groupe:  # INV-PLAFOND-1, INV-NATURE-1
         rang = rangement.propositions(moteur.vault, moteur.config.rangement, c.titre, c.description,
                                       c.conteneur, c.parent, genre)
         if rang:
             return JSONResponse(status_code=409, content={
                 "detail": langues.t(f"serveur.api_rapprochement.rangement_{rang['raison']}",
                                     ouvertes=rang["ouvertes"], plafond=rang["plafond"]), "rangement": rang})
-    if c.de or source:  # créée par un agent (corps `de` ou en-tête de `orch`)
+    if agent:  # créée par un agent (corps `de` ou en-tête de `orch`)
         c.description = exiger_description(c.description, "tâche")
     parent, conteneur = c.parent, c.conteneur
     if c.groupe:  # le regroupement demandé naît sous le parent ; la tâche s'y range

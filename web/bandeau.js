@@ -2,7 +2,7 @@
 // Frontières : lit S ; les créations passent par l'API puis ouvrent la tâche.
 import { t, tn } from './langues.js';
 import { h, $, depuis, heure, remplacer } from './dom.js';
-import { S, on, emit, ouvrir, ouvrirVue, erreur } from './store.js';
+import { S, on, emit, ouvrir, ouvrirVue, erreur, parcourir } from './store.js';
 import { ouvert, simple } from './interface.js';
 import { post, api } from './api.js';
 import { formulaire } from './dialogue.js';
@@ -157,6 +157,7 @@ async function nouvelleTache() {
   const proches = listeProches(completer);
   const v = await formulaire({
     titre: t('bandeau.nouvelle_titre'), valider: t('bandeau.creer'), corps: await galerie,
+    texte: [...parcourir(S.arbre)].some((x) => x.type === 'tache') ? undefined : t('premiers-pas.avertissement'), // première tâche : on dit ce que l'assistant pourra faire (D4)
     champs: [
       { nom: 'titre', label: t('bandeau.titre'), requis: true, sous: proches.zone, surSaisie: proches.maj },
       { nom: 'description', label: t('bandeau.description'), type: 'textarea' },
@@ -217,6 +218,7 @@ export async function chargerRevue() {
   } catch (e) { erreur(e.message); }
 }
 async function lancerRevue() {
+  if (!confirm(t('bandeau.revue_confirmer'))) return; // lance un assistant IA : coût et quota dits avant (audit L3, A3)
   const b = $('#btn-revue');
   b.disabled = true;
   try {

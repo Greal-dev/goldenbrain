@@ -108,11 +108,14 @@ def test_statut_valider_renvoyer_tache_seule(client):
     r = client.post("/api/taches/mere/statut", headers=H, json={"statut": "en-cours"})
     assert r.status_code == 200
     garde(client, "POST", "/api/taches/enfant/statut", {"statut": "en-cours"}, "enfant")
+    client.post("/api/taches/enfant/statut", headers=H, json={"statut": "fait", "forcer": True})  # B6 : on ne valide que le « fait »
     garde(client, "POST", "/api/taches/enfant/valider", {}, "enfant")
+    client.post("/api/taches/enfant/statut", headers=H, json={"statut": "fait", "forcer": True})  # rouverte : renvoyer une close est refusé
     garde(client, "POST", "/api/taches/enfant/renvoyer", {"texte": "reprends"}, "enfant")
 
 
 def test_valider_sans_corps_reste_admis(client):
+    client.post("/api/taches/mere/statut", headers=H, json={"statut": "fait"})
     assert client.post("/api/taches/mere/valider", headers=H).status_code == 200
 
 

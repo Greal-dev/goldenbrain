@@ -297,8 +297,9 @@ propagation = true
 
 [agents_cc]
 # Relevé (lecture seule) des agents de la liste de Claude Code : les agents sans tâche apparaissent dans
-# « Décisions » (rattacher, créer une tâche, ignorer). Dossier vide = relevé débrayé.
-dossier = "~/.claude/jobs"
+# « Décisions » (rattacher, créer une tâche, ignorer). Dossier vide = relevé débrayé : c'est le défaut, car
+# un premier lancement ne doit montrer que les agents de GoldenBrain (audit L3, A16). Pour l'activer :
+# dossier = "~/.claude/jobs"
 # "a-la-demande", "horaire" ou "quotidien" (le relevé se fait aussi à la demande : `orch agents-cc`).
 rythme = "quotidien"
 

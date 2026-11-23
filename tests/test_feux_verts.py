@@ -73,6 +73,17 @@ def test_accord_puis_verification_du_sha_exact(orch, vault, faux, capsys):
     assert orch("feu-vert", "demander", SHA, "encore", "--a", "enfant") == 1  # déjà accordé
 
 
+def test_feu_vert_deja_accorde_ne_promet_pas_une_reouverture(orch, capsys):
+    """Audit L2 (B15) : accorder deux fois disait « une nouvelle demande le rouvre », alors que demander refuse."""
+    orch("feu-vert", "demander", SHA, "fusion", "--a", "enfant")
+    assert orch("feu-vert", "accorder", SHA, "ok", tache="enfant") == 0
+    capsys.readouterr()
+    assert orch("feu-vert", "accorder", SHA, "ok encore", tache="enfant") == 1
+    assert orch("feu-vert", "demander", SHA, "encore", "--a", "enfant") == 1
+    erreurs = capsys.readouterr().err
+    assert erreurs.count("déjà accordé") == 2 and "rouvre" not in erreurs
+
+
 def test_refus_consigne_et_verification_echoue(orch, vault, capsys):
     orch("feu-vert", "demander", SHA, "déploiement", "--a", "enfant")
     assert orch("feu-vert", "refuser", SHA, "épreuve rouge", tache="enfant") == 0

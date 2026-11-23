@@ -66,7 +66,8 @@ def _winget(ident: str) -> Commande:
 
 def _npm(paquet: str) -> dict:
     c = Commande(f"npm install -g {paquet}")
-    return {W: c, L: c, M: c}
+    # Linux : le préfixe global de npm (/usr/local) appartient à root, la commande nue échoue en EACCES (audit L3, A4).
+    return {W: c, L: Commande(f"sudo npm install -g {paquet}", "sudo"), M: c}
 
 
 # INV-INSTALL-1 : seul chemin vers une commande ; aucune donnée externe n'y entre.

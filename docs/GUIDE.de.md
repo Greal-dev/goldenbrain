@@ -141,7 +141,7 @@ Der Vault ist Ihr **zweites Gehirn**: gewöhnliche Notizen (Markdown-Dateien), d
 
 ## Funktionen je Bildschirm {#fonctions-par-ecran}
 
-### Willkommen {#accueil}
+### Projekte übernehmen {#reprise-de-vos-projets}
 
 - **Wozu es dient**: beim ersten Start das Vorhandene (Projekte, Agenten-Unterhaltungen, Vault) übernehmen, statt mit einem leeren Baum zu beginnen.
 - **So geht es**: drei Schritte, „Auswählen“, „Durchsehen“, „Bestätigen“. Die gewünschten Quellen ankreuzen (ein paar Fragen, ein bezeichneter Ordner, Ihre Unterhaltungen mit Claude Code oder Codex, Ihr Markdown-Vault), dann „Struktur vorschlagen“; die vorgeschlagenen Elemente umbenennen, abwählen oder verschieben; „Bestätigen“ schreibt, „Meinen Baum öffnen“ beendet. „Später“ schließt, ohne etwas zu schreiben.

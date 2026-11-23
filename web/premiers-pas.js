@@ -41,6 +41,13 @@ async function verifier() {
 
 const pilotables = () => (E?.assistants || []).filter((a) => a.pilotable);
 
+// « Plus tard » clôt tout le parcours : un second dialogue de bienvenue juste après serait une double demande (audit L3, A2).
+async function plusTard() {
+  try { await post('/accueil/plus-tard', {}); } catch { /* l'accueil se reproposera au prochain passage */ }
+  suite = null;
+  await fermer();
+}
+
 async function fermer() {
   try { await post('/accueil/premiers-pas/fait', {}); } catch { /* l'état « fait » se reposera au prochain passage */ }
   boite?.remove(); boite = null; E = null;
@@ -80,11 +87,12 @@ function ecranAssistants() {
   const liste = E.assistants;
   return [
     h('p', null, t('premiers-pas.intro')),
+    h('p', { class: 'note', 'data-id': 'pp-prerequis' }, t('premiers-pas.prerequis')),
     liste ? h('ul', { class: 'pp-liste', 'data-id': 'pp-liste' }, liste.map(ligne)) : h('p', { class: 'note' }, t('premiers-pas.lecture')),
     liste && !pilotables().length ? h('p', { class: 'note', 'data-id': 'pp-aucun' }, t('premiers-pas.aucun')) : null,
     h('div', { class: 'ac-actions' },
       h('button', { class: 'btn', type: 'button', 'data-id': 'pp-verifier', onclick: verifier }, t('premiers-pas.verifier')),
-      h('button', { class: 'btn', type: 'button', 'data-id': 'pp-plus-tard', onclick: fermer }, t('premiers-pas.plus_tard')),
+      h('button', { class: 'btn', type: 'button', 'data-id': 'pp-plus-tard', onclick: plusTard }, t('premiers-pas.plus_tard')),
       h('button', { class: 'btn primaire', type: 'button', 'data-id': 'pp-continuer', disabled: pilotables().length ? null : true, onclick: () => { E.ecran = 2; dessiner(); } }, t('premiers-pas.continuer'))),
   ];
 }
@@ -96,6 +104,7 @@ function ecranDemo() {
     h('label', { class: 'ac-champ' }, t('premiers-pas.avec'), h('select', { 'data-id': 'pp-choix', onchange: (e) => { E.choix = e.target.value; } },
       prets.map((a) => h('option', { value: a.id, selected: a.id === E.choix ? true : null }, a.libelle)))),
     h('p', { class: 'note' }, t('premiers-pas.ensuite')),
+    h('p', { class: 'avertissement', role: 'note', 'data-id': 'pp-avertissement' }, t('premiers-pas.avertissement')),
     h('details', { 'data-id': 'pp-reflexes' }, h('summary', null, t('reflexes.titre')), h('p', null, t('reflexes.aide')), sectionReflexes()),
     h('div', { class: 'ac-actions' },
       h('button', { class: 'btn', type: 'button', 'data-id': 'pp-retour', onclick: () => { E.ecran = 1; dessiner(); } }, t('premiers-pas.retour')),

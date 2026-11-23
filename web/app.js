@@ -47,6 +47,7 @@ const rapporter = (fn) => async () => { try { await fn(); } catch (e) { erreur(e
 
 const chargerArbre = rapporter(async () => {
   S.arbre = (await api(`/arbre?toutes=${S.toutes ? 1 : 0}`)).noeuds;
+  S.arbreCharge = true;
   emit('arbre');
 });
 const chargerEtat = rapporter(async () => { S.etat = await api('/etat'); emit('etat'); });

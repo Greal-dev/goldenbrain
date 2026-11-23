@@ -184,11 +184,11 @@ def test_cli_ligne_et_rendu_du_rangement():
         "propositions": [{"geste": "ligne", "tache": "t1", "titre": "T"},
                          {"geste": "sous_groupe", "tache": "t2", "titre": "U"},
                          {"geste": "nouveau_groupe", "titre": "Opération — P"}]}})
-    assert "orch ligne t1" in sortie and "--parent t2" in sortie and "--parent p" in sortie and "--nouvelle" in sortie
+    assert "orch ligne t1" in sortie and "--parent t2" in sortie and "--parent p" in sortie and "--hors-rangement" in sortie
     assert cli.rendre_proches({"rangement": None}) == ""
 
     class A:
-        id, texte, document, fait, cocher = "t", "du travail", "", False, 0
+        id, texte, document, fait, cocher, decocher = "t", "du travail", "", False, 0, 0
     appels = []
     def appeler(m, chemin, corps=None):
         appels.append((m, chemin, corps)); return {"lignes": [{"fait": True}, {"fait": False}]}

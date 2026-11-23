@@ -1,6 +1,6 @@
 # Vocabulaire grand public et règle des clés
 
-Mis à jour le 2026-11-20. Tout texte montré à l'utilisateur (dictionnaires `web/langues/*.json`, guides) parle la langue de tout le monde, pas celle des développeurs. Identifiants, clés de dictionnaire, clés de configuration, routes d'API, noms de commandes et statuts du vault ne changent jamais.
+Mis à jour le 2026-11-23. Tout texte montré à l'utilisateur (dictionnaires `web/langues/*.json`, guides) parle la langue de tout le monde, pas celle des développeurs. Identifiants, clés de dictionnaire, clés de configuration, routes d'API, noms de commandes et statuts du vault ne changent jamais.
 
 ## Glossaire
 
@@ -66,3 +66,7 @@ Une clé publiée sur `gb/langues` ne se renomme ni ne se supprime : seule sa **
 2. Préfixe : le nom de l'écran ou du module (`detail.`, `reglages.`…), clés plates à points, littérales (jamais calculées), phrases entières avec paramètres `{x}` (jamais de morceaux concaténés). Ne pas nommer `t` une variable locale ; dates et nombres avec `LOCALE`.
 3. Ajouter les clés : lot JSON `{"cle": {"fr": "…", "en": "…", "de": "…", "es": "…"}}` hors du dépôt, puis `python scripts/dictionnaires.py ajouter <lot.json>` (écrit les quatre fichiers triés).
 4. Vérifier : `python scripts/dictionnaires.py reste web/x.js` liste ce qui reste en dur ; viser 0 (la porte contrôle tout `web/`). Un faux positif visible se motive dans `scripts/langues_exceptions.txt`.
+
+## « Accueil » : un seul sens
+
+« Accueil » désigne uniquement l'écran d'accueil du téléphone (compagnon mobile). L'importation des projets existants s'appelle « Reprise de vos projets » (en : Import your projects) ; la fenêtre du tout premier lancement, « Bienvenue dans GoldenBrain » (premiers pas). Clés : `accueil.*` (reprise, historique), `premiers-pas.*`, `compagnon.*`.

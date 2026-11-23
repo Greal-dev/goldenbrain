@@ -38,6 +38,11 @@ def _scenes() -> dict:
     return json.loads(Path(chemin).read_text(encoding="utf-8")) if chemin else {}
 
 
+# Un vrai transcript garde les messages envoyés ; le factice les retient par session (sinon le message
+# n'est visible que le temps — 50 ms — du tour en cours, et un test qui le lit après coup est aléatoire).
+ENVOYES: dict[str, list[str]] = {}
+
+
 class HarnaisFactice:
     nom = "faux"
     consigne_native = True
@@ -53,6 +58,7 @@ class HarnaisFactice:
             return
         apprend = "Mode « Apprendre » actif" in (consigne or "")
         sid = session or ("s-journaux" if "[journaux]" in message else "s-apprendre" if apprend else "s-faux")
+        ENVOYES.setdefault(sid, []).append(message)
         yield Evenement("session", session=sid)
         yield Evenement("texte", texte="je lis le dossier" + (f"\n\n{EXPLICATION}" if apprend else ""))
         await asyncio.sleep(0.05)
@@ -123,7 +129,8 @@ class HarnaisFactice:
         if session.startswith("s-journaux"):
             raise NotImplementedError
         texte = f"bonjour {session}" + (f"\n\n{EXPLICATION}" if session == "s-apprendre" else "")
-        return [Message("assistant", texte, ["Read"], "2026-11-12T10:00:00")]
+        envoyes = [Message("utilisateur", m, [], "2026-11-12T09:59:00") for m in ENVOYES.get(session, [])]
+        return envoyes + [Message("assistant", texte, ["Read"], "2026-11-12T10:00:00")]
 
     def commande_terminal(self, session):
         return f"faux --resume {session}"

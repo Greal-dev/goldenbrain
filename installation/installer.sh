@@ -118,6 +118,7 @@ principal() {
     printf '#!/bin/sh\nexport GB_DONNEES="%s" GB_PYTHON="%s"\nexec /bin/sh "%s/installation/goldenbrain.sh" "$@"\n' \
         "$donnees" "$py" "$app" > "$lanceur"
     chmod +x "$lanceur"
+    local commande="$lanceur"  # la commande à annoncer : celle qu'on peut réellement taper (audit L3, D20)
     if [ "$systeme" = macos ]; then
         local paquet="$HOME/Applications/GoldenBrain.app/Contents"
         mkdir -p "$paquet/MacOS" "$paquet/Resources"
@@ -129,11 +130,12 @@ principal() {
     else
         mkdir -p "$HOME/.local/bin" "${XDG_DATA_HOME:-$HOME/.local/share}/applications"
         ln -sf "$lanceur" "$HOME/.local/bin/goldenbrain"
+        case ":$PATH:" in *":$HOME/.local/bin:"*) commande=goldenbrain ;; *) commande="$HOME/.local/bin/goldenbrain" ;; esac
         sed -e "s|@LANCEUR@|$lanceur|" -e "s|@ICONE@|$app/web/icone-512.png|" \
             "$app/installation/goldenbrain.desktop" \
             > "${XDG_DATA_HOME:-$HOME/.local/share}/applications/goldenbrain.desktop"
     fi
-    echo "$MSG_FIN $lanceur"
+    echo "$MSG_FIN $commande"
     [ "${GB_SANS_LANCEMENT:-}" = 1 ] || "$lanceur"
 }
 

@@ -3,7 +3,7 @@
 Rôle : seule frontière avec le système d'exploitation pour la régulation des agents simultanés
 (INV-SIMULT-1). Windows : API Win32 par ctypes (GlobalMemoryStatusEx, GetSystemTimes,
 CreateToolhelp32Snapshot, NtSuspendProcess / NtResumeProcess, K32EmptyWorkingSet,
-K32GetProcessMemoryInfo, GetProcessTimes). Ailleurs : RAM par `/proc/meminfo`, suspension non prise en charge
+K32GetProcessMemoryInfo, GetProcessTimes). Ailleurs : RAM par `/proc/meminfo`, arbre par `/proc`, suspension non prise en charge
 (l'appelant se replie sur l'arrêt du tour et sa remise en file).
 Frontières : aucune décision (quand suspendre, qui) ; aucune dépendance nouvelle (pas de psutil).
 Pause demandée à la main (tableau « En cours ») : `figer` / `degeler`, partout (Windows : même API
@@ -111,10 +111,39 @@ def mesurer() -> Mesure | None:
         return None
 
 
-def arbre(racine: int) -> list[int]:
-    """La racine et tous ses descendants (Windows) ; [racine] ailleurs."""
-    if not WINDOWS:
+def _arbre_proc(racine: int) -> list[int]:
+    """Linux : la racine, ses descendants par parenté, et les processus de sa session quand elle en
+    mène une (`start_new_session`) — un navigateur Playwright ou un serveur lancé par l'agent
+    change de groupe mais ni de parent ni, le plus souvent, de session. Lecture de `/proc` seule."""
+    enfants: dict[int, list[int]] = {}
+    session: dict[int, int] = {}
+    try:
+        for d in Path("/proc").iterdir():
+            if not d.name.isdigit():
+                continue
+            try:
+                champs = (d / "stat").read_text(encoding="utf-8").rpartition(")")[2].split()
+            except OSError:
+                continue  # sorti entre la liste et la lecture
+            enfants.setdefault(int(champs[1]), []).append(int(d.name))
+            session[int(d.name)] = int(champs[3])
+    except OSError:
         return [racine]
+    vus, pile = [], [racine]
+    while pile:
+        p = pile.pop()
+        if p not in vus:
+            vus.append(p)
+            pile.extend(enfants.get(p, []))
+    if session.get(racine) == racine:  # chef de session : les orphelins de la session en font partie
+        vus += [p for p, sid in session.items() if sid == racine and p not in vus]
+    return vus
+
+
+def arbre(racine: int) -> list[int]:
+    """La racine et tous ses descendants."""
+    if not WINDOWS:
+        return _arbre_proc(racine)
     snap = _k32.CreateToolhelp32Snapshot(0x2, 0)  # TH32CS_SNAPPROCESS
     if snap == _INVALIDE:
         return [racine]
