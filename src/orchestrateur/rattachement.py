@@ -22,6 +22,12 @@ def normaliser(taches: list[str]) -> list[str]:
     return ids
 
 
+def deja(vault, taches: list[str], parent: str) -> bool:
+    """Tout le lot est-il déjà à sa place (sous `parent`, ou à la racine) ? Alors le geste est sans objet."""
+    parents = vault._parents(vault.index()[0])
+    return all(parents.get(i) == (None if parent == RACINE else parent) for i in normaliser(taches))
+
+
 def verifier(vault, cfg, occupation, taches: list[str], parent: str) -> list[str]:
     """Rend les identifiants à rattacher (déjà en place : ignorés) ou lève `Invalide` / `Conflit`.
     `occupation(id)` dit si un agent travaille la tâche (INV-VERROU-1)."""

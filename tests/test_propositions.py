@@ -83,3 +83,23 @@ def test_proposition_deplacer_ramene_le_nom_du_dossier_a_l_identifiant(config, v
     assert p["valeur"] == "Projets/C1-Alpha"
     with pytest.raises(Invalide):
         moteur.proposer("deplacer", "mere", "Dossier-Inexistant")
+
+
+def test_accepter_un_lien_deja_present_conclut_sans_erreur_et_ne_depose_rien(config, vault, faux):
+    """Symptôme (23/11) : « lien déjà présent » à l'acceptation, proposition restée en attente."""
+    m = Moteur(config, vault, {"faux": faux})
+    p = m.proposer("lier", "mere", "alimente:x")
+    liens.lier(vault, "mere", "alimente", "x")  # le lien est posé entre-temps
+    r = m.trancher(p["n"], True)
+    assert r["etat"] == "acceptee" and r["deja_fait"] is True
+    # dépôt : un effet déjà en place n'est pas déposé
+    assert m.proposer("lier", "mere", "alimente:x")["etat"] == "deja_fait"
+    assert len(m.propositions.liste) == 1
+
+
+def test_gestes_deja_realises_ne_sont_pas_deposes(config, vault, faux):
+    m = Moteur(config, vault, {"faux": faux})
+    assert m.proposer("rattacher", "petit", "enfant")["etat"] == "deja_fait"
+    assert m.proposer("rattacher", "mere", "racine")["etat"] == "deja_fait"
+    assert m.proposer("deplacer", "doublon", "Projets/C2-Beta")["etat"] == "deja_fait"
+    assert m.propositions.liste == []

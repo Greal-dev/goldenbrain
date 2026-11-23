@@ -1378,6 +1378,7 @@
  "premiers-pas.verifier": "Check again",
  "propositions.accepter": "Accept",
  "propositions.agent": "agent",
+ "propositions.deja_fait": "Already done: nothing to change.",
  "propositions.deplacer": "Move {tache} to {cible}",
  "propositions.detacher": "Detach {tache} from its parent (back to the project root)",
  "propositions.detacher_lot": "Detach {n} tasks from their parent (back to the project root)",

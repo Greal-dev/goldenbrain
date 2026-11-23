@@ -1378,6 +1378,7 @@
  "premiers-pas.verifier": "Vérifier à nouveau",
  "propositions.accepter": "Accepter",
  "propositions.agent": "agent",
+ "propositions.deja_fait": "Déjà fait : rien à changer.",
  "propositions.deplacer": "Déplacer {tache} vers {cible}",
  "propositions.detacher": "Détacher {tache} de son parent (retour à la racine du projet)",
  "propositions.detacher_lot": "Détacher {n} tâches de leur parent (retour à la racine du projet)",

@@ -95,6 +95,8 @@ class MixinPropositions:
             tache = ids[0]
             annexe = {**(annexe or {}), "taches": ids, "titres": [self.vault.tache(i).titre for i in ids]}
         t = self.vault.tache(tache)
+        if self._deja_fait(type_, tache, valeur, (annexe or {}).get("taches")):  # rien à décider : on ne dépose pas
+            return {"type": type_, "tache": tache, "valeur": valeur, "etat": "deja_fait"}
         jardin = getattr(self, "jardinier", None)  # INV-JARD-2 : plafond par passage, jamais d'office
         montrer = (jardin is not None and jardin.admettre(de)) or montrer
         # INV-SCAN-1 : une préconisation du scan (`montrer`) attend toujours le geste humain.
@@ -131,9 +133,27 @@ class MixinPropositions:
         if p["etat"] != "en_attente":
             raise Conflit(langues.t("serveur.propositions.deja_acceptee") if p["etat"] == "acceptee"
                           else langues.t("serveur.propositions.deja_refusee"))
-        if accepter:  # une exception laisse la proposition en attente (INV-EXEC-5)
+        if accepter and self._deja_fait(p["type"], p["tache"], p["valeur"], p.get("taches")):
+            p["deja_fait"] = True  # geste déjà réalisé entre-temps : acceptée, sans erreur, mention discrète
+        elif accepter:  # une exception laisse la proposition en attente (INV-EXEC-5)
             self._executer(p["type"], p["tache"], p["valeur"], p["motif"], p.get("taches"))
         return self.conclure(p, accepter)
+
+    def _deja_fait(self, type_: str, tache: str, valeur: str, taches: list | None = None) -> bool:
+        """INV-DEJAFAIT-1 : l'effet de la proposition est-il déjà en place ? (lien présent, déjà rattachée, au bon endroit, déjà ce titre ou ce statut)"""
+        try:
+            t = self.vault.tache(tache)
+            if type_ == "lier":
+                return liens.existe(self.vault, tache, *_lien_propose(valeur))
+            if type_ == "rattacher":
+                return rattachement.deja(self.vault, taches or [tache], valeur)
+            if type_ == "deplacer":
+                return t.conteneur == valeur and not t.parent_brut
+            if type_ == "renommer":
+                return t.titre == valeur
+            return type_ == "fermer" and t.statut == valeur
+        except (NonTrouve, Invalide):
+            return False  # le geste lui-même dira pourquoi il échoue
 
     def conclure(self, p: dict, accepter: bool) -> dict:
         """Marque la proposition tranchée (après l'exécution du geste, pour une acceptation)."""

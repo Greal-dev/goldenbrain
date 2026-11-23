@@ -113,6 +113,13 @@ def _type(type_: str) -> str:
     return type_
 
 
+def existe(vault: Vault, ident: str, type_: str, cible: str) -> bool:
+    """Le lien est-il déjà posé (pour `voir_aussi`, de l'un ou l'autre côté) ?"""
+    _type(type_)
+    t = vault.tache(ident)
+    return cible in ids(t.fm, type_) or (type_ == "voir_aussi" and cible in graphe(vault.index()[0])[2].get(ident, []))
+
+
 def lier(vault: Vault, ident: str, type_: str, cible: str) -> None:
     _type(type_)
     t = vault.tache(ident)

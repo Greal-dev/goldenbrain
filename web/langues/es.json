@@ -1378,6 +1378,7 @@
  "premiers-pas.verifier": "Comprobar de nuevo",
  "propositions.accepter": "Aceptar",
  "propositions.agent": "agente",
+ "propositions.deja_fait": "Ya hecho: nada que cambiar.",
  "propositions.deplacer": "Mover {tache} a {cible}",
  "propositions.detacher": "Desvincular {tache} de su tarea madre (vuelve a la raíz del proyecto)",
  "propositions.detacher_lot": "Desvincular {n} tareas de su madre (vuelven a la raíz del proyecto)",

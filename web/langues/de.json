@@ -1378,6 +1378,7 @@
  "premiers-pas.verifier": "Erneut prüfen",
  "propositions.accepter": "Annehmen",
  "propositions.agent": "Agent",
+ "propositions.deja_fait": "Bereits erledigt: nichts zu ändern.",
  "propositions.deplacer": "{tache} nach {cible} verschieben",
  "propositions.detacher": "{tache} von ihrer Eltern-Aufgabe lösen (zurück zur Projektwurzel)",
  "propositions.detacher_lot": "{n} Aufgaben von ihrer Eltern-Aufgabe lösen (zurück zur Projektwurzel)",

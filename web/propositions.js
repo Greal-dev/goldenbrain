@@ -50,7 +50,8 @@ export function description(p) {
 }
 async function trancher(p, action) {
   try {
-    await post(`/propositions/${p.n}/${action}`);
+    const r = await post(`/propositions/${p.n}/${action}`);
+    if (r?.deja_fait) erreur(t('propositions.deja_fait'), 'info'); // geste déjà réalisé : acceptée, sans erreur
     emit('recharger');
   } catch (e) { erreur(e.message); emit('recharger'); } // 409 : la proposition reste en attente, le message explique pourquoi
 }

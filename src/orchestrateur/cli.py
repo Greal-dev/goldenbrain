@@ -479,12 +479,12 @@ def main(argv: list[str] | None = None) -> int:
             print("\n".join(sortie), file=sys.stdout if code == 0 else sys.stderr)
             return code
         else:
-            r = appeler("POST", "/propositions", {"type": a.type, "tache": a.id,
-                                                  "valeur": a.valeur, "de": source,
+            r = appeler("POST", "/propositions", {"type": a.type, "tache": a.id, "valeur": a.valeur, "de": source,
                                                   "motif": a.motif, **({"taches": a.aussi} if a.aussi else {})})
-            if r.get("etat") == "ignoree":  # INV-INTERFACE-3 : mode simple, rien n'est mémorisé (installation à blanc, 19/11)
-                sortie = ["proposition ignorée : l'interface ne retient pas les propositions "
-                          "(mode simple ; Réglages > Propositions)"]
+            if r.get("etat") == "deja_fait":  # l'effet est déjà en place : rien n'est déposé
+                sortie = ["rien à proposer : déjà fait"]
+            elif r.get("etat") == "ignoree":  # INV-INTERFACE-3 : mode simple, rien n'est mémorisé (installation à blanc, 19/11)
+                sortie = ["proposition ignorée : l'interface ne retient pas les propositions (mode simple ; Réglages > Propositions)"]
             else:
                 suite = "en attente de décision humaine" if r.get("etat", "en_attente") == "en_attente" else r["etat"]
                 sortie = [f"proposition n°{r['n']} enregistrée ({r['type']} {r['tache']} -> "
