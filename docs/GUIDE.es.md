@@ -1,6 +1,6 @@
 # Guía de GoldenBrain
 
-Actualizado el 2026-11-22.
+Actualizado el 2026-11-23.
 
 GoldenBrain es un puesto de mando: usted confía tareas a agentes de IA (Claude Code, Codex, OpenCode, Copilot, Antigravity), cada una guardada en su lugar dentro de su vault (una carpeta de notas en Markdown). GoldenBrain organiza y supervisa; el agente trabaja en su propia conversación, que usted puede retomar en cualquier momento.
 
@@ -301,7 +301,7 @@ Para leer por todo agente —Claude Code, Codex, OpenCode, Gemini CLI u otro— 
 | `relancer <id>` | relanzar una tarea fallida o interrumpida |
 | `arreter <id>` | detener el turno en curso |
 | `deleguer "<título>" "<brief>"` | confiar un trabajo a una tarea hija lanzada por GoldenBrain |
-| `proposer deplacer\|projet\|operation\|ticket\|tache\|lier\|perimetre\|echeance\|fermer\|renommer …` | proponer un cambio de estructura (`--motif`, obligatorio para `renommer`); la persona acepta con un clic. En modo simple, las propuestas se ignoran (Ajustes > Propuestas) |
+| `proposer deplacer\|rattacher\|projet\|operation\|ticket\|tache\|lier\|perimetre\|echeance\|fermer\|renommer …` | proponer un cambio de estructura (`--motif`, obligatorio para `renommer`) ; `rattacher <id> <parent|racine> [--aussi <id>…]` ordena un lote de tareas bajo una tarea madre (o las desvincula hacia su proyecto) en UNA propuesta, rechazada si hay ciclo, tarea en curso, otro proyecto, tope de 10 o naturalezas mezcladas; la persona acepta con un clic. En modo simple, las propuestas se ignoran (Ajustes > Propuestas) |
 | `solliciter <persona> "<pregunta>"` | opinión de un persona del equipo |
 | `telegram "<texto>"` | mensaje al usuario en Telegram (`--validation`, `--choix`); exige el bot configurado |
 | `poste reserver "<motivo>"` / `poste liberer` | reservar el puesto durante una prueba pesada; si está ocupado, esperar turno (`--attente <min>`, por defecto 30) |

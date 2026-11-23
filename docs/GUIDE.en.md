@@ -1,6 +1,6 @@
 # GoldenBrain guide
 
-Updated on 2026-11-22.
+Updated on 2026-11-23.
 
 GoldenBrain is a control station: you hand tasks to AI agents (Claude Code, Codex, OpenCode, Copilot, Antigravity), each filed in its proper place in your vault (a folder of Markdown notes). GoldenBrain organises and supervises; the agent works in its own conversation, which you can pick up again at any time.
 
@@ -301,7 +301,7 @@ To be read by any agent — Claude Code, Codex, OpenCode, Gemini CLI or other �
 | `relancer <id>` | restart a failed or interrupted task |
 | `arreter <id>` | stop the turn in progress |
 | `deleguer "<title>" "<brief>"` | hand a piece of work to a child task launched by GoldenBrain |
-| `proposer deplacer\|projet\|operation\|ticket\|tache\|lier\|perimetre\|echeance\|fermer\|renommer …` | suggest a structure change (`--motif`, required for `renommer`); the human accepts with a click. In simple mode, suggestions are ignored (Settings > Suggestions) |
+| `proposer deplacer\|rattacher\|projet\|operation\|ticket\|tache\|lier\|perimetre\|echeance\|fermer\|renommer …` | suggest a structure change (`--motif`, required for `renommer`) ; `rattacher <id> <parent|racine> [--aussi <id>…]` files a batch of tasks under a parent task (or detaches them to their project) in ONE proposal, refused on a cycle, a running task, another project, the ceiling of 10 or mixed kinds of work; the human accepts with a click. In simple mode, suggestions are ignored (Settings > Suggestions) |
 | `solliciter <persona> "<question>"` | opinion of a team persona |
 | `telegram "<text>"` | message to the user on Telegram (`--validation`, `--choix`); requires the bot to be configured |
 | `poste reserver "<reason>"` / `poste liberer` | reserve the workstation during a heavy test; if it is taken, wait for your turn (`--attente <min>`, default 30) |

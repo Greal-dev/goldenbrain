@@ -151,7 +151,7 @@ _GESTES = """Tu pilotes ce conteneur (nœud {noeud}). Gestes par {orch} :
 - créer une tâche : creer "<titre>" --conteneur <id de projet> (orch conteneurs) ou --parent <id> --description "<consigne, au moins une phrase>" (exigée) ;
 - la lancer, la relancer avec une consigne ou lui écrire : dire <id> "<message>" ; reprendre un tour coupé : relancer <id> ;
 - l'arrêter : arreter <id> ; lire son état : lire <id> ;
-- réorganiser : proposer deplacer|projet|operation|ticket|tache|lier|renommer ... --motif "<pourquoi>".
+- réorganiser : proposer deplacer|rattacher|projet|operation|ticket|tache|lier|renommer ... --motif "<pourquoi>".
 Valider, fermer ou déplacer un dossier restent des gestes humains : tu les proposes, tu ne les fais pas.
 Tu ne travailles pas toi-même dans les dépôts : tu confies le travail aux tâches."""
 

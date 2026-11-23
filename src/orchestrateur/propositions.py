@@ -14,11 +14,11 @@ import json
 import logging
 from pathlib import Path
 
-from . import fiches, langues, liens, temps, transformations
+from . import fiches, langues, liens, rattachement, temps, transformations
 from .vault import Conflit, Invalide, NonTrouve, exiger_description, titre_valide
 
 TYPES_PROPOSITION = ("deplacer", "ticket", "projet", "lier", "operation", "tache", "perimetre", "echeance", "fermer",
-                     "renommer")
+                     "renommer", "rattacher")
 FERMETURES = ("cloture", "abandonne")  # statuts qu'une proposition « fermer » peut poser
 log = logging.getLogger(__name__)
 
@@ -88,6 +88,12 @@ class MixinPropositions:
                 raise Invalide(langues.t("serveur.propositions.motif_renommer"))
         if type_ == "deplacer":
             valeur = self._conteneur_canonique(str(valeur).strip())
+        if type_ == "rattacher":  # INV-RATTACHER-1 : refus immédiat, mêmes garde-fous qu'à l'acceptation
+            valeur = str(valeur).strip()
+            ids = rattachement.normaliser([tache, *((annexe or {}).get("taches") or [])])
+            rattachement.verifier(self.vault, self.config.rangement, self.occupation, ids, valeur)
+            tache = ids[0]
+            annexe = {**(annexe or {}), "taches": ids, "titres": [self.vault.tache(i).titre for i in ids]}
         t = self.vault.tache(tache)
         jardin = getattr(self, "jardinier", None)  # INV-JARD-2 : plafond par passage, jamais d'office
         montrer = (jardin is not None and jardin.admettre(de)) or montrer
@@ -126,7 +132,7 @@ class MixinPropositions:
             raise Conflit(langues.t("serveur.propositions.deja_acceptee") if p["etat"] == "acceptee"
                           else langues.t("serveur.propositions.deja_refusee"))
         if accepter:  # une exception laisse la proposition en attente (INV-EXEC-5)
-            self._executer(p["type"], p["tache"], p["valeur"], p["motif"])
+            self._executer(p["type"], p["tache"], p["valeur"], p["motif"], p.get("taches"))
         return self.conclure(p, accepter)
 
     def conclure(self, p: dict, accepter: bool) -> dict:
@@ -137,7 +143,7 @@ class MixinPropositions:
         self.publier("arbre")
         return p
 
-    def _executer(self, type_: str, tache: str, valeur: str, motif: str = "") -> None:
+    def _executer(self, type_: str, tache: str, valeur: str, motif: str = "", taches: list | None = None) -> None:
         # INV-EXEC-5 : chaque acceptation appelle la fonction du geste humain correspondant.
         if type_ == "deplacer":
             self.vault.deplacer_conteneur(tache, valeur)
@@ -157,6 +163,8 @@ class MixinPropositions:
             self.vault.poser_statut(tache, valeur, humain=True)
         elif type_ == "renommer":  # geste humain : le titre ne change que sur acceptation
             self.vault.renommer(tache, valeur)
+        elif type_ == "rattacher":  # INV-RATTACHER-1 : tout le lot ou rien, recontrôlé à l'acceptation
+            rattachement.appliquer(self.vault, self.config.rangement, self.occupation, taches or [tache], valeur)
         elif type_ == "tache":
             conteneur = self.vault.tache(tache).conteneur
             liens.lier(self.vault, self.creer(valeur, motif, conteneur=conteneur), "voir_aussi", tache)

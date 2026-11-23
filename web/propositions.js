@@ -14,6 +14,13 @@ export function description(p) {
   const tache = gras(titre);
   switch (p.type) {
     case 'deplacer': return garnir(t('propositions.deplacer'), { tache, cible: h('code', null, p.valeur) });
+    case 'rattacher': {
+      const lot = p.taches?.length > 1, racine = p.valeur === 'racine';
+      const parent = gras(titreTache(p.valeur));
+      const phrase = garnir(t(racine ? (lot ? 'propositions.detacher_lot' : 'propositions.detacher') : (lot ? 'propositions.rattacher_lot' : 'propositions.rattacher'), { n: p.taches?.length }), { tache, parent });
+      if (!lot) return phrase;
+      return h('details', { class: 'prop-long' }, h('summary', null, phrase), h('ul', null, ...(p.titres || p.taches).map((x) => h('li', null, x))));
+    }
     case 'ticket': return garnir(t('propositions.ticket'), { valeur: gras(p.valeur), tache });
     case 'projet': return garnir(t('propositions.projet'), { tache, valeur: gras(p.valeur) });
     case 'lier': {

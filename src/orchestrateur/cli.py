@@ -300,13 +300,13 @@ def main(argv: list[str] | None = None) -> int:
     rn = sous.add_parser("renommer", help="changer le titre d'une tâche (identifiant et fichier inchangés)")
     rn.add_argument("id"), rn.add_argument("titre")
     pr = sous.add_parser("proposer", help="proposer un changement de structure")
-    pr.add_argument("type", choices=["deplacer", "ticket", "projet", "lier", "operation", "tache",
-                                     "perimetre", "echeance", "fermer", "renommer"])
+    pr.add_argument("type", choices=["deplacer", "ticket", "projet", "lier", "operation", "tache", "perimetre", "echeance", "fermer", "renommer", "rattacher"])
     pr.add_argument("id")
     pr.add_argument("valeur", nargs="+", help="conteneur, titre, nom, texte ; pour lier : "
                                               "<alimente|prerequis|voir_aussi> <cible> (prerequis : <cible> "
                                               "doit être terminée avant que <id> démarre) ; pour echeance : AAAA-MM-JJ ; pour fermer : cloture ou abandonne ; pour renommer : le titre explicite proposé")
     pr.add_argument("--motif", default="", help="pourquoi, en une ligne")
+    pr.add_argument("--aussi", nargs="+", default=[], metavar="ID", help="rattacher : autres tâches du lot ; valeur = parent ou racine")
     fv = sous.add_parser("feu-vert", help="feu vert du contrôleur lié à une version (sha)")
     fv.add_argument("geste", choices=["demander", "accorder", "refuser", "verifier"])
     fv.add_argument("sha", help="sha complet : git rev-parse HEAD")
@@ -351,7 +351,7 @@ def main(argv: list[str] | None = None) -> int:
     if a.commande == "creer" and a.mission and not a.lancer:
         cr.error("--mission attend --lancer")
     if a.commande == "proposer":
-        attendus = 2 if a.type == "lier" else 1
+        attendus = 2 if a.type == "lier" else 1  # --aussi : lot de « rattacher » (INV-RATTACHER-1)
         if len(a.valeur) != attendus:
             pr.error(f"{a.type} attend {attendus} valeur(s) après l'identifiant")
         a.valeur = ":".join(a.valeur)  # lier : « alimente:<cible> »
@@ -481,7 +481,7 @@ def main(argv: list[str] | None = None) -> int:
         else:
             r = appeler("POST", "/propositions", {"type": a.type, "tache": a.id,
                                                   "valeur": a.valeur, "de": source,
-                                                  "motif": a.motif})
+                                                  "motif": a.motif, **({"taches": a.aussi} if a.aussi else {})})
             if r.get("etat") == "ignoree":  # INV-INTERFACE-3 : mode simple, rien n'est mémorisé (installation à blanc, 19/11)
                 sortie = ["proposition ignorée : l'interface ne retient pas les propositions "
                           "(mode simple ; Réglages > Propositions)"]

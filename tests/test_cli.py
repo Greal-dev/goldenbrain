@@ -135,3 +135,9 @@ def test_creer_sans_description_rend_le_refus_du_serveur(monkeypatch, capsys):
     monkeypatch.setattr(cli, "appeler", refus)
     assert cli.main(["creer", "Nue"]) == 1
     assert "au moins une phrase" in capsys.readouterr().err
+
+
+def test_proposer_rattacher_un_lot(appels):
+    assert cli.main(["proposer", "rattacher", "a", "groupe", "--aussi", "b", "c", "--motif", "ranger"]) == 0
+    assert appels[-1][2] == {"type": "rattacher", "tache": "a", "valeur": "groupe", "de": "t1", "motif": "ranger",
+                             "taches": ["b", "c"]}

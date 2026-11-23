@@ -25,6 +25,15 @@ from . import api_integration, geste, integration, langues, liens
 from .vault import Invalide
 
 
+class CorpsProposition(BaseModel):
+    type: str
+    tache: str
+    valeur: str
+    de: str | None = None
+    motif: str | None = None
+    taches: list[str] | None = None  # « rattacher » : le lot, en plus de `tache` (INV-RATTACHER-1)
+
+
 class CorpsGeste(BaseModel):
     noeud: str
     sous: str | None = None

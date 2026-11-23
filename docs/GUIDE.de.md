@@ -1,6 +1,6 @@
 # GoldenBrain-Anleitung
 
-Aktualisiert am 2026-11-22.
+Aktualisiert am 2026-11-23.
 
 GoldenBrain ist ein Steuerpult: Sie übergeben Aufgaben an KI-Agenten (Claude Code, Codex, OpenCode, Copilot, Antigravity), und jede Aufgabe wird an ihrem Platz in Ihrem Vault (einem Ordner mit Markdown-Notizen) abgelegt. GoldenBrain organisiert und beaufsichtigt; der Agent arbeitet in seiner eigenen Unterhaltung, die Sie jederzeit wieder aufnehmen können.
 
@@ -301,7 +301,7 @@ Zu lesen von jedem Agenten — Claude Code, Codex, OpenCode, Gemini CLI oder and
 | `relancer <id>` | eine gescheiterte oder unterbrochene Aufgabe neu starten |
 | `arreter <id>` | den laufenden Turn anhalten |
 | `deleguer "<Titel>" "<Briefing>"` | eine Arbeit an eine von GoldenBrain gestartete Unteraufgabe übergeben |
-| `proposer deplacer\|projet\|operation\|ticket\|tache\|lier\|perimetre\|echeance\|fermer\|renommer …` | eine Strukturänderung vorschlagen (`--motif`, Pflicht bei `renommer`); der Mensch nimmt mit einem Klick an. Im einfachen Modus werden Vorschläge ignoriert (Einstellungen > Vorschläge der Agenten) |
+| `proposer deplacer\|rattacher\|projet\|operation\|ticket\|tache\|lier\|perimetre\|echeance\|fermer\|renommer …` | eine Strukturänderung vorschlagen (`--motif`, Pflicht bei `renommer`) ; `rattacher <id> <parent|racine> [--aussi <id>…]` ordnet einen Stapel Aufgaben in EINEM Vorschlag unter einer Eltern-Aufgabe ein (oder löst sie zum Projekt hin), abgelehnt bei Zyklus, laufender Aufgabe, anderem Projekt, Obergrenze 10 oder gemischten Arbeitsarten; der Mensch nimmt mit einem Klick an. Im einfachen Modus werden Vorschläge ignoriert (Einstellungen > Vorschläge der Agenten) |
 | `solliciter <persona> "<Frage>"` | Meinung eines Personas des Teams |
 | `telegram "<Text>"` | Nachricht an den Nutzer auf Telegram (`--validation`, `--choix`); setzt den konfigurierten Bot voraus |
 | `poste reserver "<Grund>"` / `poste liberer` | den Rechner während eines aufwendigen Tests reservieren; ist er belegt, auf die Reihe warten (`--attente <min>`, Standard 30) |

@@ -276,3 +276,10 @@ def test_proposition_avec_motif_et_operation_409(client):
     r = client.post(f"/api/propositions/{p['n']}/accepter", headers=H)
     assert r.status_code == 409 and "promouv" in r.json()["detail"]
     assert client.get("/api/propositions").json()[0]["etat"] == "en_attente"
+
+
+def test_proposition_rattacher_lot_et_cycle_api(client):
+    r = client.post("/api/propositions", headers=H, json={"type": "rattacher", "tache": "petit", "valeur": "mere", "taches": ["enfant"]})
+    assert r.status_code == 201 and r.json()["taches"] == ["petit", "enfant"]
+    r = client.post("/api/propositions", headers=H, json={"type": "rattacher", "tache": "mere", "valeur": "petit"})
+    assert r.status_code == 409  # cycle (INV-RATTACHER-1)

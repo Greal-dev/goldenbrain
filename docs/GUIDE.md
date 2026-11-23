@@ -308,7 +308,7 @@ Le vault est votre **second cerveau** : des notes ordinaires (fichiers Markdown)
 | `relancer <id>` | relancer une tâche en échec ou interrompue |
 | `arreter <id>` | arrêter le tour en cours |
 | `deleguer "<titre>" "<brief>"` | confier un travail à une tâche enfant lancée par GoldenBrain |
-| `proposer deplacer\|projet\|operation\|ticket\|tache\|lier\|perimetre\|echeance\|fermer\|renommer …` | proposer un changement de structure (`--motif`, obligatoire pour `renommer`) ; l'humain accepte d'un clic. En mode simple, les propositions sont ignorées (Réglages > Propositions) |
+| `proposer deplacer\|rattacher\|projet\|operation\|ticket\|tache\|lier\|perimetre\|echeance\|fermer\|renommer …` | proposer un changement de structure (`--motif`, obligatoire pour `renommer`) ; `rattacher <id> <parent|racine> [--aussi <id>…]` range un lot de tâches sous une tâche parente (ou les détache vers leur projet) en UNE proposition, refusée si cycle, tâche en cours, autre projet, plafond de 10 ou natures mêlées ; l'humain accepte d'un clic. En mode simple, les propositions sont ignorées (Réglages > Propositions) |
 | `solliciter <persona> "<question>"` | avis d'un persona de l'équipe |
 | `telegram "<texte>"` | message à l'utilisateur sur Telegram (`--validation`, `--choix`) ; exige le bot configuré |
 | `poste reserver "<motif>"` / `poste liberer` | réserver le poste pendant une épreuve lourde ; s'il est pris, attendre son tour (`--attente <min>`, défaut 30) |

@@ -99,14 +99,6 @@ class CorpsSession(BaseModel):
     harnais: str | None = None
 
 
-class CorpsProposition(BaseModel):
-    type: str
-    tache: str
-    valeur: str
-    de: str | None = None
-    motif: str | None = None
-
-
 class CorpsLien(BaseModel):
     type: str
     cible: str
@@ -419,8 +411,8 @@ def creer_app(config: Config, moteur: Moteur | None = None) -> FastAPI:
         return moteur.propositions.liste
 
     @app.post("/api/propositions", status_code=201)
-    async def proposer(c: CorpsProposition):
-        return moteur.proposer(c.type, c.tache, c.valeur, c.de or "", c.motif or "")
+    async def proposer(c: api_arbre.CorpsProposition):
+        return moteur.proposer(c.type, c.tache, c.valeur, c.de or "", c.motif or "", annexe={"taches": c.taches or []} if c.type == "rattacher" else None)
 
     @app.post("/api/propositions/{n}/accepter")
     async def accepter(n: int):
