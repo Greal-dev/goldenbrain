@@ -32,3 +32,12 @@
 .modele b { display: block; font-size: 13px; }
 .modele span { font-size: 12px; color: var(--texte-2); }
 .modele.choisi, .modele:hover { outline: 2px solid var(--accent); }
+/* Second cerveau (cerveau.js) : plein écran opaque, avant tout autre écran ; rappel visible si « Plus tard ». */
+.accueil.plein { background: var(--fond, var(--panneau)); z-index: 60; }
+.cv-champ input { max-width: none; width: 100%; font-family: monospace; }
+.cv-bas { justify-content: flex-start; margin-top: 8px; }
+.cv-nav { border: 1px solid var(--bord); border-radius: 6px; padding: 8px 12px; margin: 8px 0; }
+.cv-chemin { font-family: monospace; font-size: 12px; overflow-wrap: anywhere; margin-bottom: 6px; }
+.cv-barre { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 6px; }
+.cv-liste { list-style: none; margin: 0; padding: 0; max-height: 220px; overflow: auto; display: flex; flex-wrap: wrap; gap: 4px; }
+.cerveau-rappel { display: flex; align-items: center; gap: 12px; padding: 6px 12px; background: var(--panneau); border-bottom: 2px solid var(--accent); font-size: 13px; }

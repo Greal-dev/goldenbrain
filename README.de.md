@@ -2,7 +2,7 @@
 
 [English](README.md) · [Français](README.fr.md) · Deutsch · [Español](README.es.md)
 
-GoldenBrain ist ein lokaler Leitstand für Arbeit, die KI-Programmieragenten übertragen wird. Jede Aufgabe ist eine Markdown-Notiz in Ihrem Vault (ein einfacher Notizordner, mit oder ohne Obsidian), und ihre Ausführung ist eine gewöhnliche Konversation eines Kommandozeilen-Harness — Claude Code, Codex, OpenCode, GitHub Copilot CLI oder Antigravity —, die Sie jederzeit fortsetzen können. GoldenBrain ordnet ein, reiht ein, überwacht und verknüpft diese Konversationen; der Agent liefert eine kurze Ergebniskarte in die Notiz, und Sie bestätigen.
+GoldenBrain ist eine App, die auf Ihrem Computer läuft: Sie übertragen Aufgaben an KI-Assistenten und verfolgen alle auf einem Bildschirm. Jede Aufgabe ist eine Markdown-Notiz in Ihrem Vault (ein einfacher Notizordner, mit oder ohne Obsidian), und ihre Ausführung ist eine gewöhnliche Konversation eines KI-Assistenten, den Sie schon im Terminal nutzen — Claude Code, Codex, OpenCode, GitHub Copilot CLI oder Antigravity —, die Sie jederzeit fortsetzen können. GoldenBrain ordnet ein, reiht ein, überwacht und verknüpft diese Konversationen; der Agent liefert eine kurze Ergebniskarte in die Notiz, und Sie bestätigen.
 
 ![Aufgabenbaum als Kaskade, mit Status, Live-Aktivität und Engine](docs/captures/arbre-de.png)
 
@@ -52,21 +52,21 @@ Set-Content python.local "$PWD\.venv\Scripts\python.exe" -Encoding ascii
 .\lancer.cmd
 ```
 
-Öffnen Sie dann http://127.0.0.1:8300 (immer diese Adresse, nicht `localhost`; `lancer.cmd` öffnet sie für Sie). Der erste Start legt `config.toml` an, die nur Ihre Abweichungen enthält; alles andere kommt aus `config.exemple.toml`. Anderer Vault: in `config.toml` `[vault]`, dann `racine = "~/pfad/zum/vault"`. Anderer Port: `[serveur]`, dann `port = 8301`.
+Öffnen Sie dann http://127.0.0.1:8300 (bleiben Sie bei dieser Adresse: `localhost` antwortet auch, aber der Browser führt getrennte Daten je Adresse; `lancer.cmd` öffnet sie für Sie). Der erste Start legt `config.toml` an, die nur Ihre Abweichungen enthält; alles andere kommt aus `config.exemple.toml`. Anderer Vault: in `config.toml` `[vault]`, dann `racine = "~/pfad/zum/vault"`. Anderer Port: `[serveur]`, dann `port = 8301`. Der erste Start öffnet „Ihr zweites Gehirn einrichten“: Wählen Sie den Vault-Ordner in der Oberfläche (ein vorhandener Obsidian-Vault wird an Ort und Stelle übernommen), ohne eine Datei zu bearbeiten.
 
-| Harness | Installation | Anmeldung |
+| KI-Assistent | Installation (die App kann sie übernehmen) | Anmeldung |
 |---|---|---|
-| Claude Code | `npm install -g @anthropic-ai/claude-code` | `claude`, dann `/login` |
+| Claude Code | `curl -fsSL https://claude.ai/install.sh \| bash` (macOS, Linux) · `irm https://claude.ai/install.ps1 \| iex` (Windows) | `claude`, dann `/login` |
 | Codex | `npm install -g @openai/codex` | `codex login` |
 | GitHub Copilot CLI | `npm install -g @github/copilot` | `copilot login` |
-| OpenCode | siehe opencode.ai | siehe seine Dokumentation |
+| OpenCode | `npm install -g opencode-ai` | siehe seine Dokumentation |
 | Antigravity (`agy`) | siehe seine Dokumentation | in der Anwendung |
 
 Das vollständige Handbuch — erste Schritte, jeder Bildschirm, Fehlerbehebung, Start bei der Anmeldung mit systemd — ist [`docs/GUIDE.de.md`](docs/GUIDE.de.md), auch in der Anwendung (Schaltfläche « ? ») und über `python orch.py guide`.
 
 ## Wichtigste Funktionen
 
-- **Aufgaben an Harnesses übertragen**: « Nouvelle tâche » (Neue Aufgabe), ein Titel, « Lancer tout de suite » (Sofort starten). Harness und Modell werden pro Aufgabe gewählt; Warteschlange, Prioritäten, Voraussetzungen und eine Obergrenze gleichzeitiger Agenten (fest oder nach freiem Arbeitsspeicher).
+- **Aufgaben an KI-Assistenten übertragen**: « Nouvelle tâche » (Neue Aufgabe), ein Titel, « Lancer tout de suite » (Sofort starten). Assistent und Modell werden pro Aufgabe gewählt; Warteschlange, Prioritäten, Voraussetzungen und eine Obergrenze gleichzeitiger Agenten (fest oder nach freiem Arbeitsspeicher).
 - **Bereiche Konversation und Notizen**: Die Aufgabe zeigt die Live-Konversation des Agenten neben Ihren datierten Notizen, die der Agent liest, aber nie schreibt. « Interface native du harnais » öffnet dieselbe Konversation erneut in einem Terminal.
 - **Ich / KI**: Ein Schalter im Kopf der Aufgabe sagt, wer sie führt. « Moi » (Ich): kein Agent arbeitet daran; « IA » (KI): « Confier la suite » (Übergeben) gibt sie mit Ihren Notizen als Kontext zurück.
 - **Zweites Gehirn und Graph**: den ganzen Vault durchsuchen, durchblättern und bearbeiten; Rückverweise, unverknüpfte Erwähnungen, lokaler und globaler Graph von Notizen, Aufgaben und Projekten. Ein Gärtner-Agent schlägt Verschiebungen und Verknüpfungen vor; nichts ändert sich ohne Ihren Klick.
@@ -78,16 +78,17 @@ Das vollständige Handbuch — erste Schritte, jeder Bildschirm, Fehlerbehebung,
 
 ## GoldenBrain von einem Agenten aus steuern
 
-Jeder Harness (Claude Code, Codex, OpenCode, Gemini CLI…) kann GoldenBrain über `python orch.py` oder die lokale REST-API steuern. Lesen Sie [`AGENTS.md`](AGENTS.md) und den Abschnitt « Pour un agent IA » des Handbuchs: Befehle, Routen, Regeln und durchgängige Beispiele.
+Jeder KI-Assistent für die Kommandozeile (Claude Code, Codex, OpenCode…) kann GoldenBrain über `python orch.py` oder die lokale REST-API steuern. Lesen Sie [`AGENTS.md`](AGENTS.md) und den Abschnitt « Pour un agent IA » des Handbuchs: Befehle, Routen, Regeln und durchgängige Beispiele.
 
 ## Bekannte Grenzen
 
+- Standardmäßig arbeiten die Agenten **ohne Rückfrage** (`--dangerously-skip-permissions` für Claude Code und Antigravity, `--dangerously-bypass-approvals-and-sandbox` für Codex, `--auto` für OpenCode, `--allow-all-tools --no-ask-user` Copilot), ab Ihrem Benutzerordner, sofern die Aufgabe keinen anderen nennt: Ein Agent kann Ihre Dateien lesen, ändern oder löschen. Probieren Sie es zuerst mit einer harmlosen Anweisung und lesen Sie [SECURITY.md](SECURITY.md), bevor Sie echte Arbeit übertragen; die Argumente stehen in `config.exemple.toml`.
 - Ein Benutzer, ein Arbeitsplatz: Der Server lauscht auf `127.0.0.1` ohne Authentifizierung. Setzen Sie ihn nie dem Internet aus; Fernzugriff nur über Tailscale.
 - Oberfläche auf Französisch, Englisch, Deutsch und Spanisch; Konfigurationsschlüssel und Entwurfsdokumente bleiben auf Französisch.
 - Windows und Linux (Debian) werden täglich genutzt; macOS sollte funktionieren, wurde aber nicht erprobt.
-- Ein Harness muss von Ihnen installiert und angemeldet sein; GoldenBrain installiert und bezahlt keinen. Der Copilot-CLI-Adapter wurde noch nicht mit einem echten Abonnement erprobt.
+- Ein KI-Assistent muss von Ihnen mit eigenem Abonnement oder Schlüssel angemeldet sein: GoldenBrain kann die Installation anbieten, meldet sich aber nie an und zahlt nie für Sie. Für die `npm`-Assistenten wird Node.js benötigt. Der Copilot-CLI-Adapter wurde noch nicht mit einem echten Abonnement erprobt.
 - Die Oberflächentests (Playwright) laufen nicht in der kontinuierlichen Integration; dort läuft nur `python scripts/check.py`.
-- Durch GoldenBrain selbst verlassen keine Daten den Rechner; die von Ihnen gestarteten Harnesses sprechen mit ihren eigenen Anbietern.
+- GoldenBrain behält Ihre Daten auf dem Rechner. Es kontaktiert nur GitHub (Updates prüfen und einmal einen Stern anbieten) sowie Telegram oder Microsoft 365, wenn Sie sie aktivieren; die von Ihnen gestarteten Assistenten sprechen mit ihren eigenen Anbietern.
 
 ## Für Entwickler
 

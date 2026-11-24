@@ -4,6 +4,7 @@
 //        sans effet visible au-delà. INV-PWA-1 : le cache du service worker est l'affaire de sw.js seul.
 import { S, on, ouvrir, ouvrirVue } from './store.js';
 import { $ } from './dom.js';
+import { t } from './langues.js';
 
 // Écran « liste » = l'arbre ; tout le reste (tâche, projet, Décisions, Réglages, note, résultats) occupe l'écran entier.
 const ecran = () => (S.selection || S.vue !== 'cascade' || S.portee ? 'detail' : 'liste');
@@ -46,6 +47,7 @@ export function initTelephone() {
   // la barre reviendrait et décalerait le bouton sous le doigt avant le clic.
   document.addEventListener('mousedown', (e) => { if (e.target.closest('.composer button, .dc-reponse button')) e.preventDefault(); });
   on('selection', maj);
+  if (matchMedia('(max-width: 480px)').matches) $('#recherche').placeholder = t('index.recherche'); // A17 : le long libellé était tronqué
   maj();
   on('arbre', () => setTimeout(installable));
 }

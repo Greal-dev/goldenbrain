@@ -1,7 +1,7 @@
 // Rôle : page « Décisions » — tout ce qui attend l'utilisateur, la question en clair, tranché sur place.
 // Frontières : lit GET /decisions (tri fait par le serveur, INV-DECISIONS-1) ; chaque geste passe par une route
 // existante (valider, renvoyer, messages, temps, propositions) ou par les lots /decisions/valider|fermer|agents ; « Scanner le système » par /decisions/scan (INV-SCAN-1 : propositions en attente, rien d'appliqué) ; « Rouvrir » par /validation-auto/rouvrir.
-import { h, remplacer, pastille } from './dom.js';
+import { h, remplacer, pastille, nomLisible } from './dom.js';
 import { api, post } from './api.js';
 import { ouvrir, emit, erreur } from './store.js';
 import { formulaire } from './dialogue.js';
@@ -121,7 +121,7 @@ function groupes(liste) {
   for (const d of liste) { if (!m.has(d.projet)) m.set(d.projet, []); m.get(d.projet).push(d); }
   return [...m].map(([projet, ds]) => h('details', { class: 'dc-groupe', open: repliees.has(projet) ? null : true,
     ontoggle: (e) => { (e.target.open ? repliees.delete(projet) : repliees.add(projet)); } },
-  h('summary', null, projet, ' ', h('span', { class: 'n' }, ds.length)), h('ul', { class: 'dc-liste' }, ds.map(ligne))));
+  h('summary', null, nomLisible(projet), ' ', h('span', { class: 'n' }, ds.length)), h('ul', { class: 'dc-liste' }, ds.map(ligne))));
 }
 
 // INV-VALID-2 : clôtures automatiques des 7 derniers jours, chacune réversible d'un clic.

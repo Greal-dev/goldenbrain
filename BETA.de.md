@@ -6,7 +6,7 @@ Beta-Versionen erscheinen auf dem Branch `beta` vor `main`. Tester finden, was a
 
 ## Mitmachen
 1. Installation über git (die übliche Installation): *Einstellungen → Installation und Version → Aktualisierung* öffnen, **Kanal** auf *Beta* stellen.
-2. Im Banner auf **Aktualisieren** klicken: GoldenBrain wechselt auf den Branch `beta` und startet neu. Lokale Änderungen am Code verhindern den Wechsel; nichts wird überschrieben.
+2. Im Banner auf **Aktualisieren** klicken: GoldenBrain wechselt auf den Branch `beta` und startet neu. Lokale Änderungen am Code verhindern den Wechsel; nichts wird überschrieben. Gibt es den Branch `beta` noch nicht, sagt GoldenBrain das, und der Kanal geht zurück auf *Stabil*; nichts wird geändert.
 3. Zurück geht es mit *Stabil*: Der Wechsel erfolgt bei der nächsten Aktualisierung.
 
 Ein Wechsel berührt nie Ihren Vault: Nur der Code der Anwendung ändert sich.

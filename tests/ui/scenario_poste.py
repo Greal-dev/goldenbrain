@@ -27,13 +27,13 @@ def test_poste_reserve_met_en_attente_une_tache_lourde_puis_la_laisse_partir(pag
         expect(page.locator(".d-titre")).to_have_text("Épreuves lourdes")
         page.fill(".composer textarea", "[lent 4] lance la porte")
         page.press(".composer textarea", "Control+Enter")
-        expect(page.locator(".d-meta .etat")).to_have_text(
+        expect(page.locator(".d-une .etat")).to_have_text(
             "En attente du poste (réservé par Titulaire du poste)", timeout=5000)
         assert page.request.get(serveur.url + "/api/taches/po-lourde").json()["etat_execution"] == "en_file"
 
         page.locator("#poste-reserve button", has_text="Libérer").click()
         expect(bandeau).to_be_hidden(timeout=5000)
-        expect(page.locator(".d-meta .etat")).to_have_text("Séance de travail en cours", timeout=8000)
+        expect(page.locator(".d-une .etat")).to_have_text("Séance de travail en cours", timeout=8000)
     finally:
         page.request.post(serveur.url + "/api/poste/liberer", headers=H, data={})
         page.request.post(serveur.url + "/api/taches/po-lourde/arret", headers=H)
@@ -53,14 +53,14 @@ def test_file_du_poste_rang_affiche_sur_la_tache_puis_le_suivant_obtient_le_post
         assert r["poste"] is None and r["rang"] == 1
         expect(page.locator("#poste-reserve")).to_contain_text("File : 1. pf-suivante", timeout=5000)
         ligne(page, "Seconde tâche").click()
-        expect(page.locator(".d-meta .etat")).to_have_text("En attente du poste (rang 1)", timeout=5000)
+        expect(page.locator(".d-une .etat")).to_have_text("En attente du poste (rang 1)", timeout=5000)
 
         # Attendre la libération : la redemande partie avant elle trouverait le poste encore pris.
         with page.expect_response(lambda r: r.url.endswith("/api/poste/liberer")):
             page.locator("#poste-reserve button", has_text="Libérer").click()
         assert post("reserver", {"tache": "pf-suivante", "attendre": True}).json()["poste"]["tache"] == "pf-suivante"
         expect(page.locator("#poste-reserve")).to_contain_text("Poste réservé par pf-suivante", timeout=5000)
-        expect(page.locator(".d-meta .etat")).to_have_count(0, timeout=5000)  # plus d'attente affichée
+        expect(page.locator(".d-une .etat")).to_have_count(0, timeout=5000)  # plus d'attente affichée
     finally:
         post("liberer", {})
     assert not page.erreurs, page.erreurs

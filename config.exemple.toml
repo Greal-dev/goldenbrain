@@ -354,7 +354,7 @@ branche = "main"
 distant = "origin"
 
 [etoile]
-# Invitation unique a mettre une etoile GitHub : eteinte tant que le depot n'est pas public.
+# Invitation unique a mettre une etoile GitHub, proposee seulement si le depot de GoldenBrain est public ; "actif = false" l'eteint.
 actif = true
 # Vide = deduit du depot distant "origin" ; sinon "proprietaire/depot".
 depot = ""

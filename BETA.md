@@ -6,7 +6,7 @@ Beta versions reach the `beta` branch before `main`. Testers catch what automate
 
 ## Join
 1. Installed with git (the usual installation): open *Settings → Installation and version → Update*, set **Channel** to *Beta*.
-2. Click **Update** on the banner: GoldenBrain switches to the `beta` branch and restarts. Local changes to the code block the switch; nothing is overwritten.
+2. Click **Update** on the banner: GoldenBrain switches to the `beta` branch and restarts. Local changes to the code block the switch; nothing is overwritten. If the `beta` branch does not exist yet, GoldenBrain says so and the channel goes back to *Stable*; nothing is changed.
 3. To go back, choose *Stable*: the switch happens at the next update.
 
 Your vault is never touched by a switch: only the application code changes.

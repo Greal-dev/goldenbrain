@@ -7,6 +7,7 @@ import pytest
 from orchestrateur import fiches, liens
 from orchestrateur.moteur import Moteur
 from orchestrateur.vault import Conflit, Invalide
+from conftest import ecrire, tache_md
 from test_moteur import executer, finir, moteur
 
 
@@ -103,3 +104,33 @@ def test_gestes_deja_realises_ne_sont_pas_deposes(config, vault, faux):
     assert m.proposer("rattacher", "mere", "racine")["etat"] == "deja_fait"
     assert m.proposer("deplacer", "doublon", "Projets/C2-Beta")["etat"] == "deja_fait"
     assert m.propositions.liste == []
+
+
+def _integration_permanente(racine):
+    ecrire(racine, "Projets/C1-Alpha/taches/integ.md", tache_md(statut="en-cours", extra="nature: permanente\n", titre="Intégrer"))
+
+
+def test_livraison_bloquee_une_nuit_par_un_lien_d_integration_en_attente(config, vault, faux, racine):
+    # Symptôme : le lien « alimente » vers l'intégration attendait dans Décisions, la branche n'était pas fusionnée.
+    _integration_permanente(racine)
+    m = Moteur(config, vault, {"faux": faux})
+    p = m.proposer("lier", "mere", "alimente:integ", de="mere", motif="livre la branche")
+    assert p["etat"] == "acceptee" and p["auto"] is True
+    assert [r["id"] for r in liens.refs(vault.index()[0], "mere")["alimente"]] == ["integ"]
+    assert not [q for q in m.propositions.liste if q["etat"] == "en_attente"]
+    assert "mere alimente integ" in fiches.lire(vault.tache("mere").chemin)  # mention discrète dans « Traces »
+
+
+def test_lien_vers_une_tache_permanente_est_pose_meme_si_les_propositions_sont_ignorees(config, vault, faux, racine):
+    _integration_permanente(racine)
+    config.interface.propositions = "ignorer"
+    m = Moteur(config, vault, {"faux": faux})
+    assert m.proposer("lier", "mere", "alimente:integ")["etat"] == "acceptee"
+    assert [r["id"] for r in liens.refs(vault.index()[0], "mere")["alimente"]] == ["integ"]
+
+
+def test_les_autres_liens_gardent_la_politique(config, vault, faux, racine):
+    _integration_permanente(racine)
+    m = Moteur(config, vault, {"faux": faux})
+    assert m.proposer("lier", "mere", "alimente:x")["etat"] == "en_attente"  # cible ordinaire
+    assert m.proposer("lier", "mere", "voir_aussi:integ")["etat"] == "en_attente"  # lien autre qu'alimente

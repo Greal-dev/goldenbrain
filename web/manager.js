@@ -8,6 +8,7 @@ import { h, $, heure, remplacer } from './dom.js';
 import { api, post } from './api.js';
 import { erreur } from './store.js';
 import { rendreMd } from './md.js';
+import { simple } from './interface.js';
 
 const CLE = 'orch.manager';
 let el = null, fil = null, charge = false, envoi = false, enCharge = false, perime = false;
@@ -63,7 +64,7 @@ function dessinerFil() {
   // Ne défiler en bas que si le lecteur y était déjà (ou au premier dessin) : on ne l'arrache pas à sa lecture.
   const enBas = !zone.firstChild || zone.scrollHeight - zone.scrollTop - zone.clientHeight < 40;
   $('#mgr-tg').hidden = !fil.telegram;
-  remplacer(zone, fil.messages.length ? null : h('p', { class: 'mgr-aide' }, t('manager.aide')),
+  remplacer(zone, fil.messages.length ? null : h('p', { class: 'mgr-aide' }, t(simple() ? 'manager.aide_simple' : 'manager.aide')),
     ...fil.messages.map(elMessage),
     fil.en_cours ? h('p', { class: 'mgr-reflechit' }, h('span', { class: 'tourne', 'aria-hidden': 'true' }), t('manager.reflechit')) : null);
   if (enBas) zone.scrollTop = zone.scrollHeight;

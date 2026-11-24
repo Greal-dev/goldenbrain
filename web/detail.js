@@ -1,6 +1,6 @@
 // Rôle : volet droit — tâche sélectionnée (en-tête, actions, fiche, corps, conversation, saisie).
 // Frontières : API HTTP + événements SSE relayés par app.js ; ne modifie jamais l'arbre lui-même.
-import { h, libelleStatut, pastille, remplacer, ajouter as ajouterDom } from './dom.js';
+import { h, libelleStatut, nomLisible, pastille, remplacer, ajouter as ajouterDom } from './dom.js';
 import { rendreMd } from './md.js';
 import { S, on, emit, erreur, ouvrir, ouvrirVue, ouvrirNote, ouvrirGraphe, noeudTache } from './store.js';
 import { filVisible } from './interface.js';
@@ -39,11 +39,19 @@ let deplies = new Set(); // tours dont les étapes ont été dépliées à la ma
 let choixMoteur = null; // {harnais, modele} choisis dans l'en-tête depuis le dernier message : repris par le prochain envoi
 let r = {}; // références DOM de la tâche ouverte
 const enc = encodeURIComponent;
+const CLE_DETAILS = 'gb.detail-ouvert';
+let detOuvert = (() => { try { return localStorage.getItem(CLE_DETAILS) === '1'; } catch { return false; } })();
+function basculerDetails() {
+  detOuvert = !detOuvert;
+  try { localStorage.setItem(CLE_DETAILS, detOuvert ? '1' : '0'); } catch { /* stockage indisponible : le choix vaut pour la séance */ }
+  r.details.hidden = !detOuvert;
+  r.une.querySelector('[data-id="details-bascule"]')?.setAttribute('aria-expanded', String(detOuvert));
+}
 const actif = (tk) => tk && (tk.etat_execution === 'en_cours' || tk.etat_execution === 'en_file');
 
 function squelette() {
   r = {};
-  r.tete = h('div', { class: 'd-tete' });
+  r.une = h('div', { class: 'd-une' });
   r.vie = h('div', { class: 'd-vie' });
   r.fiche = h('section', { class: 'fiche' });
   r.lignes = h('div', { class: 'liens f-lignes' });
@@ -58,13 +66,17 @@ function squelette() {
   });
   r.etapes = h('button', { class: 'btn petit btn-etapes', type: 'button', 'aria-pressed': String(etapesAffichees()), onclick: basculerEtapes,
     title: t('detail.etapes_titre') }, h('span', { class: 'sw', 'aria-hidden': 'true' }), t('detail.etapes'));
-  r.defile = h('div', { class: 'd-defile' }, r.fiche, r.lignes, r.liens, r.revues, r.corps, h('div', { class: 'conv-tete' }, (r.convTitre = h('h3', { class: 'conv-titre' }, t('detail.echanges'))), r.etapes), r.conv);
+  // INV-DETAIL-1 : une seule ligne d'en-tête ; tout le reste vit dans « Détails », replié par défaut, choix mémorisé.
+  r.detMeta = h('div', { class: 'd-det-meta' });
+  r.details = h('div', { class: 'd-details', 'data-id': 'details', hidden: !detOuvert }, r.detMeta, r.vie, r.fiche, r.lignes, r.liens, r.revues, r.corps);
+  r.tete = h('div', { class: 'd-tete' }, r.une, r.details);
+  r.defile = h('div', { class: 'd-defile' }, h('div', { class: 'conv-tete' }, (r.convTitre = h('h3', { class: 'conv-titre' }, t('detail.echanges'))), r.etapes), r.conv);
   r.defile.addEventListener('scroll', () => { colle = r.defile.scrollHeight - r.defile.scrollTop - r.defile.clientHeight < 48; r.bas.hidden = colle; });
   r.bas = h('button', { class: 'btn petit retour-bas', type: 'button', hidden: true, onclick: () => descendre(true) }, t('detail.direct'));
   r.ta = h('textarea', { rows: 2, 'aria-label': t('detail.message_agent'), placeholder: t('detail.message_placeholder') });
   r.note = h('span', { class: 'note' });
   r.envoyer = h('button', { class: 'btn primaire', type: 'submit' }, t('detail.envoyer'));
-  r.rappel = h('button', { class: 'rappel', type: 'button', onclick: () => r.tete.querySelector('.moteur select')?.focus() });
+  r.rappel = h('button', { class: 'rappel', type: 'button', onclick: () => { if (!detOuvert) basculerDetails(); r.tete.querySelector('.moteur select')?.focus(); } });
   const form = h('form', { class: 'composer' }, h('div', { class: 'c-ligne' }, r.ta, h('div', { class: 'c-col' }, r.rappel, r.envoyer)), r.note);
   form.addEventListener('submit', (e) => { e.preventDefault(); envoyer(); });
   r.ta.addEventListener('keydown', (e) => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); envoyer(); } });
@@ -83,7 +95,7 @@ const modeleDe = (tk) => tk.modele ?? tk.frontmatter?.modele ?? '';
 const aValider = (tk) => tk.a_valider ?? (tk.statut === 'fait' && !!tk.session);
 
 function selecteurStatut(tk) {
-  const opt = (s) => h('option', { value: s, selected: s === tk.statut ? true : null }, libelleStatut(s));
+  const opt = (s) => h('option', { value: s, selected: s === tk.statut ? true : null }, s === tk.statut && aValider(tk) ? t('statut.a_valider') : libelleStatut(s));
   return h('select', { 'aria-label': t('detail.statut'), disabled: tk.statut_verrouille ? true : null, title: tk.statut_verrouille ? INFO_VERROU : null,
     onchange: async (e) => {
       const nt = await agir(() => ecrireStatut(id, e.target.value));
@@ -98,21 +110,21 @@ const normT = (s) => (s || '').normalize('NFD').replace(/\p{M}/g, '').toLowerCas
 function segmentsFil(tk) {
   const aller = (type, nid) => (type === 'tache' ? ouvrir(nid) : ouvrirVue('cascade', `${type}:${nid}`));
   const lien = (txt, type, nid) => h('span', null, h('button', { class: 'crumb', type: 'button', title: t('detail.aller', { titre: txt }), onclick: () => aller(type, nid) }, txt));
-  if (tk.fil?.length) return filVisible(tk.fil).map((s) => lien(s.titre, s.type, s.id));
+  if (tk.fil?.length) return filVisible(tk.fil).filter((s) => s.titre !== '?').map((s) => lien(nomLisible(s.titre), s.type, s.id));
   let niveau = S.arbre;
   return (tk.fil_ariane || []).map((txt) => {
     const q = normT(txt);
     const n = niveau.find((x) => normT(x.titre) === q || (x.type === 'casquette' && normT(x.titre).startsWith(q)));
     niveau = n?.enfants || [];
-    return n ? lien(txt, n.type, n.id) : h('span', null, txt);
+    return n ? lien(nomLisible(txt), n.type, n.id) : h('span', null, nomLisible(txt));
   });
 }
 
 // « Rattachée à : <mère ou conteneur> » : dernier ancêtre du fil ; « Changer… » rouvre le dialogue « Déplacer vers… » (même geste que dans l'arbre).
 function rattachement(tk, b) {
   const a = tk.fil?.at(-1);
-  const nom = a ? h('button', { class: 'crumb', type: 'button', title: t('detail.aller', { titre: a.titre }), onclick: () => (a.type === 'tache' ? ouvrir(a.id) : ouvrirVue('cascade', `${a.type}:${a.id}`)) }, a.titre)
-    : h('span', { class: 'crumb-txt' }, (tk.fil_ariane || []).at(-1) || '—');
+  const nom = a ? h('button', { class: 'crumb', type: 'button', title: t('detail.aller', { titre: a.titre }), onclick: () => (a.type === 'tache' ? ouvrir(a.id) : ouvrirVue('cascade', `${a.type}:${a.id}`)) }, nomLisible(a.titre))
+    : h('span', { class: 'crumb-txt' }, nomLisible((tk.fil_ariane || []).at(-1) || '—'));
   const noeud = noeudTache(tk.id);
   const mobile = noeud ? noeud.deplacable !== false : true;
   return h('div', { class: 'd-rattache' }, t('detail.rattachee'), nom, a ? h('span', { class: 'badge-type' }, a.type === 'tache' ? t('detail.tache_mere') : t('detail.projet')) : null,
@@ -140,19 +152,33 @@ function dessinerTete() {
     : tk.etat_execution === 'en_pause' ? (tk.pause || t('detail.pause_quota'))
     : { en_cours: t('detail.tour_en_cours'), en_file: t('detail.en_file'), interrompu: t('detail.tour_interrompu'), attente_reseau: t('detail.attente_reseau') }[tk.etat_execution];
   const b = (txt, f, o = {}) => h('button', { class: `btn petit${o.cls ? ' ' + o.cls : ''}`, type: 'button', onclick: f, disabled: o.off ? true : null, title: o.titre || null }, txt);
-  remplacer(r.tete,
-    h('nav', { class: 'fil', 'aria-label': t('detail.fil') }, segmentsFil(tk)),
+  // Alertes : la plus importante en tête de ligne, les autres en compteur ; toutes se lisent dans « Détails » (INV-DETAIL-1).
+  const alertes = [tk.incident && tk.incident.libelle, tk.pause_ram && t('detail.pause_ram'), tk.controle?.verdict && tk.controle.verdict.verdict !== 'reussi' && t('detail.controle_echoue')].filter(Boolean);
+  const routine = tk.frontmatter?.nature === 'routine';
+  remplacer(r.une,
     titreEditable(tk, appliquer, repereIA(tk.id)), // INV-RENOMMER-1
+    ...(routine ? [] : [pastille(tk.statut), selecteurStatut(tk)]), // INV-ROUTINE-5 : état au lieu du statut
+    etat && !tk.pause_ram ? h('span', { class: `etat ${tk.etat_execution}` }, tk.etat_execution === 'en_cours' ? h('span', { class: 'tourne' }) : null, etat) : null,
+    alertes.length ? h('button', { class: 'd-alerte', type: 'button', 'data-id': 'alerte', title: alertes.join('\n'), onclick: () => { if (!detOuvert) basculerDetails(); } },
+      h('span', { class: 'd-alerte-t' }, alertes[0]), alertes.length > 1 ? h('span', { class: 'd-alerte-n' }, t('detail.alertes_plus', { n: alertes.length - 1 })) : null) : null,
+    aValider(tk) ? h('span', { class: 'a-valider', role: 'status', title: t('detail.a_valider') }, b(t('detail.valider'), valider, { cls: 'primaire' }), b(t('detail.renvoyer_btn'), renvoyer)) : null,
+    b(t('resultat.bouton'), () => voirResultat(tk.id), { cls: aValider(tk) ? '' : 'primaire', titre: t('resultat.aide') }),
+    tk.pause_ram ? b(t('detail.reprendre_maintenant'), reprendreRam, { cls: 'primaire', titre: t('detail.reprendre_ram_titre') }) : null,
+    tk.etat_execution === 'en_pause' ? b(t('detail.reprendre_maintenant'), reprendreMaintenant, { cls: 'primaire', titre: t('detail.reprendre_quota_titre') }) : null,
+    actif(tk) || tk.etat_execution === 'en_pause' ? b(t('detail.arreter'), arreter, { cls: 'danger' }) : null,
+    tk.etat_execution === 'interrompu' ? b(t('detail.relancer'), relancer, { cls: 'primaire', titre: t('detail.relancer_titre') }) : null,
+    h('button', { class: 'btn petit d-bascule', type: 'button', 'data-id': 'details-bascule', 'aria-expanded': String(detOuvert), 'aria-controls': 'details', title: t('detail.details_titre'), onclick: basculerDetails }, t('detail.details')));
+  remplacer(r.detMeta,
+    h('nav', { class: 'fil', 'aria-label': t('detail.fil') }, segmentsFil(tk)),
     curseur(tk, (x) => (x ? appliquer(x) : rafraichir()), erreur), // INV-EXECUTANT-1
     rattachement(tk, b),
-    tk.frontmatter?.nature === 'routine' ? blocRoutine(tk.id, () => { emit('recharger'); rafraichir(); }) : null, // INV-ROUTINE-5
+    routine ? blocRoutine(tk.id, () => { emit('recharger'); rafraichir(); }) : null, // INV-ROUTINE-5
     tk.frontmatter?.chaine || tk.frontmatter?.chaine_phase ? blocChaine(tk.id, () => { emit('recharger'); rafraichir(); }) : null, // INV-CHAINE-1
-    h('div', { class: 'd-meta' }, ...(tk.frontmatter?.nature === 'routine' ? [] : [pastille(tk.statut), selecteurStatut(tk)]), // INV-ROUTINE-5 : état au lieu du statut
+    h('div', { class: 'd-meta' },
       tk.statut_verrouille ? b(t('detail.reprendre_main'), reprendre, { cls: 'verrou', titre: t('detail.reprendre_main_titre') }) : null,
       controleRepere(tk.controle),
       motifExecution(tk.execution), // INV-REGROUPE-1
       (tk.enfants?.length && tk.execution) ? selecteurExecution(tk.id, tk.execution, () => rafraichir()) : null,
-      etat && !tk.pause_ram ? h('span', { class: `etat ${tk.etat_execution}` }, tk.etat_execution === 'en_cours' ? h('span', { class: 'tourne' }) : null, etat) : null,
       tk.pause_ram ? h('span', { class: 'etat pause-ram', 'data-id': 'pause-ram', title: t('detail.pause_ram_titre') }, t('detail.pause_ram')) : null,
       editeurTemps(tk, appliquer),
       selecteurMoteur(tk.harnais || '', modeleDe(tk), changerMoteur),
@@ -162,22 +188,14 @@ function dessinerTete() {
       blocEconomie(tk, (vers) => changerMoteur(vers, '')),  // INV-ECO-1 : bascule acceptée d'un geste
       blocCodespace(tk, appliquer),
       h('span', { class: 'session' }, tk.session ? t('detail.session', { id: tk.session.slice(0, 8) }) : t('detail.sans_session')),
-      b(t('resultat.bouton'), () => voirResultat(tk.id), { cls: 'primaire', titre: t('resultat.aide') }),
       tk.dossier_travail ? h('span', { class: 'session', title: tk.dossier_travail_origine }, t('detail.dossier', { dossier: tk.dossier_travail })) : null),
-    r.vie,
-    aValider(tk) ? h('div', { class: 'a-valider', role: 'status' }, h('span', null, t('detail.a_valider')),
-      b(t('detail.valider'), valider, { cls: 'primaire' }), b(t('detail.renvoyer_btn'), renvoyer)) : null,
     notesLiees(cheminVaultTache(tk)),
     h('div', { class: 'd-actions' },
       b(t('detail.ouvrir_note'), () => ouvrirNote(cheminVaultTache(tk)), { cls: 'f-notes', titre: t('detail.ouvrir_note_titre') }),
       b(t('detail.graphe'), () => ouvrirGraphe(tk.id), { cls: 'f-notes', titre: t('detail.graphe_titre') }),
-      b(t('detail.solliciter'), demanderAvis, { cls: 'f-equipe', titre: t('detail.solliciter_titre') }), b(t('detail.deriver'), deriver), tk.frontmatter?.nature === 'routine' ? null : b(t('detail.routine'), async () => { if (await convertirEnRoutine(tk.id)) { emit('recharger'); rafraichir(); } }, { titre: t('detail.routine_titre') }), b(t('detail.promouvoir'), promouvoir, { cls: 'f-transformations', titre: t('detail.promouvoir_titre') }),
+      b(t('detail.solliciter'), demanderAvis, { cls: 'f-equipe', titre: t('detail.solliciter_titre') }), b(t('detail.deriver'), deriver), routine ? null : b(t('detail.routine'), async () => { if (await convertirEnRoutine(tk.id)) { emit('recharger'); rafraichir(); } }, { titre: t('detail.routine_titre') }), b(t('detail.promouvoir'), promouvoir, { cls: 'f-transformations', titre: t('detail.promouvoir_titre') }),
       b(t('detail.console'), consoleGB, { titre: t('detail.console_titre') }),
-      b(t('detail.natif'), natif, { titre: t('detail.natif_titre') }),
-      tk.pause_ram ? b(t('detail.reprendre_maintenant'), reprendreRam, { cls: 'primaire', titre: t('detail.reprendre_ram_titre') }) : null,
-      tk.etat_execution === 'en_pause' ? b(t('detail.reprendre_maintenant'), reprendreMaintenant, { cls: 'primaire', titre: t('detail.reprendre_quota_titre') }) : null,
-      actif(tk) || tk.etat_execution === 'en_pause' ? b(t('detail.arreter'), arreter, { cls: 'danger' }) : null,
-      tk.etat_execution === 'interrompu' ? b(t('detail.relancer'), relancer, { cls: 'primaire', titre: t('detail.relancer_titre') }) : null));
+      b(t('detail.natif'), natif, { titre: t('detail.natif_titre') })));
   r.note.textContent = (S.etat.occupees || {})[id]?.terminal // INV-NATIF-1
     ? t('detail.terminal')
     : actif(tk) ? t('detail.tour_en_cours_msg') : '';
@@ -385,7 +403,7 @@ export function initDetail(el) {
 export async function ouvrirDetail(nouvelId) {
   id = nouvelId; tache = null; instantane = ''; colle = true; ficheAbsente = false; choixMoteur = null; direct = false; deplies = new Set();
   squelette();
-  remplacer(r.tete, h('p', { class: 'vide' }, t('detail.chargement')));
+  remplacer(r.une, h('p', { class: 'vide' }, t('detail.chargement')));
   await agir(chargerHarnais); // liste des moteurs avant le premier dessin de l'en-tête
   instantane = ''; // un rafraîchissement parti pendant le chargement a pu dessiner sans la liste
   await rafraichir(true);

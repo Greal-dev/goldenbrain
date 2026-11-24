@@ -28,6 +28,8 @@ def serveur(tmp_path_factory):
     config.write_text(texte.replace('taches = ["Projets/*/taches/*.md",',
                                     'taches = ["Projets/*/taches/*.md", "Projets/*/*/taches/*.md",'),
                       encoding="utf-8")
+    (dossier / "etat").mkdir()
+    (dossier / "etat" / "cerveau.json").write_text('{"etat": "fait"}', encoding="utf-8")  # second cerveau réglé (INV-CERVEAU-1)
     proc = subprocess.Popen([sys.executable, str(SERVEUR), str(config)],
                             stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
     url = f"http://127.0.0.1:{port}"

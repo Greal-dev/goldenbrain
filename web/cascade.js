@@ -4,7 +4,7 @@
 // Performance : le squelette est construit une fois (défilement conservé) ; les lignes sont refaites d'un bloc (~120)
 // et seule l'activité en direct est patchée sur place (un clic en cours ne se perd pas pendant un flux SSE).
 import { t, tn } from './langues.js';
-import { h, remplacer, libelleStatut, majCourt, depuis, groupeStatut, ORDRE_STATUTS } from './dom.js';
+import { h, remplacer, libelleStatut, nomLisible, majCourt, depuis, groupeStatut, ORDRE_STATUTS } from './dom.js';
 import { S, on, ouvrir, ouvrirVue, ouvrirNote, parcourir, chemin, fixerToutes, cleNoeud as cle } from './store.js';
 import { cheminContexte } from './ponts.js';
 import { carteProposition, enAttente } from './propositions.js';
@@ -94,7 +94,7 @@ function ligne({ n, niveau }) {
   const titre = h('div', { class: 'c-titre', role: 'gridcell', style: `padding-left:${niveau * 16 + 4}px` },
     h('span', { class: `chev${enf ? (ouvert ? ' ouvert' : '') : ' vide'}`, 'aria-hidden': 'true' }),
     n.type === 'conteneur' ? h('span', { class: 'ico-projet', role: 'img', 'aria-label': t('cascade.projet'), title: t('cascade.projet') }) : null,
-    h('span', { class: 'c-t', title: n.titre }, n.titre), tache ? repereIA(n.id) : null, tache ? pastilleMoi(n) : null, compteIA(n));
+    h('span', { class: 'c-t', title: nomLisible(n.titre) }, nomLisible(n.titre)), tache ? repereIA(n.id) : null, tache ? pastilleMoi(n) : null, compteIA(n));
   const cells = [titre];
   let cell = null;
   if (tache) {
@@ -129,7 +129,7 @@ function entete(c, racines) {
   const total = Object.values(compte).reduce((a, b) => a + b, 0);
   const crumb = (txt, f) => h('span', null, h('button', { class: 'crumb', type: 'button', onclick: f }, txt));
   remplacer(ref.fil, c ? [crumb(t('cascade.ensemble'), () => ouvrirVue('cascade', null)),
-    ...c.slice(0, -1).map((a) => crumb(a.titre, () => ouvrirVue('cascade', cle(a)))), h('span', { 'aria-current': 'location' }, c.at(-1).titre)] : null);
+    ...c.slice(0, -1).map((a) => crumb(nomLisible(a.titre), () => ouvrirVue('cascade', cle(a)))), h('span', { 'aria-current': 'location' }, nomLisible(c.at(-1).titre))] : null);
   ref.fil.hidden = !c;
   const cont = c?.at(-1);
   ref.noteBtn.classList.add('f-notes'); ref.reduireBtn.classList.add('f-transformations');
@@ -137,7 +137,7 @@ function entete(c, racines) {
   ref.noteBtn.onclick = cont?.type === 'conteneur' ? () => ouvrirNote(cheminContexte(cont.id)) : null;
   ref.reduireBtn.hidden = cont?.type !== 'conteneur';
   ref.reduireBtn.onclick = cont?.type === 'conteneur' ? () => reduire(cont) : null;
-  ref.titre.textContent = c ? c.at(-1).titre : t('cascade.vue_ensemble');
+  ref.titre.textContent = c ? nomLisible(c.at(-1).titre) : t('cascade.vue_ensemble');
   majConversation(ref.chatBtn, ref.chat, cont);
   majReglageConteneur(ref.execution, cont); // INV-REGROUPE-1
   ref.total.textContent = tn(S.toutes ? 'cascade.total_toutes' : 'cascade.total_ouvertes', total);
@@ -263,7 +263,7 @@ function surTouche(e) {
 }
 
 function colonnes() {
-  const col0 = (c, txt) => h('div', { role: 'columnheader', class: c }, txt);
+  const col0 = (c, txt) => h('div', { role: 'columnheader', class: c, title: txt }, txt);
   const triable = (col, txt) => {
     const b = h('button', { class: 'tri', type: 'button', 'data-tri': col, title: t(col === 'echeance' ? 'cascade.trier_echeance' : 'cascade.trier_priorite'), onclick: () => basculerTri(col) }, txt, h('span', { class: 'tri-sens', 'aria-hidden': 'true' }));
     return h('div', { role: 'columnheader', class: 'c-th', 'data-col': col, 'aria-sort': 'none' }, b);

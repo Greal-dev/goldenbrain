@@ -109,3 +109,22 @@ def test_script_journal_puis_release_sans_envoi(tmp_path):
                         "proprietaire/depot", "--cible", "abc1234", "--notes", str(notes)],
                        capture_output=True, text=True, encoding="utf-8", check=True)
     assert r.stdout.startswith("gh release create v2026.11.20 --repo proprietaire/depot --target abc1234")
+
+
+def test_message_du_commit_public_reporte_les_lignes_nouveaute_sinon_quoi_de_neuf_reste_vide(tmp_path):
+    # Le dépôt public reçoit un commit unique : sans ligne « Nouveauté: » dans son message, « Quoi de neuf ? »
+    # n'a rien à lire (constat D6). `message` fournit ce message, de la forme que `entrees` relit.
+    d, depart = depot_neuf(tmp_path)
+    enregistrer(d, "a.py", "x\n\nNouveauté: export en PDF")
+    fin = enregistrer(d, "a.py", "y\n\nNouveauté: thème sombre")
+    r = subprocess.run([sys.executable, str(SCRIPT), "message", "--depot", str(d), "--depuis", depart,
+                        "--jusqua", fin, "--jour", "2026-11-23", "--heure", "19:10"],
+                       capture_output=True, text=True, encoding="utf-8", check=True)
+    assert r.stdout.splitlines()[0] == "GoldenBrain, version du 2026-11-23 19:10"
+    assert "Nouveauté: Export en PDF" in r.stdout and "Nouveauté: Thème sombre" in r.stdout
+    public = tmp_path / "public"
+    public.mkdir()
+    git(public, "init", "-q", "-b", "main")
+    base = enregistrer(public, "a.py", "Départ")
+    sommet = enregistrer(public, "b.py", r.stdout)
+    assert nouveautes.entrees(public, base, sommet) == ["Export en PDF", "Thème sombre"]

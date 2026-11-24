@@ -1,7 +1,7 @@
 // Rôle : vue « Aujourd'hui » du volet droit — en retard, dues aujourd'hui, dues dans les sept jours, puis « À moi ».
 // Frontières : lit GET /aujourdhui (groupes et tri faits par le serveur) ; n'écrit rien ; ouvrir une tâche passe par store.ouvrir.
 import { t, tn, LOCALE } from './langues.js';
-import { h, remplacer, pastille, libelleStatut } from './dom.js';
+import { h, remplacer, pastille, libelleStatut, filLisible } from './dom.js';
 import { api } from './api.js';
 import { ouvrir, erreur } from './store.js';
 import { libelleEcheance, celluleCle } from './temps.js';
@@ -14,7 +14,7 @@ function ligne(x) {
   return h('li', null, h('button', { class: 'au-ligne', type: 'button', onclick: () => ouvrir(x.id) },
     pastille(x.statut),
     h('span', { class: 'au-titre', title: x.titre }, x.titre, repereIA(x.id), x.a_valider ? h('span', { class: 'tag', title: t('aujourdhui.valider_titre') }, t('aujourdhui.a_valider')) : null),
-    h('span', { class: 'au-place', title: x.fil_ariane.join(' › ') }, x.fil_ariane.slice(-2).join(' › ')),
+    h('span', { class: 'au-place', title: filLisible(x.fil_ariane).join(' › ') }, filLisible(x.fil_ariane).slice(-2).join(' › ')),
     x.a_valider ? h('span', { class: `au-res${x.resultat ? '' : ' manque'}`, title: t('aujourdhui.essai', { valeur: x.essai || t('aujourdhui.non_indique_agent') }) }, t('aujourdhui.resultat', { valeur: x.resultat || t('aujourdhui.non_indique') })) : null,
     h('span', { class: `au-ech${x.retard ? ' retard' : ''}`, title: x.echeance ? t('aujourdhui.echeance', { date: x.echeance }) : libelleStatut(x.statut) }, libelleEcheance(x.echeance, x.retard)),
     h('span', null, celluleCle(x.priorite))));

@@ -38,7 +38,7 @@ def test_statut_d_une_tache_occupee_demande_confirmation(page, serveur):
     _ouvrir_et_lancer(page, serveur, "C1-IaStatut", {"ia-statut": ("Statut IA", "")}, "Statut IA",
                       "[lent 60] travaille longtemps")
     expect(page.locator(".d-titre [data-ia='1']")).to_be_visible(timeout=5000)
-    statut = page.locator(".d-meta select[aria-label='Statut']")
+    statut = page.locator(".d-une select[aria-label='Statut']")
     expect(statut).to_have_value("en-cours")
     try:
         statut.select_option("bloque")
@@ -48,14 +48,14 @@ def test_statut_d_une_tache_occupee_demande_confirmation(page, serveur):
         expect(non).to_be_focused()
         non.click()
         expect(dlg).to_have_count(0)
-        expect(page.locator(".d-meta select[aria-label='Statut']")).to_have_value("en-cours")
+        expect(page.locator(".d-une select[aria-label='Statut']")).to_have_value("en-cours")
         assert page.request.get(serveur.url + "/api/taches/ia-statut").json()["statut"] == "en-cours"
         assert not page.locator("#banniere:visible").count()  # « Non » : aucune erreur affichée
 
-        page.locator(".d-meta select[aria-label='Statut']").select_option("bloque")
+        page.locator(".d-une select[aria-label='Statut']").select_option("bloque")
         with page.expect_response(lambda r: r.url.endswith("/ia-statut/statut") and r.status == 200):
             page.locator("dialog.dlg button", has_text="Continuer quand même").click()
-        expect(page.locator(".d-meta select[aria-label='Statut']")).to_have_value("bloque")
+        expect(page.locator(".d-une select[aria-label='Statut']")).to_have_value("bloque")
         assert page.request.get(serveur.url + "/api/taches/ia-statut").json()["statut"] == "bloque"
     finally:
         page.request.post(serveur.url + "/api/taches/ia-statut/arret", headers=H)

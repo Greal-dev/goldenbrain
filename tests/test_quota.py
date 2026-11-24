@@ -154,6 +154,8 @@ class ProcVivant:
 
 def test_harnais_reste_vivant_apres_un_quota_le_guet_arrete_le_tour(tmp_path, monkeypatch):
     monkeypatch.setattr(opencode, "GUET_S", 0.05)
+    # Indépendant du poste : le test ne doit pas exiger un binaire opencode installé (CI publique).
+    monkeypatch.setattr(opencode, "resoudre", lambda commande: [commande])
     journal = tmp_path / "log"
     journal.mkdir()
     (journal / "a.log").write_text("ancien\n", encoding="utf-8")

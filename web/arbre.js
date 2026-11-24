@@ -1,7 +1,7 @@
 // Rôle : volet gauche — arbre repliable, filtres, clavier, glisser-déposer.
 // Frontières : lit S.arbre ; les déplacements passent par l'API puis demandent un rechargement.
 import { t, tn } from './langues.js';
-import { h, $, remplacer, ajouter } from './dom.js';
+import { h, $, remplacer, ajouter, nomLisible } from './dom.js';
 import { S, on, emit, ouvrir, ouvrirVue, fixerToutes, chemin, cleNoeud } from './store.js';
 import { brancher, actionsLigne } from './glisser.js';
 import { repereIA, compteIA, surOccupees } from './verrou.js';
@@ -74,7 +74,7 @@ function ligne({ n, niveau }) {
   h('span', { class: `chev${enfants ? (ouvert ? ' ouvert' : '') : ' vide'}`, 'aria-hidden': 'true' }),
   n.type === 'tache' ? (n.routine ? badgeStatut(n) : rendreChangeable(badgeStatut(n), n)) : null, // la pastille d'une routine montre son échéance, pas un statut
   n.type === 'conteneur' ? h('span', { class: 'ico-projet', 'aria-hidden': 'true', title: t('arbre.projet') }) : null,
-  h('span', { class: 'titre', title: n.titre }, n.titre),
+  h('span', { class: 'titre', title: nomLisible(n.titre) }, nomLisible(n.titre)),
   n.type === 'tache' ? pastilleRetard(n) : null,
   nl ? h('span', { class: 'repere-liens', title: lib, 'aria-hidden': 'true' }, '⇄') : null,
   // INV-ARBRE-2 : placé par sa clé parent:, pas par son dossier (écart à aligner, ou dossier non déplaçable).

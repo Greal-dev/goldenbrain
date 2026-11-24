@@ -1,7 +1,7 @@
 // Rôle : bandeau haut — tours en cours, compteurs (dont « Aujourd'hui »), panneau de propositions, recherche, nouvelle tâche.
 // Frontières : lit S ; les créations passent par l'API puis ouvrent la tâche.
 import { t, tn } from './langues.js';
-import { h, $, depuis, heure, remplacer } from './dom.js';
+import { h, $, depuis, heure, remplacer, filLisible, libelleStatut } from './dom.js';
 import { S, on, emit, ouvrir, ouvrirVue, erreur, parcourir } from './store.js';
 import { ouvert, simple } from './interface.js';
 import { post, api } from './api.js';
@@ -110,7 +110,7 @@ const DELAI_PROCHES = 350;
 function carteProche(c, completer) {
   return h('li', { class: 'proche', 'data-id': c.id },
     h('span', { class: 'proche-titre' }, c.titre), ' ',
-    h('span', { class: 'proche-meta' }, `${c.ouverte ? c.statut : t('bandeau.close_recemment')} · ${c.fil_ariane.join(' › ')}${c.forte ? t('bandeau.tres_proche') : ''}`),
+    h('span', { class: 'proche-meta' }, `${c.ouverte ? libelleStatut(c.statut) : t('bandeau.close_recemment')} · ${filLisible(c.fil_ariane).join(' › ')}${c.forte ? t('bandeau.tres_proche') : ''}`),
     h('button', { type: 'button', class: 'btn', 'data-completer': c.id, onclick: (e) => completer(c, e.currentTarget) }, t('bandeau.completer')));
 }
 function listeProches(completer) {
@@ -160,7 +160,7 @@ async function nouvelleTache() {
     texte: [...parcourir(S.arbre)].some((x) => x.type === 'tache') ? undefined : t('premiers-pas.avertissement'), // première tâche : on dit ce que l'assistant pourra faire (D4)
     champs: [
       { nom: 'titre', label: t('bandeau.titre'), requis: true, sous: proches.zone, surSaisie: proches.maj },
-      { nom: 'description', label: t('bandeau.description'), type: 'textarea' },
+      { nom: 'description', label: t('bandeau.description'), type: 'textarea', aide: t('bandeau.description_aide') },
       { nom: 'conteneur', label: simple() ? t('bandeau.projet') : t('bandeau.emplacement'), type: 'select', options },
       { nom: 'echeance', label: t('bandeau.echeance'), type: 'date' },
       { nom: 'priorite', label: t('bandeau.priorite'), type: 'select', options: [{ valeur: '', libelle: t('bandeau.aucune') }, ...PRIORITES.map(([valeur, libelle]) => ({ valeur, libelle }))] },

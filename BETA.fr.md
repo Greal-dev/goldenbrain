@@ -6,7 +6,7 @@ Les versions bêta arrivent sur la branche `beta` avant `main`. Les testeurs att
 
 ## Rejoindre
 1. Installation par git (l'installation habituelle) : ouvrez *Réglages → Installation et version → Mise à jour*, mettez **Canal** sur *Bêta*.
-2. Cliquez **Mettre à jour** sur le bandeau : GoldenBrain passe sur la branche `beta` et redémarre. Une modification locale du code bloque la bascule ; rien n'est écrasé.
+2. Cliquez **Mettre à jour** sur le bandeau : GoldenBrain passe sur la branche `beta` et redémarre. Une modification locale du code bloque la bascule ; rien n'est écrasé. Si la branche `beta` n'existe pas encore, GoldenBrain le dit et le canal repasse sur *Stable* ; rien n'est modifié.
 3. Pour revenir, choisissez *Stable* : la bascule se fait à la mise à jour suivante.
 
 Une bascule ne touche jamais votre vault : seul le code de l'application change.

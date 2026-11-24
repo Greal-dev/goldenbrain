@@ -27,6 +27,7 @@ import { boutonAide } from './guide.js';
 import { t, tn } from './langues.js';
 import { sectionEtoile } from './etoile.js';
 import { sectionAccueil, choixLangue } from './accueil.js';
+import { sectionCerveau } from './cerveau.js';
 import { sectionPremiersPas, titreSectionPremiersPas } from './premiers-pas.js';
 import { sectionSignaler } from './signaler.js';
 import { sectionReflexes } from './reflexes.js';
@@ -101,6 +102,7 @@ const GROUPES = [
       ['version', t('reglages.version'), t('reglages.version_aide'), h('p', { class: 'note', 'data-id': 'rg-version' }, versionTexte())],
       ['maj-auto', t('reglages.maj_auto'), t('reglages.maj_auto_aide'), sectionMiseAJour()[1]],
       ['signaler', t('reglages.signaler'), t('reglages.signaler_aide'), sectionSignaler()],
+      ['cerveau', t('cerveau.section'), null, h('div', null, ...sectionCerveau())],
       ['premiers-pas', titreSectionPremiersPas(), null, h('div', null, ...sectionPremiersPas())],
       ['accueil', t('accueil.titre'), null, h('div', null, ...sectionAccueil().slice(1))]] },
 ];
@@ -108,7 +110,7 @@ const GROUPES = [
 const ANCRES = { mode: 'affichage', theme: 'affichage', familles: 'fonctions', simultanes: 'agents', economie: 'agents', compactage: 'agents', apprendre: 'agents', reflexes: 'agents', rangement: 'agents',
   moteurs: 'agents', propositions: 'validation', telegram: 'connexions', appareils: 'connexions', executeurs: 'connexions',
   installation: 'installation', langue: 'affichage', version: 'installation', etoile: 'affichage', evitable: 'validation', integration: 'validation',
-  'maj-auto': 'installation', signaler: 'installation', accueil: 'installation', 'premiers-pas': 'installation' };
+  'maj-auto': 'installation', signaler: 'installation', accueil: 'installation', cerveau: 'installation', 'premiers-pas': 'installation' };
 const groupeDe = (cle) => GROUPES.find((g) => g.id === (ANCRES[cle] || cle));
 
 // Sections ouvertes : par visiteur (ce navigateur) ; la première seule par défaut.

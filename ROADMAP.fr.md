@@ -14,7 +14,7 @@ Résumé de [ROADMAP.md](ROADMAP.md), qui fait foi et donne pour chaque entrée 
 - **R7** Dérivation dont la filiation survit au redémarrage (M).
 - **R8** Capture au clavier et brouillon conservé (S) — contributions bienvenues.
 - Durcissement : compteur de sauts côté serveur, délais, bornes, tests manquants (S chacun) — contributions bienvenues.
-- Console en terminal : fonctions natives des harnais (M) — contributions bienvenues.
+- Console en terminal : fonctions natives des assistants IA (M) — contributions bienvenues.
 
 ## Horizon 2 — Absorber les routines et les entrées
 - Tâches récurrentes réveillées dans la même conversation (M) — livré (Routines).
@@ -23,9 +23,9 @@ Résumé de [ROADMAP.md](ROADMAP.md), qui fait foi et donne pour chaque entrée 
 
 ## Horizon 3 — Un produit local maintenable pour d'autres
 - Prise en main avec un vault d'exemple neutre (M) — contributions bienvenues.
-- Installation et mise à jour sous Linux et macOS (L) — Linux livré ; macOS : contributions bienvenues.
-- Traduction de l'interface (L) — contributions bienvenues.
-- Nouveaux adaptateurs de harnais (M chacun) — contributions bienvenues.
+- Installation et mise à jour sous Linux et macOS (L) — Linux et Windows livrés ; macOS : installateur construit mais jamais essayé, contributions bienvenues.
+- Traduction de l'interface (L) — livré (français, anglais, allemand, espagnol ; autres langues : contributions bienvenues).
+- Nouveaux adaptateurs d'assistants IA (M chacun) — Claude Code, Codex, OpenCode, GitHub Copilot CLI et Antigravity livrés ; autres : contributions bienvenues.
 
 ## Hors programme
 Équipes et permissions, nuage et coédition, constructeur de workflows, plateforme d'agents, forge Git, canevas, scores de productivité.

@@ -45,7 +45,7 @@ function carteTour(x) {
   const actifs = sa.filter((a) => !a.fin);
   return h('article', { class: `tr-carte${pause || x.pause_ram ? ' en-pause' : ''}${s.silencieux ? ' silence' : ''}`, 'data-id': 'tr-tour', 'data-tache': x.tache },
     h('header', { class: 'tr-tete' },
-      h('div', { class: 'tr-noms' }, h('b', { class: 'tr-titre' }, x.titre), x.projet ? h('span', { class: 'tr-projet' }, x.projet) : null),
+      h('div', { class: 'tr-noms' }, h('b', { class: 'tr-titre', title: x.titre }, x.titre), x.projet ? h('span', { class: 'tr-projet' }, x.projet) : null),
       h('span', { class: 'tr-depuis', title: x.depuis }, t('encours.depuis', { duree: depuis(x.depuis) }))),
     h('p', { class: 'tr-qui' }, t('encours.qui', { harnais: x.persona ? `${x.harnais} (${x.persona})` : x.harnais, modele: x.modele || t('encours.par_defaut') })),
     h('p', { class: 'tr-action', 'data-id': 'tr-action' }, phrase, s.fichiers ? h('span', { class: 'tr-fichiers' }, ` · ${tn('encours.fichiers', s.fichiers)}`) : null),
@@ -63,12 +63,12 @@ function carteTour(x) {
 function ligneFile(f) {
   const pourquoi = f.raison || (f.rang ? (f.motif ? t('encours.rang_motif', { rang: f.rang, motif: f.motif }) : t('encours.rang', { rang: f.rang })) : t('encours.en_file'));
   return h('li', null, h('button', { class: 'au-ligne tr-ligne', type: 'button', 'data-id': 'tr-file', onclick: () => ouvrir(f.tache) },
-    h('span', { class: 'au-titre' }, f.titre), h('span', { class: 'au-place' }, f.projet || ''), h('span', { class: 'tr-raison' }, pourquoi)));
+    h('span', { class: 'au-titre', title: f.titre }, f.titre), h('span', { class: 'au-place' }, f.projet || ''), h('span', { class: 'tr-raison' }, pourquoi)));
 }
 const ligneRoutine = (r) => h('li', null, h('button', { class: 'au-ligne tr-ligne', type: 'button', onclick: () => ouvrir(r.id) },
-  h('span', { class: 'au-titre' }, r.titre), h('span', { class: 'tr-raison' }, t('encours.prochaine', { date: quand(r.prochaine) }))));
+  h('span', { class: 'au-titre', title: r.titre }, r.titre), h('span', { class: 'tr-raison' }, t('encours.prochaine', { date: quand(r.prochaine) }))));
 const ligneIncident = (i) => h('li', null, h('button', { class: 'au-ligne tr-ligne', type: 'button', title: i.motif, onclick: () => ouvrir(i.tache) },
-  h('span', { class: 'au-titre' }, i.titre), h('span', { class: 'tr-raison' }, `${i.libelle} — ${i.geste}`), h('span', { class: 'au-place' }, quand(i.date))));
+  h('span', { class: 'au-titre', title: i.titre }, i.titre), h('span', { class: 'tr-raison' }, `${i.libelle} — ${i.geste}`), h('span', { class: 'au-place' }, quand(i.date))));
 
 function bloc(cle, titre, items, vide, rendu, liste = true) {
   return h('section', { class: `au-groupe tr-${cle}`, 'aria-label': titre },

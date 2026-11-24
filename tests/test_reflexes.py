@@ -113,4 +113,4 @@ def test_cli_tracer_envoie_des_chemins_absolus(monkeypatch, capsys):
     vu = []
     monkeypatch.setattr(cli, "appeler", lambda m, c, corps=None: vu.append((m, c, corps)) or {"id": "t1"})
     assert cli.main(["tracer", "t1", "fait", "--document", "rel.md"]) == 0
-    assert vu[0][1] == "/taches/t1/traces" and vu[0][2]["documents"][0].endswith("/rel.md") and vu[0][2]["documents"][0] != "rel.md"
+    assert vu[0][1] == "/taches/t1/traces" and vu[0][2]["documents"][0].replace("\\", "/").endswith("/rel.md") and vu[0][2]["documents"][0] != "rel.md"

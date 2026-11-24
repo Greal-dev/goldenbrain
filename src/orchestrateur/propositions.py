@@ -5,7 +5,8 @@ acceptation, appeler la fonction du geste humain correspondant.
 Frontières : mélangé au `Moteur` (dont il emprunte vault, publier, soumettre, creer, deriver) ;
 pas de HTTP.
 Invariants portés : INV-EXEC-5 (une proposition n'est exécutée que sur geste humain), INV-RAPPROCHEMENT-1,
-INV-PLAFOND-1 et INV-INTEG-2 (une tâche ou un ticket accepté passe les mêmes gardes que `orch creer`).
+INV-PLAFOND-1 et INV-INTEG-2 (une tâche ou un ticket accepté passe les mêmes gardes que `orch creer`),
+INV-LIEN-2 (un lien `alimente` vers une tâche permanente est posé d'office).
 """
 
 from __future__ import annotations
@@ -115,20 +116,36 @@ class MixinPropositions:
             return {"type": type_, "tache": tache, "valeur": valeur, "etat": "deja_proposee", "n": q["n"]}
         if self._deja_fait(type_, tache, valeur, (annexe or {}).get("taches")):  # rien à décider : on ne dépose pas
             return {"type": type_, "tache": tache, "valeur": valeur, "etat": "deja_fait"}
+        routine = type_ == "lier" and self._lien_de_routine(valeur)  # INV-LIEN-2
         jardin = getattr(self, "jardinier", None)  # INV-JARD-2 : plafond par passage, jamais d'office
-        montrer = (jardin is not None and jardin.admettre(de)) or montrer
+        montrer = not routine and ((jardin is not None and jardin.admettre(de)) or montrer)
         # INV-SCAN-1 : une préconisation du scan (`montrer`) attend toujours le geste humain.
-        politique = "montrer" if montrer else self.config.interface.politique()
+        politique = "accepter" if routine else "montrer" if montrer else self.config.interface.politique()
         if politique == "ignorer":  # INV-INTERFACE-3 : ignorée en silence, rien n'est mémorisé
             return {"type": type_, "tache": tache, "valeur": valeur, "etat": "ignoree"}
         n = max((p["n"] for p in self.propositions.liste), default=0) + 1
         p = {"n": n, "type": type_, "tache": tache, "titre_tache": t.titre, "valeur": valeur,
              "de": de or "", "motif": " ".join((motif or "").split()), "etat": "en_attente",
-             "cree": maintenant(), **(annexe or {})}
+             "cree": maintenant(), **({"auto": True} if routine else {}), **(annexe or {})}
         self.propositions.liste.append(p)
         self.propositions.sauver()
         self.publier("proposition", n=n)
-        return self.trancher(n, True) if politique == "accepter" else p
+        if politique != "accepter":
+            return p
+        p = self.trancher(n, True)
+        if routine:  # mention discrète au journal de la tâche, rien à trancher
+            self.vault.consigner(tache, "Traces", f"- {dt.datetime.now():%Y-%m-%d %H:%M} — "
+                                                  + langues.t("serveur.propositions.lien_d_office", tache=tache, cible=_lien_propose(valeur)[1]))
+        return p
+
+    def _lien_de_routine(self, valeur: str) -> bool:
+        """INV-LIEN-2 : un lien « alimente » vers une tâche permanente (l'intégration) est un geste de
+        routine : posé d'office, jamais mis en attente. Les autres liens suivent la politique."""
+        type_, cible = _lien_propose(valeur)
+        try:
+            return type_ == "alimente" and str(self.vault.tache(cible).fm.get("nature") or "") == "permanente"
+        except NonTrouve:
+            return False
 
     def _conteneur_canonique(self, valeur: str) -> str:
         # Les agents citent souvent le seul nom du dossier (« META-Cognitive-System ») : on

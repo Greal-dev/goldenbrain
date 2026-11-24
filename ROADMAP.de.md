@@ -14,7 +14,7 @@ Zusammenfassung von [ROADMAP.md](ROADMAP.md), die maßgeblich ist und für jeden
 - **R7** Ableitung, deren Herkunft einen Neustart überlebt (M).
 - **R8** Erfassung per Tastatur, Entwurf bleibt erhalten (S) — Beiträge willkommen.
 - Härtung: serverseitiger Sprungzähler, Zeitlimits, Obergrenzen, fehlende Tests (je S) — Beiträge willkommen.
-- Terminal-Konsole: native Funktionen der Harnesses (M) — Beiträge willkommen.
+- Terminal-Konsole: native Funktionen der KI-Assistenten (M) — Beiträge willkommen.
 
 ## Horizont 2 — Routinen und Eingänge aufnehmen
 - Wiederkehrende Aufgaben, in derselben Konversation geweckt (M) — umgesetzt (Routinen).
@@ -23,9 +23,9 @@ Zusammenfassung von [ROADMAP.md](ROADMAP.md), die maßgeblich ist und für jeden
 
 ## Horizont 3 — Ein wartbares lokales Produkt für andere
 - Einstieg mit einem neutralen Beispiel-vault (M) — Beiträge willkommen.
-- Installation und Aktualisierung unter Linux und macOS (L) — Linux umgesetzt; macOS: Beiträge willkommen.
-- Übersetzung der Oberfläche (L) — Beiträge willkommen.
-- Weitere Harness-Adapter (je M) — Beiträge willkommen.
+- Installation und Aktualisierung unter Linux und macOS (L) — Linux und Windows umgesetzt; macOS: Installer gebaut, aber nie ausprobiert, Beiträge willkommen.
+- Übersetzung der Oberfläche (L) — umgesetzt (Französisch, Englisch, Deutsch, Spanisch; weitere Sprachen: Beiträge willkommen).
+- Weitere Adapter für KI-Assistenten (je M) — Claude Code, Codex, OpenCode, GitHub Copilot CLI und Antigravity umgesetzt; weitere: Beiträge willkommen.
 
 ## Nicht geplant
 Teams und Berechtigungen, Cloud und gemeinsame Bearbeitung, Workflow-Baukasten, Agentenplattform, Git-Forge, Canvas, Produktivitätswerte.

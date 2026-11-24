@@ -62,6 +62,9 @@ def monde(tmp_path, monkeypatch):
     home.mkdir()
     monkeypatch.setenv("ORCH_ACCUEIL_HOME", str(home))
     monkeypatch.setattr(tempfile, "gettempdir", lambda: str(tmp_path / "temporaire"))
+    # Indépendant du poste : tmp_path vit sous « …\\Temp\\… » (runner Windows de la CI) et la clause
+    # « Temp in parts » de `_passage` y verrait un lieu de passage ; on garde domicile et racine seuls.
+    monkeypatch.setattr(accueil, "_passage", lambda d: Path(d) == accueil.src.maison() or Path(d) == Path(d).parent)
     travaux = tmp_path / "travaux"
     for nom in ("alpha", "beta"):
         (travaux / nom / ".git").mkdir(parents=True)

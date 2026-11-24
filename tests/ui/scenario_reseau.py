@@ -23,14 +23,14 @@ def test_coupure_reseau_gele_l_agent_puis_il_reprend_au_retour(page, serveur):
         expect(bandeau).to_be_visible(timeout=8000)
         expect(bandeau).to_contain_text("Réseau perdu depuis")
         expect(bandeau).to_contain_text("1 agent en attente")
-        expect(page.locator(".d-meta .etat")).to_have_text("En attente du réseau")
+        expect(page.locator(".d-une .etat")).to_have_text("En attente du réseau")
         assert page.request.get(serveur.url + "/api/taches/rc-agent").json()["etat_execution"] == "attente_reseau"
 
         ouvert = socket.socket()  # le réseau revient : le point d'accès sondé répond
         ouvert.bind(("127.0.0.1", univers.PORT_SONDE))
         ouvert.listen()
         expect(bandeau).to_be_hidden(timeout=15000)
-        expect(page.locator(".d-meta .etat")).to_be_hidden(timeout=15000)
+        expect(page.locator(".d-une .etat")).to_be_hidden(timeout=15000)
         assert page.request.get(serveur.url + "/api/taches/rc-agent").json()["etat_execution"] == "inactif"
     finally:
         if ouvert:

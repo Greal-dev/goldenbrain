@@ -54,6 +54,27 @@ def test_canal_beta_bascule_puis_retour_au_stable(depots):
     assert r["branche_courante"] == "main" and (local / "b.txt").is_file() and not (local / "essai.txt").exists()
 
 
+def test_canal_beta_sans_branche_beta_message_clair(depots):
+    _, local, _ = depots  # le distant n'a pas (encore) de branche beta
+    beta, canaux = mise_a_jour.suivie(C, "beta")
+    with pytest.raises(mise_a_jour.BrancheAbsente, match="beta"):
+        mise_a_jour.etat(local, beta, canaux=canaux)
+    with pytest.raises(mise_a_jour.BrancheAbsente):
+        mise_a_jour.appliquer(local, beta, canaux)
+    assert git(local, "rev-parse", "--abbrev-ref", "HEAD") == "main"
+
+
+def test_api_canal_beta_sans_branche_repasse_sur_stable(api):
+    assert api.put("/api/maj-auto", json={"canal": "beta"}).json()["reglage"]["canal"] == "beta"
+    e = api.get("/api/mise-a-jour").json()
+    assert "beta" in e["erreur"] and "Stable" in e["erreur"] and e["canal"] == "stable"
+    assert api.get("/api/maj-auto").json()["reglage"]["canal"] == "stable"
+    api.put("/api/maj-auto", json={"canal": "beta"})
+    r = api.post("/api/mise-a-jour")
+    assert r.status_code == 409 and "beta" in r.json()["detail"]
+    assert api.get("/api/maj-auto").json()["reglage"]["canal"] == "stable"
+
+
 def test_bascule_refusee_avec_modifications_locales(depots):
     _, local, ailleurs = depots
     publier_beta(ailleurs)

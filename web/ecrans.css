@@ -1,0 +1,67 @@
+/* Rôle : cohérence de mise en page entre écrans (audit L4, 23/11) — bandeau en deux rangées nettes, gouttière commune,
+   Guide, modale « Nouvelle tâche » bornée, tableau, mode simple. Chargé avant telephone.css : le mobile garde le dernier mot.
+   Frontières : aucune logique ; ne touche ni à l'accueil (accueil.css) ni aux dialogues d'accueil. */
+
+/* A8 : le bandeau a deux rangées voulues — repères et recherche en haut, gestes et réglages en dessous — au lieu de
+   laisser « Intelligent / Réglages / Manager / ? » tomber seuls à la ligne selon la langue. */
+@media (min-width: 481px) {
+  .b-haut { row-gap: 4px; }
+  .b-haut::before { content: ""; flex: 0 0 100%; order: 2; height: 0; }
+  .b-haut > :is(#btn-equipe, #btn-revue, #btn-nouvelle, #btn-routine, #btn-chaines, #eco-repere, #btn-reglages, #btn-manager, #btn-guide, #conn) { order: 3; }
+  .b-haut > #eco-repere { margin-left: auto; }
+  .b-haut > .rech-zone { order: 1; }
+  #recherche { min-width: 120px; }
+}
+
+/* A11 : même gouttière que « Aujourd'hui » (20 px) sur tous les écrans de lecture. */
+.decisions, .guide, .reglages { padding: 14px 20px 28px; }
+.equipe { padding: 16px 20px 24px; }
+.guide { max-width: 980px; }
+.guide .eq-tete { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin-bottom: 10px; }
+.guide .eq-tete h2 { margin: 0; flex: 1 1 auto; }
+.guide-recherche { flex: 0 1 280px; min-width: 160px; padding: 5px 10px; border: 1px solid var(--bord-fort); border-radius: 5px; background: var(--panneau-2); }
+.guide-sommaire { margin: 0 0 14px; padding: 8px 12px; border: 1px solid var(--bord); border-radius: 6px; background: var(--panneau); }
+.guide-sommaire ul { list-style: none; margin: 0; padding: 0; columns: 2 260px; column-gap: 24px; }
+.guide-sommaire li { margin: 0 0 3px; break-inside: avoid; }
+.guide-sommaire li.sous { padding-left: 14px; font-size: 12.5px; }
+.guide-corps { max-width: 80ch; }
+
+/* A13 : la galerie de modèles ne pousse plus le formulaire hors de la fenêtre. */
+.dlg .modeles { overflow-y: auto; }
+
+/* A15 : pas de coût prévu ni de commande en barre oblique en mode simple. */
+.mode-simple .eco-tache { display: none; }
+
+/* A7/A9 : les titres gardent la place ; les en-têtes de colonnes ne se coupent plus dans les langues longues. */
+.cl { grid-template-columns: minmax(300px, 4fr) 112px 88px minmax(100px, 1.2fr) 84px 96px 72px 44px 96px; column-gap: 8px; }
+.cl-tete > * { text-overflow: clip; font-size: 11px; letter-spacing: 0; }
+.cl-tete .c-lien { font-size: 0; }
+.cl-tete .c-lien::before { content: "⇄"; font-size: 13px; }
+.dlg .modeles { max-height: 11vh; }
+.dlg textarea { height: 64px; min-height: 48px; resize: vertical; }
+
+/* A7 : un titre long passe sur deux lignes (info-bulle en plus) au lieu de se couper net. */
+.tr-titre { white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+
+/* INV-DETAIL-1 : ouverture d'une tâche allégée — en-tête sur une ligne, tout le reste derrière « Détails » (choix mémorisé). */
+.d-tete { padding: 0; }
+.d-une { display: flex; align-items: center; gap: 8px; padding: 4px 16px; min-height: 36px; box-sizing: border-box; }
+.d-une .d-titre { flex: 1 1 120px; min-width: 0; margin: 0; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.d-une .d-titre-champ { margin: 0; font-size: 15px; flex: 1 1 120px; min-width: 0; }
+.d-une > select { flex: none; max-width: 150px; padding: 2px 6px; border: 1px solid var(--bord-fort); border-radius: 5px; background: var(--panneau); }
+.d-une > .btn, .d-une > .a-valider { flex: none; white-space: nowrap; }
+.d-une .a-valider { display: inline-flex; gap: 6px; margin: 0; padding: 0; border: 0; background: none; }
+.d-une .etat { flex: none; white-space: nowrap; }
+.d-alerte { flex: 0 1 auto; min-width: 0; display: inline-flex; align-items: center; gap: 6px; max-width: 26ch; padding: 2px 8px; border: 1px solid var(--c-bloque); border-radius: 12px; background: none; color: var(--c-bloque); font-size: 12px; font-weight: 600; cursor: pointer; }
+.d-alerte-t { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.d-alerte-n { flex: none; }
+.d-bascule { flex: none; margin-left: auto; }
+.d-bascule::after { content: " ▾"; } .d-bascule[aria-expanded="true"]::after { content: " ▴"; }
+.d-details { max-height: 55vh; overflow-y: auto; padding: 8px 16px 10px; border-top: 1px solid var(--bord); background: var(--panneau); }
+.d-details[hidden] { display: none; }
+.d-details > * + * { margin-top: 8px; }
+.d-det-meta .d-meta { margin-top: 6px; }
+.d-defile { padding-top: 6px; }
+.conv-tete { top: -6px; margin-top: 0; padding-top: 3px; padding-bottom: 3px; }
+.p-tete { padding-top: 1px; padding-bottom: 1px; }
+.conv-tete { padding-top: 2px; padding-bottom: 2px; }

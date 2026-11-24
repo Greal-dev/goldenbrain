@@ -466,6 +466,8 @@ def main(argv: list[str] | None = None) -> int:
                                                   "motif": a.motif, **({"taches": a.aussi} if a.aussi else {})})
             if r.get("etat") == "deja_fait":  # l'effet est déjà en place : rien n'est déposé
                 sortie = ["rien à proposer : déjà fait"]
+            elif r.get("auto"):  # INV-LIEN-2 : lien vers une tâche permanente, posé d'office
+                sortie = [f"lien posé d'office ({r['tache']} -> {r['valeur']}) : rien à décider"]
             elif r.get("etat") == "deja_proposee":  # B7 : la même proposition attend déjà
                 sortie = [f"proposition identique déjà en attente (n°{r['n']}) : rien de nouveau déposé"]
             elif r.get("etat") == "ignoree":  # INV-INTERFACE-3 : mode simple, rien n'est mémorisé (installation à blanc, 19/11)

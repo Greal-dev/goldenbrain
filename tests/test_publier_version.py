@@ -3,6 +3,7 @@ sur le français, traduction écartée si elle sort de son rôle ou porte un mot
 étiquette datée, version précédente retrouvée par son arbre. Rien n'est envoyé ni construit."""
 
 import datetime as dt
+import shlex
 import subprocess
 import sys
 from pathlib import Path
@@ -28,9 +29,19 @@ def test_note_sans_traducteur_reprend_le_francais_et_sans_nouveaute_une_phrase()
     assert "- Internal fixes and improvements." in vide and "- Interne Korrekturen und Verbesserungen." in vide
 
 
+def test_note_sans_traduction_ne_presente_pas_du_francais_sous_un_titre_etranger():
+    texte = pv.note(["Bouton Valider"], "x.deb")  # aucun traducteur : le français est repris
+    for titre, avertissement in (("English", "in French"), ("Español", "en francés"), ("Deutsch", "auf Französisch")):
+        section = texte.split(f"## {titre}")[1].split("\n## ")[0]
+        assert avertissement in section and "- Bouton Valider" in section
+    assert "traduit" not in texte.split("## Français")[1].split("## Español")[0]  # le français n'a rien à signaler
+    traduit = pv.note(["Bouton Valider"], "x.deb", lambda langue, t: f"- [{langue}]")
+    assert "in French" not in traduit  # traduit : pas d'avertissement
+
+
 def test_traduction_hors_liste_ou_personnelle_ecartee(tmp_path):
     (tmp_path / ".sensible").write_text("secretperso\n", encoding="utf-8")
-    py = sys.executable
+    py = shlex.quote(sys.executable)  # shlex.split (POSIX) mange les « \\ » d'un chemin Windows
     bonne = pv.traducteur(f'{py} -c "print(\'- Hello {{langue}}\')"', tmp_path)
     assert bonne("English", "- Bonjour") == "- Hello English"
     bavarde = pv.traducteur(f'{py} -c "print(\'Voici la traduction :\')"', tmp_path)

@@ -37,6 +37,16 @@ class CorpsMajAuto(BaseModel):
     canal: str | None = None  # INV-MAJ-4 : « stable » ou « beta »
 
 
+def _canal_sans_branche(auto, e: Exception) -> str:
+    """D2 : branche du canal absente du distant → le canal repasse sur stable ; rend le message complet."""
+    if not isinstance(e, mise_a_jour.BrancheAbsente):
+        return ""
+    if auto.reglage["canal"] == "stable":
+        return str(e)
+    auto.regler({"canal": "stable"})
+    return f"{e} {langues.t('serveur.mise_a_jour.retour_stable')}"
+
+
 def routes(config: Config, moteur, version, depot=RACINE_DEPOT) -> APIRouter:
     r, c = APIRouter(), config.mise_a_jour
     memo: dict = {"instant": 0.0, "valeur": None}
@@ -53,7 +63,8 @@ def routes(config: Config, moteur, version, depot=RACINE_DEPOT) -> APIRouter:
                         v["nouveautes"] = await asyncio.to_thread(
                             nouveautes.quoi_de_neuf, depot, f"{v['distant']}/{v['branche']}")
                 except ErreurOrch as e:
-                    v = {**(memo["valeur"] or {"depot": True, "branche": c.branche}), "erreur": str(e)}
+                    msg = _canal_sans_branche(auto, e)
+                    v = {**(memo["valeur"] or {"depot": True, "branche": c.branche}), "erreur": msg or str(e)}
                 else:
                     v.pop("erreur", None)
                 v["canal"] = auto.reglage["canal"]
@@ -102,7 +113,11 @@ def routes(config: Config, moteur, version, depot=RACINE_DEPOT) -> APIRouter:
         if moteur.occupe():
             raise Conflit(langues.t("serveur.api_maj.occupe_maj"))
         async with moteur.exclusif():  # aucun tour ne démarre pendant l'avance du dépôt
-            res = await asyncio.to_thread(mise_a_jour.appliquer, depot, *auto.suivie())
+            try:
+                res = await asyncio.to_thread(mise_a_jour.appliquer, depot, *auto.suivie())
+            except mise_a_jour.BrancheAbsente as e:
+                memo["valeur"] = None
+                raise type(e)(_canal_sans_branche(auto, e)) from None
         memo["valeur"] = None  # le prochain contrôle repart du dépôt
         if res["appliquee"]:
             version.redemarrer()  # INV-VERSION-1 : arrêt normal, sortie 3, `lancer.cmd` relance

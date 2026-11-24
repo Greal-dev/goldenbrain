@@ -1,6 +1,6 @@
 # Guía de GoldenBrain
 
-Actualizado el 2026-11-23.
+Actualizado el 2026-11-24.
 
 GoldenBrain es un puesto de mando: usted confía tareas a agentes de IA (Claude Code, Codex, OpenCode, Copilot, Antigravity), cada una guardada en su lugar dentro de su vault (una carpeta de notas en Markdown). GoldenBrain organiza y supervisa; el agente trabaja en su propia conversación, que usted puede retomar en cualquier momento.
 
@@ -33,7 +33,7 @@ A mano, desde el código (desarrolladores). Se necesitan Git y Python 3.12 o pos
 1. Requisitos previos (Debian, Ubuntu): `sudo apt install git python3 python3-venv`
 2. Obtener el código: `git clone https://github.com/Greal-dev/goldenbrain.git ~/goldenbrain && cd ~/goldenbrain`
 3. Python dedicado: `python3 -m venv ~/.venvs/goldenbrain`
-4. Dependencias: `~/.venvs/goldenbrain/bin/pip install fastapi uvicorn pyyaml`
+4. Dependencias: `~/.venvs/goldenbrain/bin/pip install fastapi uvicorn pyyaml` (desarrolladores, para las pruebas: `pip install ".[test]"`)
 5. Designar ese Python: `echo ~/.venvs/goldenbrain/bin/python > python.local`
 6. Primer inicio: `./lancer.sh`, y después abrir http://127.0.0.1:8300
 
@@ -45,7 +45,7 @@ A mano, desde el código (desarrolladores).
 
 1. Instalar Git y Python 3.12 (python.org); anotar la ruta de `python.exe`.
 2. Obtener el código: `git clone https://github.com/Greal-dev/goldenbrain.git goldenbrain`
-3. Dependencias: `python -m pip install fastapi uvicorn pyyaml`
+3. Dependencias: `python -m pip install fastapi uvicorn pyyaml` (desarrolladores, para las pruebas: `pip install ".[test]"`)
 4. Si el `python` del PATH no es el intérprete correcto, escribir su ruta completa en la primera línea de un archivo `python.local` en la raíz de la carpeta.
 5. Primer inicio: doble clic en `lancer.cmd`. Se abre la página http://127.0.0.1:8300.
 
@@ -57,6 +57,8 @@ Por defecto: `~/Documents/Vault`. Si está en otro sitio, escríbalo en `config.
 [vault]
 racine = "~/chemin/vers/mon-vault"
 ```
+
+**Sin tocar ese archivo**: en el primer inicio, antes de cualquier otra pantalla, GoldenBrain abre «Configure su segundo cerebro» a pantalla completa. Allí elige la carpeta (escribirla o «Examinar» para recorrer sus carpetas): un vault Markdown u Obsidian existente se usa en su sitio, sin copia; una carpeta inexistente o vacía se convierte en un segundo cerebro nuevo, creado solo al validar. Una carpeta inexistente, no escribible o relativa, o ya servida por otra instancia, se rechaza con el motivo. Cambiar de carpeta reescribe solo la clave `[vault] racine` de `config.toml`; luego GoldenBrain se reinicia solo sobre el nuevo vault, y si conserva la carpeta actual no se reinicia nada. Siguen la elección del asistente de IA y la propuesta de roles y proyectos (o la demostración); nada se escribe antes de su validación. «Más tarde» deja un aviso «Segundo cerebro por configurar». Para reabrirlo: Ajustes → «Instalación y versión» → «Reconfigurar mi segundo cerebro».
 
 Un vault de Obsidian existente sirve tal cual: apunte `racine` hacia él (véase «Organizar su segundo cerebro»). Una carpeta vacía o inexistente recibe, en la bienvenida y tras su aprobación, una clasificación inicial.
 
@@ -94,12 +96,17 @@ Un asistente de IA es el programa, usado desde un símbolo del sistema, que hace
 
 | Asistente de IA | Instalar | Iniciar sesión |
 |---|---|---|
-| Claude Code | `npm install -g @anthropic-ai/claude-code` | `claude`, y después `/login` |
+| Claude Code | `curl -fsSL https://claude.ai/install.sh \| bash` (macOS, Linux) · `irm https://claude.ai/install.ps1 \| iex` (Windows) | `claude`, y después `/login` |
 | Codex | `npm install -g @openai/codex` | `codex login` |
 | GitHub Copilot CLI | `npm install -g @github/copilot` | `copilot login` |
-| OpenCode | véase su documentación (opencode.ai) | véase su documentación |
+| OpenCode | `npm install -g opencode-ai` | véase su documentación |
+| Antigravity (`agy`) | véase su documentación | desde la aplicación |
 
 Conviene saber: un asistente de IA ausente aparece como «no disponible», con el motivo, en la elección del «Motor» de una tarea. Su ruta o sus argumentos se ajustan en `config.toml`, sección `[harnais.<nombre>]` (modelo: `config.exemple.toml`).
+
+Conviene saber: Node.js hace falta para las instalaciones con `npm`; la aplicación propone instalarlos (pantalla de inicio) y nunca inicia sesión por usted.
+
+**Atención — sin confirmación**: por defecto GoldenBrain lanza los agentes con los argumentos que suprimen toda petición de permiso (`--dangerously-skip-permissions` para Claude Code y Antigravity, `--dangerously-bypass-approvals-and-sandbox` para Codex, `--auto` para OpenCode, `--allow-all-tools --no-ask-user` para Copilot), desde su carpeta personal salvo que la tarea indique otra. Un agente puede, pues, leer, modificar o borrar sus archivos sin preguntar. Pruebe primero con una instrucción inocua; estos argumentos se cambian en `config.toml` (`[harnais.<nombre>]`, modelo: `config.exemple.toml`); véase `SECURITY.md`.
 
 ## Primeros pasos {#premiers-pas}
 
@@ -159,6 +166,7 @@ El vault es su **segundo cerebro**: notas corrientes (archivos Markdown) que Gol
 ### Tarea {#tache}
 
 - **Para qué sirve**: la conversación de un agente sobre un trabajo concreto, y su ficha (lo que está hecho, resultado, cómo probarlo, lo que queda).
+- **Apertura aligerada**: la cabecera cabe en una línea (título, estado, estado de ejecución, «Resultado», «Validar» / «Devolver» o «Detener» / «Relanzar» según el caso) y el hilo de la conversación ocupa el resto de la pantalla. El botón «Detalles» despliega todo lo demás: ruta y tarea madre, Yo / IA, motor, fecha límite, economía, líneas, enlaces, revisiones, ficha, cuerpo, acciones. Su elección (plegado por defecto) se recuerda. Una alerta (incidente, pausa, control fallido) aparece como una sola pastilla, las demás como «+N»; un clic abre «Detalles».
 - **Cómo se hace**: encabezado de la tarea: estado, asistente de IA y modelo (el próximo mensaje sale con ellos), vencimiento, prioridad. Al pie, escriba y luego Ctrl+Intro. «Detener» interrumpe la sesión de trabajo; «Interfaz propia del asistente de IA» abre la misma conversación en un símbolo del sistema, con la interfaz propia del asistente; «Consola de GoldenBrain» la sigue desde un símbolo del sistema.
 - **Renombrar**: haga clic en el título de la tarea, se convierte en un campo; Intro guarda, Escape cancela. Solo cambia el título: el identificador, el archivo del vault, los vínculos y la conversación siguen iguales, y el nuevo título aparece en todas partes (árbol, búsqueda, Telegram, panel). Un agente hace lo mismo con `orch renommer <id> "<título>"`. Salir del campo («Hecho» del teclado del teléfono, tocar fuera) también guarda.
 - **Yo / IA**: el selector del encabezado indica quién lleva la tarea. «👤 Yo»: ningún agente trabaja en ella (conversación atenuada, ni revisión ni aprobación automática); la tarea lleva una etiqueta en el árbol. «🤖 IA»: «Confiar el resto» devuelve el mando al agente, que recibe sus notas.
@@ -233,8 +241,9 @@ El vault es su **segundo cerebro**: notas corrientes (archivos Markdown) que Gol
 - **Para qué sirve**: pasar a la última versión sin símbolo del sistema.
 - **Cómo se hace**: cuando aparece la barra «Hay una actualización disponible», pulse «Actualizar»; la página espera el reinicio y luego se recarga. Sin la interfaz (Windows): doble clic en `mettre-a-jour.cmd`.
 - **Conviene saber**: se rechaza mientras un agente trabaja (reintente después) o si se han modificado a mano archivos de GoldenBrain. La carpeta solo avanza, sin mezclar nunca modificaciones; `config.toml`, `etat`, `journal` y `equipe` nunca se tocan. Origen: la versión principal (`main`) de la carpeta del código pública https://github.com/Greal-dev/goldenbrain (el remoto `origin` de un clon), ajustable con `[mise_a_jour] branche` y `distant`.
-- **Qué hay de nuevo**: la barra lleva «¿Qué hay de nuevo?»; un clic despliega las novedades de la versión pendiente, en lenguaje corriente. El registro completo de cada versión publicada es `CHANGELOG.md`, en la raíz de la carpeta (en francés); cada versión pública tiene además su nota en la página «Releases» de la carpeta del código público (para suscribirse: «Watch» → «Custom» → «Releases», o el canal https://github.com/Greal-dev/goldenbrain/releases.atom).
-- **Canal estable o beta**: Ajustes → «Instalación y versión» → «Actualización» → «Canal». «Beta» sigue la versión `beta` de la carpeta del código pública (versiones de prueba, antes que `main`); la barra propone entonces «pasar al canal beta» y el botón «Actualizar» cambia de versión y luego reinicia GoldenBrain. Volver a «Estable» se hace igual. Se rechaza si el código se ha modificado a mano, o desde una versión distinta de `main` o `beta`; el vault nunca se toca. Para probar y dar su opinión: página «Hacerse probador» (`BETA.md`).
+- **Qué hay de nuevo**: la barra lleva «¿Qué hay de nuevo?»; un clic despliega las novedades de la versión pendiente, en lenguaje corriente. El registro de versiones es `CHANGELOG.md`, en la raíz de la carpeta del código (ausente de un clon del repositorio público; en francés); cada versión pública tiene además su nota en la página «Releases» de la carpeta del código público (para suscribirse: «Watch» → «Custom» → «Releases», o el canal https://github.com/Greal-dev/goldenbrain/releases.atom).
+- **Notas de versión**: en la página «Releases», la nota va en el idioma de la página; sin traducción, las notas en inglés, español y alemán anuncian «notas en francés» en vez de presentar francés bajo un título extranjero.
+- **Canal estable o beta**: Ajustes → «Instalación y versión» → «Actualización» → «Canal». «Beta» sigue la versión `beta` de la carpeta del código pública (versiones de prueba, antes que `main`); la barra propone entonces «pasar al canal beta» y el botón «Actualizar» cambia de versión y luego reinicia GoldenBrain. Volver a «Estable» se hace igual. Se rechaza si el código se ha modificado a mano, o desde una versión distinta de `main` o `beta`; el vault nunca se toca. Si la versión `beta` no existe (todavía) en la carpeta del código público, GoldenBrain lo dice en una frase, devuelve el canal a «Estable» y no toca nada. Para probar y dar su opinión: página «Hacerse probador» (`BETA.md`).
 - **Informar de un problema o proponer una idea**: Ajustes → «Instalación y versión» → «Informar de un problema o proponer una idea». Los enlaces abren, en el navegador, el formulario de GitHub del proyecto público con la versión (huella, fecha, canal) y el sistema ya rellenados — nada más: ni nombre, ni ruta, ni contenido del vault. GoldenBrain no envía nada; usted lo revisa y lo envía (se necesita una cuenta de GitHub). «Hacer una pregunta» abre las Discussions.
 - **Actualización automática**: Ajustes → «Instalación y versión» → «Actualización» → «Aplicar sola una actualización disponible» (desactivada por defecto). Ninguna sesión de trabajo nueva arranca durante la preparación; las sesiones en curso terminan, y una sesión que supera el plazo fijado solo se corta (y luego se reanuda) en un punto de reanudación seguro. Franja horaria opcional; la actualización también espera a que usted deje de tocar la interfaz. Un fallo se muestra en una barra, con el gesto que hay que hacer.
 - **Reiniciar durante una sesión de trabajo**: si «Reiniciar» se rechaza porque hay sesiones de trabajo en curso, se ofrece «Reiniciar GoldenBrain en cuanto terminen las sesiones de trabajo» (solo GoldenBrain, nunca el ordenador); la espera se cancela desde la misma barra.
@@ -276,7 +285,7 @@ El vault es su **segundo cerebro**: notas corrientes (archivos Markdown) que Gol
 
 ## Para un agente de IA {#pour-un-agent-ia}
 
-Para leer por todo agente —Claude Code, Codex, OpenCode, Gemini CLI u otro— que dirija GoldenBrain o trabaje en su repositorio. GoldenBrain no se invoca mediante una biblioteca: se le habla con el comando `python orch.py` (desde la raíz del repositorio, nunca mediante un `.cmd`) o con su API local.
+Para leer por todo agente —Claude Code, Codex, OpenCode, Antigravity u otro— que dirija GoldenBrain o trabaje en su repositorio. GoldenBrain no se invoca mediante una biblioteca: se le habla con el comando `python orch.py` (desde la raíz del repositorio, nunca mediante un `.cmd`) o con su API local.
 
 **1. Arrancar y verificar el servidor**
 
@@ -306,7 +315,18 @@ Para leer por todo agente —Claude Code, Codex, OpenCode, Gemini CLI u otro— 
 | `telegram "<texto>"` | mensaje al usuario en Telegram (`--validation`, `--choix`); exige el bot configurado |
 | `poste reserver "<motivo>"` / `poste liberer` | reservar el puesto durante una prueba pesada; si está ocupado, esperar turno (`--attente <min>`, por defecto 30) |
 | `chaine plan\|sauter\|ajouter\|dedoubler\|consigne …` | adaptar la cadena de la tarea a la carpeta real: `plan` la muestra; omitir, añadir, duplicar una fase o cambiar su instrucción (solo fases pendientes), siempre con `--motif`: el ajuste se registra y se muestra al usuario |
-| `feu-vert demander\|accorder\|refuser\|verifier …` | luz verde ligada a una versión |
+| `feu-vert demander\|accorder\|refuser\|verifier <sha de 40 car.> [texto] [--a <tarea del controlador>] …` | luz verde ligada a una versión (huella completa de 40 caracteres); requiere `ORCH_TACHE` |
+| `agents-cc [--relever]` | agrupar los agentes de Claude Code de este equipo y vincularlos a una tarea |
+| `reevaluer` | volver a ejecutar la validación automática sobre las tareas |
+| `console <id> [--url]` | seguir una tarea y escribirle desde el terminal |
+| `rattacher <envoi> <id>` | vincular un envío de Telegram a una tarea existente (no confundir con `proposer rattacher`, que ordena tareas bajo un padre) |
+| `m365 connecter\|demander\|contexte` | conocimiento de empresa de Microsoft 365 Copilot (si está activado) |
+| `telegram-jeton [--pause]` | introducir el token del bot de Telegram sin mostrarlo (cofre del equipo) |
+| `jeton-executeur <nom> [--revoquer]` | crear o revocar el token de un ordenador auxiliar |
+| `executeur [installer]` | convertir este PC en ejecutor de un GoldenBrain jefe |
+| `fiche` | ficha y estado propuesto de una ejecución agrupada |
+| `natif <fichier>` | relevo de la interfaz nativa (lo lanza GoldenBrain, no a mano) |
+| `poste etat` | ver quién tiene el puesto |
 
 `python orch.py <comando> -h` da las opciones de cada uno.
 
@@ -318,7 +338,7 @@ Para leer por todo agente —Claude Code, Codex, OpenCode, Gemini CLI u otro— 
 | `GET /api/arbre` | árbol de las tareas |
 | `GET /api/recherche?q=<palabras>` | buscar |
 | `GET /api/taches/{id}` | una tarea (estado, ficha, notas, ejecución) |
-| `POST /api/taches` | crear: `titre`, `description`, y a elección `conteneur`, `parent`, `lancer`, `mission`, `harnais`, `modele`, `echeance`, `priorite` |
+| `POST /api/taches` | crear: `titre`, `description`, y a elección `conteneur`, `parent`, `lancer`, `mission`, `harnais`, `modele`, `echeance`, `priorite`, `forcer` (pasar por alto una tarea muy cercana), `groupe` |
 | `POST /api/taches/{id}/messages` | escribir a la tarea: `texte` (y `de`: el id de la tarea que escribe) |
 | `POST /api/taches/{id}/statut` | fijar un estado: `statut` — gesto humano, véanse las reglas |
 | `POST /api/taches/{id}/notes` | añadir una nota de la persona: `texte` |
@@ -326,14 +346,15 @@ Para leer por todo agente —Claude Code, Codex, OpenCode, Gemini CLI u otro— 
 | `POST /api/taches/{id}/relancer` | relanzar |
 | `GET /api/propositions` · `POST /api/propositions` | listar · proponer: `type`, `tache`, `valeur`, `motif` |
 | `POST /api/propositions/{n}/accepter` · `…/refuser` | resolver — gesto humano |
-| `GET /api/guide` | esta guía, en texto plano |
+| `GET /api/guide[?langue=fr\|en\|de\|es]` | esta guía, en texto plano (`orch guide` solo sirve el francés) |
 | `GET /api/evenements` | flujo de eventos (SSE) |
 
 **4. Reglas**
 
 - **Relacionar antes de crear**: primero `chercher` o `rapprochement "<título>"`; una tarea cercana se completa (`dire`) en lugar de duplicarse.
+- **Integración**: en un proyecto que declara `integration:`, `creer` y `deleguer` enlazan de oficio la nueva tarea con la tarea de integración (`alimente`); en otro caso, una tarea que entrega una rama pone este enlace directamente (`proposer lier <id> alimente <integración>`): un enlace `alimente` hacia una tarea permanente es un gesto de rutina, aplicado de oficio y anotado en las «Traces» de la tarea, nunca en espera en Decisiones; los demás enlaces siguen la política de propuestas.
 - **Nunca cambiar un estado sin conformidad humana**: un agente no fija `fait`, no acepta una propuesta, no aprueba una tarea; entrega su ficha y la persona aprueba. Las rutas `statut`, `valider`, `accepter` son gestos de la interfaz.
-- **Tareas «Yo»** (`executant: humain`): la persona la lleva; GoldenBrain rechaza en ella todo turno y toda escritura de agente (un agente puede leerla y proponer); «Confiar el resto» es el gesto humano que la devuelve a la IA.
+- **Tareas «Yo»** (`executant: humain`): la persona la lleva; GoldenBrain rechaza en ella todo turno y toda escritura de agente, salvo líneas y enlaces (un agente puede leerla y proponer); «Confiar el resto» es el gesto humano que la devuelve a la IA.
 - El vault es la única base de datos; nunca reformatear el frontmatter de una nota.
 - Nunca mover una carpeta por cuenta propia: proponer (`orch proposer`), la persona acepta.
 - Ningún envío, publicación, pago ni borrado sin conformidad escrita del usuario.

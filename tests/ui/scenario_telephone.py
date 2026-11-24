@@ -22,6 +22,7 @@ def _monde(serveur):
 def _telephone(navigateur):
     ctx = navigateur.new_context(viewport={"width": 412, "height": 839}, screen={"width": 412, "height": 915},
                                  device_scale_factor=2.625, is_mobile=True, has_touch=True)
+    ctx.add_init_script("try{localStorage.setItem('gb.detail-ouvert','1')}catch(e){}")  # INV-DETAIL-1
     p = ctx.new_page()
     p.erreurs = []
     p.on("console", lambda m: p.erreurs.append(m.text) if m.type in ("error", "warning") else None)

@@ -20,6 +20,7 @@ if os.environ.get("FAUX_DORMIR"):
 if os.environ.get("FAUX_ERREUR"):
     emettre({"type": "error", "data": {"message": "quota épuisé"}})
     sys.exit(1)
+sys.stdin.reconfigure(encoding="utf-8")  # Windows : sinon la page de code locale
 stdin = sys.stdin.read()
 rendu = json.dumps({"argv": sys.argv[1:], "stdin": stdin})
 emettre({"type": "tool.execution_start", "data": {"toolName": "bash", "arguments": {"command": "echo  salut"}}})

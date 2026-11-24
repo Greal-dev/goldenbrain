@@ -23,9 +23,9 @@ Resumen de [ROADMAP.md](ROADMAP.md), que es la versión vinculante y da para cad
 
 ## Horizonte 3 — Un producto local mantenible para otros
 - Primeros pasos con un vault de ejemplo neutro (M) — contribuciones bienvenidas.
-- Instalación y actualización en Linux y macOS (L) — Linux entregado; macOS: contribuciones bienvenidas.
-- Traducción de la interfaz (L) — contribuciones bienvenidas.
-- Nuevos adaptadores de arnés (M cada uno) — contribuciones bienvenidas.
+- Instalación y actualización en Linux y macOS (L) — Linux y Windows entregados; macOS: instalador construido pero nunca probado, contribuciones bienvenidas.
+- Traducción de la interfaz (L) — entregada (francés, inglés, alemán, español; otros idiomas: contribuciones bienvenidas).
+- Nuevos adaptadores de asistentes de IA (M cada uno) — Claude Code, Codex, OpenCode, GitHub Copilot CLI y Antigravity entregados; otros: contribuciones bienvenidas.
 
 ## Fuera de programa
 Equipos y permisos, nube y coedición, constructor de flujos de trabajo, plataforma de agentes, forja Git, lienzo, puntuaciones de productividad.

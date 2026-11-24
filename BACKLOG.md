@@ -2,10 +2,10 @@
 
 ## Prochaines US (ordre proposé)
 1. **Gabarit de tâche conforme à l'ontologie** : sections « Pourquoi moi » et « Critère de délégation », clé `tags`, `projet: transverse` pour le conteneur d'arrivée — le tout paramétrable.
-2. **Second harnais (Codex)** : un adaptateur + une entrée de registre ; choix du harnais par tâche dans l'interface.
+2. ~~**Second harnais (Codex)**~~ — livré (Codex, OpenCode, Copilot CLI et Antigravity s'ajoutent à Claude Code ; choix par tâche dans l'interface).
 3. **Rattacher une session existante** depuis l'interface (les sessions Claude agents déjà ouvertes).
 4. **Le temps** : échéance et priorité visibles et triables dans l'arbre.
-5. **Routeur Telegram** : message adressé à la bonne tâche ; scan classé et transformé en tâche.
+5. ~~**Routeur Telegram**~~ — livré (un message, une photo ou une note vocale devient une tâche rangée au bon endroit).
 6. **Relevés de mails** (deux par jour) et **récurrences** (tâche permanente réveillée à échéance).
 7. **Inscrire dans l'ontologie du vault** les clés `harnais`, `session`, `alimente`, `voir_aussi`.
 8. **Propagation plus fine** : ne prévenir les tâches alimentées que si la fiche de la source a réellement changé (économie de crédits).

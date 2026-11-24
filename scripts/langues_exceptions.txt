@@ -20,3 +20,4 @@ transfo.js | description: … | format imposé de la consigne de découpage (cl�
 note-edition.js | btn primaire petit | classes CSS (bouton), jamais montrées
 notes_ia.js | btn primaire petit | classes CSS (bouton), jamais montrées
 travaux.js | btn petit danger | classe CSS (bouton), jamais montrée
+cerveau.js | btn petit primaire | classes CSS (boutons), jamais montrées

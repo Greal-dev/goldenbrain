@@ -39,6 +39,10 @@ export function reglerRetour(nom) {
 }
 export const groupeStatut = (s) => (s === 'confier-agent' ? 'a-faire' : s);
 export const libelleStatut = (s) => STATUTS[s] || s || '—';
+// Audit L4 (A5) : « ? » (casquette inconnue) et « _meta » (dossier technique) ne s'affichent jamais tels quels.
+export const nomLisible = (s) => (s === '?' ? t('interface.sans_casquette') : s === '_meta' ? t('arbre.interne') : /^_./.test(s || '') ? s.slice(1) : s);
+export const filLisible = (fil) => (fil || []).filter((s) => s !== '?').map(nomLisible);
+// Audit L4 (A6) : une tâche terminée qui attend la validation porte le même mot partout.
 // « À moi » = en attente + terminée à valider.
 export const pourMoi = (n) => n.statut === RETOUR || !!n.a_valider;
 // Classe CSS générique `st-retour`, quel que soit le nom réglé.

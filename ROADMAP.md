@@ -73,16 +73,16 @@ A routine is automated only after about two weeks of successful manual or assist
 - Intent: a new user starts from a fictitious example vault, connects one harness, and runs capture → work → trial → resume alone.
 - Accepted when: an outside user does it without help and finds their files usable outside GoldenBrain.
 
-**Installation and update on other systems** · L · core + launch scripts · Linux **delivered**; macOS **contributions welcome**
+**Installation and update on other systems** · L · core + launch scripts · Linux and Windows **delivered**; macOS installer built but **never tried**, **contributions welcome**
 - Intent: install and update on Linux and macOS as on Windows (launch scripts, process control), without losing configuration.
 - Accepted when: the gate passes on the three systems and an update keeps `config.toml` and local state.
 
-**Interface translation** · L · web interface + translations · **contributions welcome**
+**Interface translation** · L · web interface + translations · **delivered** (French, English, German, Spanish; other languages: **contributions welcome**)
 - Intent: the interface offers French, English, German and Spanish.
 - Accepted when: switching language changes every label without changing any vault key or value.
 
-**More harness adapters** · M each · harness adapters · **contributions welcome**
-- Intent: support further command-line agent harnesses through the common turn contract.
+**More AI assistant adapters** · M each · adapters · Claude Code, Codex, OpenCode, GitHub Copilot CLI and Antigravity **delivered**; others **contributions welcome**
+- Intent: support further command-line AI assistants through the common turn contract.
 - Accepted when: the adapter passes the shared harness tests with recorded, fictitious test data.
 
 ## Not planned

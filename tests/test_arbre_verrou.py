@@ -71,8 +71,10 @@ def test_verrou_check_ui_sort_non_nul_si_un_autre_vit():
     if tenu is None:
         pytest.skip("un vrai check_ui tourne")
     try:
-        r = subprocess.run([sys.executable, "scripts/check_ui.py"], cwd=racine,
-                           capture_output=True, text=True, encoding="utf-8", timeout=60)
+        # UTF-8 forcé côté fils : sous Windows il écrit dans la page de code locale (illisible en UTF-8).
+        r = subprocess.run([sys.executable, "scripts/check_ui.py"], cwd=racine, capture_output=True,
+                           text=True, encoding="utf-8", timeout=60,
+                           env={**os.environ, "PYTHONUTF8": "1", "PYTHONIOENCODING": "utf-8"})
     finally:
         tenu.close()
     assert r.returncode != 0 and "autre exemplaire" in r.stdout

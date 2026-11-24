@@ -7,6 +7,7 @@ import re
 import shutil
 import subprocess
 import sys
+import types
 import time
 from pathlib import Path
 
@@ -138,6 +139,8 @@ def test_langue_du_systeme_quatre_langues_anglais_sinon(monkeypatch, valeur, cod
     for nom in ("LC_ALL", "LC_MESSAGES"):
         monkeypatch.delenv(nom, raising=False)
     monkeypatch.setenv("LANG", valeur)
+    # Windows lit la langue d'affichage du système, pas LANG : on exerce ici la branche POSIX.
+    monkeypatch.setattr(langue, "sys", types.SimpleNamespace(platform="linux"))
     assert langue.code_systeme() == code
 
 

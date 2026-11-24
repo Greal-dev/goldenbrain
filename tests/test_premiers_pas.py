@@ -5,7 +5,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from conftest import PORT
-from orchestrateur import api, installation, premiers_pas
+from orchestrateur import api, cerveau, installation, premiers_pas
 from orchestrateur.moteur import Moteur
 from test_installation import Faux
 
@@ -47,6 +47,8 @@ def client(config, vault, faux, monkeypatch):
 
 
 def test_propose_seulement_vault_vide_et_premiers_pas_non_faits(client, config, racine):
+    assert client.get("/api/accueil/premiers-pas").json()["propose"] is False  # poste neuf : le second cerveau d'abord (INV-CERVEAU-1)
+    cerveau.poser(config, "fait")
     assert client.get("/api/accueil/premiers-pas").json() == {"propose": False, "etat": "jamais"}  # vault déjà garni
     for f in racine.rglob("taches/*.md"):
         f.unlink()

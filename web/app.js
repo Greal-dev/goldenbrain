@@ -38,6 +38,7 @@ import { recharger as rechargerCompactage } from './compactage.js';
 import { recharger as rechargerExecuteurs } from './executeurs.js';
 import { initAccueil } from './accueil.js';
 import { initPremiersPas } from './premiers-pas.js';
+import { initCerveau } from './cerveau.js';
 import { initEconomie, recharger as rechargerEconomie } from './economie.js';
 import { initTelephone } from './telephone.js';
 import { initManager, rechargerManager, evtManager, evtTourManager } from './manager.js';
@@ -223,7 +224,7 @@ async function demarrer() {
   initAlignement();
   initVersion();
   initMajAuto();
-  initPremiersPas(initAccueil); // premiers pas d'abord, puis l'accueil s'il se propose
+  initCerveau(() => initPremiersPas(initAccueil)); // second cerveau d'abord (INV-CERVEAU-1), puis assistant IA, puis l'accueil s'il se propose
   initMaj();
   initEtoile();
   initEconomie();

@@ -22,6 +22,10 @@ function champ(c, i) {
     ctrl = h('select', { id, name: c.nom }, [...groupes].map(([g, os]) => (g ? h('optgroup', { label: g }, os.map(opt)) : os.map(opt))));
   } else ctrl = h('input', { id, name: c.nom, type: c.type === 'date' ? 'date' : 'text', value: v || '', required: c.requis ? true : null, autocomplete: 'off', readonly: c.lecture ? true : null, pattern: c.motif || null, title: c.motif ? c.aide : null, placeholder: c.aide || null });
   // `sous` : nœud affiché sous le champ ; `surSaisie(valeur)` : appelée à chaque frappe (suggestions).
+  if (c.requis) { // A12 : message natif en anglais remplacé par le nôtre, effacé dès la saisie
+    ctrl.addEventListener('invalid', () => ctrl.setCustomValidity(t('dialogue.champ_requis')));
+    ctrl.addEventListener('input', () => ctrl.setCustomValidity(''));
+  }
   if (c.surSaisie) ctrl.addEventListener('input', () => c.surSaisie(ctrl.value));
   return h('div', { class: 'champ' }, h('label', { for: id }, c.label), ctrl, c.sous || null);
 }

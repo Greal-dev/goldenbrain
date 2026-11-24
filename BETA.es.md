@@ -6,7 +6,7 @@ Las versiones beta llegan a la rama `beta` antes que a `main`. Los probadores de
 
 ## Unirse
 1. Instalación con git (la instalación habitual): abra *Ajustes → Instalación y versión → Actualización*, ponga **Canal** en *Beta*.
-2. Pulse **Actualizar** en el aviso: GoldenBrain pasa a la rama `beta` y se reinicia. Un cambio local en el código bloquea el paso; no se sobrescribe nada.
+2. Pulse **Actualizar** en el aviso: GoldenBrain pasa a la rama `beta` y se reinicia. Un cambio local en el código bloquea el paso; no se sobrescribe nada. Si la rama `beta` aún no existe, GoldenBrain lo dice y el canal vuelve a *Estable*; no se cambia nada.
 3. Para volver, elija *Estable*: el cambio se hace en la siguiente actualización.
 
 Un cambio de canal nunca toca su vault: solo cambia el código de la aplicación.

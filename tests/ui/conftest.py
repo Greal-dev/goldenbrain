@@ -35,11 +35,15 @@ def serveur(tmp_path_factory):
     yield from demarrer(tmp_path_factory.mktemp("ui"))
 
 
-def demarrer(dossier: Path, supplement: str = ""):
-    """Vrai serveur sur un univers neuf ; `supplement` s'ajoute à la fin de son config.toml."""
+def demarrer(dossier: Path, supplement: str = "", cerveau_fait: bool = True):
+    """Vrai serveur sur un univers neuf ; `supplement` s'ajoute à la fin de son config.toml. `cerveau_fait` : le second cerveau est
+    réglé (INV-CERVEAU-1) ; faux = poste neuf, le parcours « Configurer votre second cerveau » ouvre l'interface."""
     port = port_libre()
     faux_tg = FauxTelegram()
     config = univers.construire(dossier, port, faux_tg.url)
+    if cerveau_fait:
+        (dossier / "etat").mkdir(exist_ok=True)
+        (dossier / "etat" / "cerveau.json").write_text('{"etat": "fait"}', encoding="utf-8")
     if supplement:
         config.write_text(config.read_text(encoding="utf-8") + supplement, encoding="utf-8")
     # Journal sur fichier, jamais sur un tuyau : un tuyau que personne ne vide se remplit (quelques Ko
@@ -66,7 +70,7 @@ def demarrer(dossier: Path, supplement: str = ""):
         else:
             pytest.fail("le serveur ne répond pas")
         yield type("Serveur", (), {"url": url, "port": port, "vault": dossier / "vault", "config": config,
-                                   "telegram": faux_tg, "home": home, "dossier": dossier})
+                                   "telegram": faux_tg, "home": home, "dossier": dossier, "proc": proc})
     finally:
         faux_tg.arreter()
         proc.terminate()
@@ -89,6 +93,7 @@ def navigateur():
 @pytest.fixture
 def page(navigateur, serveur):
     ctx = navigateur.new_context(viewport={"width": 1366, "height": 768}, locale="fr-FR")  # INV-LANGUE-1 : sinon la langue détectée serait celle de Chromium (en-US)
+    ctx.add_init_script("try{localStorage.setItem('gb.detail-ouvert','1')}catch(e){}")  # INV-DETAIL-1 : les scénarios existants visent le contenu des Détails ; la fermeture par défaut est gardée par scenario_detail_allege
     p = ctx.new_page()
     p.erreurs = []
     p.on("console", lambda m: p.erreurs.append(m.text) if m.type in ("error", "warning") else None)

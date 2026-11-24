@@ -2,7 +2,7 @@
 
 Rôle : traduire HTTP en appels à `accueil` (plan, sans écriture) et `accueil_ecriture` (après validation).
 L'état « accueil fait ou différé » vit dans `<donnees>/etat/accueil.json`. L'accueil se propose seulement
-quand le vault ne porte encore aucune tâche ; « Relancer l'accueil » (Réglages) l'ouvre à tout moment.
+quand le vault ne porte encore aucune tâche (ou au cours du parcours du second cerveau, INV-CERVEAU-1) ; « Relancer l'accueil » (Réglages) l'ouvre à tout moment.
 Frontières : poste seulement (garde d'`api.py`, INV-ACCUEIL-1) ; aucune écriture avant `POST /valider`.
 Invariants portés : INV-ACCUEIL-1, INV-ACCUEIL-2.
 """
@@ -15,7 +15,7 @@ import json
 from fastapi import APIRouter
 from pydantic import BaseModel, Field
 
-from . import accueil, accueil_ecriture, accueil_sources, api_reflexes, fiches, premiers_pas, squelette
+from . import accueil, accueil_ecriture, accueil_sources, api_cerveau, api_reflexes, cerveau, fiches, premiers_pas, squelette
 
 ROUTE = "/api/accueil"
 
@@ -46,7 +46,7 @@ def routes(config, moteur, vault) -> APIRouter:
     async def lire():
         vide = not vault.index()[0]
         dispo = await asyncio.to_thread(accueil_sources.disponibles)
-        return {"propose": vide and not etat(), "etat": etat() or "jamais", "conversations": dispo,
+        return {"propose": not etat() and cerveau.parcours_ouvert(config, vide), "etat": etat() or "jamais", "conversations": dispo,
                 "vault": str(vault.racine), "vide": squelette.vide(vault.racine, vault.cfg.arrivee),
                 "obsidian": squelette.obsidian(vault.racine)}
 
@@ -66,6 +66,7 @@ def routes(config, moteur, vault) -> APIRouter:
         poser("differe")
         return {"etat": "differe"}
 
+    r.include_router(api_cerveau.routes(config, moteur, vault))  # INV-CERVEAU-1 : même garde, poste seulement
     r.include_router(premiers_pas.routes(config, moteur, vault))  # même préfixe : poste seulement (INV-ACCUEIL-1)
     r.include_router(api_reflexes.routes(config))  # INV-REFLEXES-1 : écrit hors du vault, poste seulement
     return r

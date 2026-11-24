@@ -21,11 +21,11 @@ def _envoyer(page, texte):
 
 def test_tache_en_tete_et_fiche(page, serveur):
     _ouvrir(page, serveur, "C1-TacheEntete", {"te-un": ("Un TE", "")}, "Un TE")
-    expect(page.locator(".d-meta select[aria-label='Statut']")).to_have_value("a-faire")
+    expect(page.locator(".d-une select[aria-label='Statut']")).to_have_value("a-faire")
     expect(page.locator(".d-meta .session")).to_have_text("pas de conversation")
     expect(page.locator(".d-tete nav.fil")).to_contain_text("TacheEntete")
     expect(page.locator(".conv .vide")).to_have_text("Aucun échange pour le moment.")
-    expect(page.locator(".d-defile .corps summary")).to_have_text("Contenu de la tâche")
+    expect(page.locator(".d-details .corps summary")).to_have_text("Contenu de la tâche")
     assert not page.erreurs, page.erreurs
 
 
@@ -105,13 +105,13 @@ def test_echec_de_tour_message_du_systeme_et_repere(page, serveur):
 def test_quota_epuise_tache_en_pause_reprendre_maintenant_puis_arreter(page, serveur):
     _ouvrir(page, serveur, "C1-PauseQuota", {"pq-un": ("Un PQ", "")}, "Un PQ")
     _envoyer(page, "[echec] travaille")
-    expect(page.locator(".d-meta .etat.en_pause")).to_contain_text("En pause : quota faux, reprise à", timeout=10000)
+    expect(page.locator(".d-une .etat.en_pause")).to_contain_text("En pause : quota faux, reprise à", timeout=10000)
     expect(ligne(page, "Un PQ").locator(".echec")).to_have_attribute("title", re.compile("En pause : quota faux"))
     page.get_by_role("button", name="Reprendre maintenant").click()  # relance aussitôt : échoue encore (factice)
     expect(page.locator(".msg.systeme")).to_have_count(2, timeout=10000)
-    expect(page.locator(".d-meta .etat.en_pause")).to_be_visible()
+    expect(page.locator(".d-une .etat.en_pause")).to_be_visible()
     page.get_by_role("button", name="Arrêter").click()  # annule le réveil
-    expect(page.locator(".d-meta .etat.en_pause")).to_have_count(0)
+    expect(page.locator(".d-une .etat.en_pause")).to_have_count(0)
     expect(page.get_by_role("button", name="Reprendre maintenant")).to_have_count(0)
     assert not page.erreurs, page.erreurs
 
@@ -121,9 +121,9 @@ def test_tour_interrompu_affiche_relancer_et_reprend_la_session(page, serveur):
     _ouvrir(page, serveur, "C1-ConvRelance", {"cr-un": ("Un CR", "")}, "Un CR")
     _envoyer(page, "[lent 60] travaille longtemps")
     page.get_by_role("button", name="Arrêter").click()
-    expect(page.locator(".d-meta .etat.interrompu")).to_have_text("Séance de travail interrompue")
+    expect(page.locator(".d-une .etat.interrompu")).to_have_text("Séance de travail interrompue")
     page.get_by_role("button", name="Relancer").click()
     page.wait_for_selector("text=en bonne voie", timeout=10000)  # le tour repris a rendu sa fiche
     expect(page.get_by_role("button", name="Relancer")).to_have_count(0)
-    expect(page.locator(".d-meta .etat")).to_have_count(0)  # plus rien d'interrompu
+    expect(page.locator(".d-une .etat")).to_have_count(0)  # plus rien d'interrompu
     assert not page.erreurs, page.erreurs

@@ -1,6 +1,6 @@
 # Guide de GoldenBrain
 
-Mis à jour le 2026-11-23.
+Mis à jour le 2026-11-24.
 
 GoldenBrain est un poste de pilotage : vous confiez des tâches à des agents IA (Claude Code, Codex, OpenCode, Copilot, Antigravity), chacune rangée à sa place dans votre vault (un dossier de notes Markdown). GoldenBrain organise et supervise ; l'agent travaille dans sa propre conversation, que vous pouvez reprendre à tout moment.
 
@@ -33,7 +33,7 @@ Comment ça marche : chaque lancement ouvre le navigateur sur GoldenBrain, en d�
 1. Prérequis (Debian, Ubuntu) : `sudo apt install git python3 python3-venv`
 2. Récupérer le code : `git clone https://github.com/Greal-dev/goldenbrain.git ~/goldenbrain && cd ~/goldenbrain`
 3. Python dédié : `python3 -m venv ~/.venvs/goldenbrain`
-4. Dépendances : `~/.venvs/goldenbrain/bin/pip install fastapi uvicorn pyyaml`
+4. Dépendances : `~/.venvs/goldenbrain/bin/pip install fastapi uvicorn pyyaml` (développeurs, pour les tests : `pip install ".[test]"`)
 5. Désigner ce Python : `echo ~/.venvs/goldenbrain/bin/python > python.local`
 6. Premier lancement : `./lancer.sh`, puis ouvrir http://127.0.0.1:8300
 
@@ -45,7 +45,7 @@ Le premier lancement crée `config.toml`, qui ne contient que vos écarts (tout 
 
 1. Installer Git et Python 3.12 (python.org) ; noter le chemin de `python.exe`.
 2. Récupérer le code : `git clone https://github.com/Greal-dev/goldenbrain.git goldenbrain`
-3. Dépendances : `python -m pip install fastapi uvicorn pyyaml`
+3. Dépendances : `python -m pip install fastapi uvicorn pyyaml` (développeurs, pour les tests : `pip install ".[test]"`)
 4. Si `python` du PATH n'est pas le bon interpréteur, écrire son chemin complet sur la première ligne d'un fichier `python.local` à la racine du dossier.
 5. Premier lancement : double-clic sur `lancer.cmd`. La page http://127.0.0.1:8300 s'ouvre.
 
@@ -57,6 +57,8 @@ Par défaut : `~/Documents/Vault`. Ailleurs, l'écrire dans `config.toml` :
 [vault]
 racine = "~/chemin/vers/mon-vault"
 ```
+
+**Sans toucher à ce fichier** : au premier lancement, avant tout autre écran, GoldenBrain ouvre « Configurer votre second cerveau » en plein écran. Vous y choisissez le dossier (le champ, ou « Parcourir » pour naviguer dans vos dossiers) : un vault Markdown ou Obsidian existant est repris en place, sans copie ; un dossier absent ou vide devient un nouveau second cerveau, créé seulement à la validation. Un dossier inexistant, non inscriptible, relatif, ou déjà servi par une autre instance est refusé avec la raison. Changer de dossier réécrit la seule clé `[vault] racine` de `config.toml`, puis GoldenBrain redémarre seul sur le nouveau vault ; garder le dossier actuel ne redémarre rien. Vient ensuite le choix de l'assistant IA, puis la proposition de rôles et de projets (ou la démonstration) ; rien n'est écrit avant votre validation. « Plus tard » laisse un bandeau « Second cerveau à configurer ». Pour le rouvrir : Réglages → « Installation et version » → « Reconfigurer mon second cerveau ».
 
 Un vault Obsidian existant convient tel quel : y pointer `racine` (voir « Organiser votre second cerveau »). Un dossier vide ou absent reçoit, à l'accueil et après validation, un classement de départ.
 
@@ -94,12 +96,17 @@ Un assistant IA est le programme, utilisé depuis une invite de commandes, qui f
 
 | Assistant IA | Installer | Se connecter |
 |---|---|---|
-| Claude Code | `npm install -g @anthropic-ai/claude-code` | `claude`, puis `/login` |
+| Claude Code | `curl -fsSL https://claude.ai/install.sh \| bash` (macOS, Linux) · `irm https://claude.ai/install.ps1 \| iex` (Windows) | `claude`, puis `/login` |
 | Codex | `npm install -g @openai/codex` | `codex login` |
 | GitHub Copilot CLI | `npm install -g @github/copilot` | `copilot login` |
-| OpenCode | voir sa documentation (opencode.ai) | voir sa documentation |
+| OpenCode | `npm install -g opencode-ai` | voir sa documentation |
+| Antigravity (`agy`) | voir sa documentation | depuis l'application |
 
 À savoir : un assistant IA absent apparaît « indisponible », avec la raison, dans le choix du « Moteur » d'une tâche. Son chemin ou ses arguments se règlent dans `config.toml`, section `[harnais.<nom>]` (modèle : `config.exemple.toml`).
+
+À savoir : Node.js est requis pour les installations par `npm` ; l'application propose l'installation (écran Accueil) et ne se connecte jamais à votre place.
+
+**Attention — sans confirmation** : par défaut, GoldenBrain lance les agents avec les arguments qui suppriment toute demande d'autorisation (`--dangerously-skip-permissions` pour Claude Code et Antigravity, `--dangerously-bypass-approvals-and-sandbox` pour Codex, `--auto` pour OpenCode, `--allow-all-tools --no-ask-user` pour Copilot), depuis votre dossier personnel sauf si la tâche en désigne un autre. Un agent peut donc lire, modifier ou supprimer vos fichiers sans vous demander. Essayez d'abord avec une consigne anodine ; ces arguments se changent dans `config.toml` (`[harnais.<nom>]`, modèle : `config.exemple.toml`) ; voir `SECURITY.md`.
 
 ## Premiers pas
 
@@ -153,12 +160,14 @@ Le vault est votre **second cerveau** : des notes ordinaires (fichiers Markdown)
 - **À quoi ça sert** : voir toutes les tâches à leur place (casquettes, opérations, projets, tâches) et leur état.
 - **Comment faire** : volet gauche, onglet « Tâches » ; « Ouvertes » ou « Toutes ». Au centre, la vue d'ensemble en cascade (statut, activité, échéance, priorité) ; un clic sur un compteur de statut filtre. « À moi » ne garde que ce qui attend votre geste. La recherche (touche `/`) trouve tâches et notes.
 - **Intégration en retard** : une tâche terminée dont la fiche cite une version `gb/*` pas encore intégrée à la version principale, plusieurs heures après son dernier enregistrement, porte une pastille orange. Version principale et retard toléré : Réglages → « Intégration des versions ».
+- **Libellés** : une tâche terminée qui attend votre validation s'appelle « À valider » partout (arbre, fiche, menu de statut) ; les dossiers techniques (« _meta », casquette inconnue) s'affichent sous « Tâches internes » ou « Autres ». Le bandeau tient sur deux rangées (repères et recherche, puis gestes et réglages) dans toutes les langues ; sur téléphone, « + » crée une tâche et la recherche garde sa place.
 - **Ranger** : glisser une tâche ou un projet sous un autre élément ; « Monter d'un niveau » (Maj+←) ; touche `m` pour déplacer au clavier ; tout geste s'annule pendant 10 s.
 - **À savoir** : le dossier fait foi. Déplacer un projet déplace réellement son dossier, après un plan à approuver (« Appliquer ») et un point de restauration du vault (git).
 
 ### Tâche
 
 - **À quoi ça sert** : la conversation d'un agent sur un travail précis, et sa fiche (ce qui est fait, résultat, comment l'essayer, ce qui reste).
+- **Ouverture allégée** : l'en-tête tient en une ligne (titre, statut, état d'exécution, « Résultat », « Valider » / « Renvoyer » ou « Arrêter » / « Relancer » selon le cas), et le fil de la conversation occupe le reste de l'écran. Le bouton « Détails » déplie tout le reste : fil d'Ariane et rattachement, Moi / IA, moteur, échéance, économie, lignes, liens, revues, fiche, corps, actions. Votre choix (replié par défaut) est mémorisé. Une alerte (incident, pause, contrôle échoué) s'affiche en une pastille, les suivantes en « +N » ; un clic ouvre « Détails ».
 - **Comment faire** : en-tête de la tâche : statut, assistant IA et modèle (le prochain message part avec eux), échéance, priorité. En bas, écrire puis Ctrl+Entrée. « Arrêter » interrompt la séance de travail ; « Interface native de l'assistant IA » ouvre la même conversation dans une invite de commandes, avec l'interface propre de l'assistant ; « Console GoldenBrain » la suit depuis une invite de commandes.
 - **Renommer** : cliquez sur le titre de la tâche, il devient un champ ; Entrée enregistre, Échap annule ; quitter le champ (touche « OK » du clavier du téléphone, toucher ailleurs) enregistre aussi. Seul le titre change : l'identifiant, le fichier du vault, les liens et la conversation restent les mêmes, et le nouveau titre apparaît partout (arbre, recherche, Telegram, tableau de bord). Un agent fait de même par `orch renommer <id> "<titre>"`.
 - **Moi / IA** : le curseur de l'en-tête dit qui mène la tâche. « 👤 Moi » : aucun agent n'y travaille (conversation grisée, ni revue ni validation automatique) ; la tâche porte une pastille dans l'arbre. « 🤖 IA » : « Confier la suite » rend la main à l'agent, qui reçoit vos notes.
@@ -201,7 +210,7 @@ Le vault est votre **second cerveau** : des notes ordinaires (fichiers Markdown)
 - **À quoi ça sert** : parcourir et modifier tout le vault sans quitter GoldenBrain.
 - **Comment faire** : volet gauche, onglet « Notes » (mode Avancé). « Nouvelle note » ; « Modifier » (touche `e`, Ctrl+S enregistre) ; « Renommer / déplacer… » réécrit les liens.
 - **À savoir** : si la note a changé ailleurs (Obsidian, un agent), l'enregistrement est refusé et les deux versions vous sont proposées. Les blocs Dataview ne sont pas exécutés.
-- **Graphe** : bouton « Graphe » de l'onglet « Notes » (graphe global : notes, tâches, dossiers et leurs liens, filtres par casquette, projet, type, tag, période) ; bouton « Graphe » d'une tâche ou « Graphe local » d'une note (profondeur réglable). Un clic sur un élément ouvre la note ou la tâche.
+- **Graphe** (cadré à l'ouverture ; bouton « Recentrer » après un déplacement ou un zoom) : bouton « Graphe » de l'onglet « Notes » (graphe global : notes, tâches, dossiers et leurs liens, filtres par casquette, projet, type, tag, période) ; bouton « Graphe » d'une tâche ou « Graphe local » d'une note (profondeur réglable). Un clic sur un élément ouvre la note ou la tâche.
 
 ### Routines
 
@@ -237,8 +246,9 @@ Le vault est votre **second cerveau** : des notes ordinaires (fichiers Markdown)
 - **À quoi ça sert** : passer à la dernière version sans invite de commandes.
 - **Comment faire** : quand le bandeau « Une mise à jour est disponible » paraît, cliquer « Mettre à jour » ; la page attend le redémarrage puis se recharge. Sans l'interface (Windows) : double-clic sur `mettre-a-jour.cmd`.
 - **À savoir** : refusé tant qu'un agent travaille (réessayer après) ou si des fichiers de GoldenBrain ont été modifiés à la main. Le dossier avance seulement, sans jamais mélanger de modifications ; `config.toml`, `etat`, `journal` et `equipe` ne sont jamais touchés. Source : la version principale (`main`) du dossier du code public https://github.com/Greal-dev/goldenbrain (le distant `origin` d'un clone), réglable par `[mise_a_jour] branche` et `distant`.
-- **Quoi de neuf** : le bandeau porte « Quoi de neuf ? » ; un clic déplie les nouveautés de la version en attente, en langage courant. Le journal complet de chaque version publiée est `CHANGELOG.md`, à la racine du dossier ; chaque version publique a aussi sa note sur la page « Releases » du dossier du code public (s'y abonner : « Watch » → « Custom » → « Releases », ou le flux https://github.com/Greal-dev/goldenbrain/releases.atom).
-- **Canal stable ou bêta** : Réglages → « Installation et version » → « Mise à jour » → « Canal ». « Bêta » suit la version `beta` du dossier du code public (versions en essai, avant `main`) ; le bandeau propose alors « passer au canal bêta » et le bouton « Mettre à jour » change de version puis redémarre GoldenBrain. Revenir à « Stable » se fait de même. Refusé si le code a été modifié à la main, ou depuis une autre version que `main` ou `beta` ; le vault n'est jamais touché. Pour tester et donner votre avis : page « Devenir testeur » (`BETA.md`).
+- **Quoi de neuf** : le bandeau porte « Quoi de neuf ? » ; un clic déplie les nouveautés de la version en attente, en langage courant. Le journal des versions est `CHANGELOG.md` à la racine du dossier du code (absent d'un clone du dépôt public) ; chaque version publique a aussi sa note sur la page « Releases » du dossier du code public (s'y abonner : « Watch » → « Custom » → « Releases », ou le flux https://github.com/Greal-dev/goldenbrain/releases.atom).
+- **Notes de version** : sur la page « Releases », la note est dans la langue de la page ; faute de traduction, l'anglais, l'espagnol et l'allemand annoncent « notes en français » plutôt que de présenter du français sous un titre étranger.
+- **Canal stable ou bêta** : Réglages → « Installation et version » → « Mise à jour » → « Canal ». « Bêta » suit la version `beta` du dossier du code public (versions en essai, avant `main`) ; le bandeau propose alors « passer au canal bêta » et le bouton « Mettre à jour » change de version puis redémarre GoldenBrain. Revenir à « Stable » se fait de même. Refusé si le code a été modifié à la main, ou depuis une autre version que `main` ou `beta` ; le vault n'est jamais touché. Si la version `beta` n'existe pas (encore) dans le dossier du code public, GoldenBrain le dit en une phrase, remet le canal sur « Stable » et ne touche à rien. Pour tester et donner votre avis : page « Devenir testeur » (`BETA.md`).
 - **Signaler un problème ou proposer une idée** : Réglages → « Installation et version » → « Signaler un problème ou proposer une idée ». Les liens ouvrent, dans le navigateur, le formulaire GitHub du projet public avec la version (empreinte, date, canal) et le système déjà remplis — rien d'autre : ni nom, ni chemin, ni contenu du vault. GoldenBrain n'envoie rien ; vous relisez et envoyez vous-même (compte GitHub requis). « Poser une question » ouvre les Discussions.
 - **Mise à jour automatique** : Réglages → « Installation et version » → « Mise à jour » → « Appliquer seule une mise à jour disponible » (désactivée par défaut). Aucune nouvelle séance de travail ne démarre pendant la préparation ; les séances en cours finissent, une séance qui dépasse le délai réglé n'est coupée (puis reprise) qu'à un point de reprise sûr. Plage horaire facultative ; la mise à jour attend aussi que vous ne touchiez plus à l'interface. Un échec s'affiche dans un bandeau, avec le geste à faire.
 - **Redémarrer pendant une séance de travail** : « Redémarrer » refusé parce que des séances de travail sont en cours propose « Redémarrer GoldenBrain dès que les séances de travail sont finies » (GoldenBrain seulement, jamais l'ordinateur) ; l'attente s'annule depuis le même bandeau.
@@ -281,7 +291,7 @@ Le vault est votre **second cerveau** : des notes ordinaires (fichiers Markdown)
 
 ## Pour un agent IA
 
-À lire par tout agent — Claude Code, Codex, OpenCode, Gemini CLI ou autre — qui pilote GoldenBrain ou travaille dans son dépôt. GoldenBrain ne s'appelle pas par une bibliothèque : on lui parle par la commande `python orch.py` (depuis la racine du dépôt, jamais par un `.cmd`) ou par son API locale.
+À lire par tout agent — Claude Code, Codex, OpenCode, Antigravity ou autre — qui pilote GoldenBrain ou travaille dans son dépôt. GoldenBrain ne s'appelle pas par une bibliothèque : on lui parle par la commande `python orch.py` (depuis la racine du dépôt, jamais par un `.cmd`) ou par son API locale.
 
 **1. Démarrer et vérifier le serveur**
 
@@ -314,7 +324,18 @@ Le vault est votre **second cerveau** : des notes ordinaires (fichiers Markdown)
 | `telegram "<texte>"` | message à l'utilisateur sur Telegram (`--validation`, `--choix`) ; exige le bot configuré |
 | `poste reserver "<motif>"` / `poste liberer` | réserver le poste pendant une épreuve lourde ; s'il est pris, attendre son tour (`--attente <min>`, défaut 30) |
 | `chaine plan\|sauter\|ajouter\|dedoubler\|consigne …` | adapter la chaîne de la tâche au dossier réel : `plan` la montre ; sauter, ajouter, dédoubler une phase ou changer sa consigne (phase à venir seulement), toujours avec `--motif` : l'ajustement est journalisé et montré à l'utilisateur |
-| `feu-vert demander\|accorder\|refuser\|verifier …` | feu vert lié à une version |
+| `feu-vert demander\|accorder\|refuser\|verifier <sha 40 car.> [texte] [--a <tâche du contrôleur>] …` | feu vert lié à une version (empreinte complète de 40 caractères) ; exige `ORCH_TACHE` |
+| `agents-cc [--relever]` | regrouper les agents de Claude Code du poste et les rattacher à une tâche |
+| `reevaluer` | rejouer la validation automatique sur les tâches |
+| `console <id> [--url]` | suivre une tâche et lui écrire depuis le terminal |
+| `rattacher <envoi> <id>` | rattacher un envoi Telegram à une tâche existante (à ne pas confondre avec `proposer rattacher`, qui range des tâches sous un parent) |
+| `m365 connecter\|demander\|contexte` | connaissance d'entreprise Microsoft 365 Copilot (si activée) |
+| `telegram-jeton [--pause]` | saisir le jeton du bot Telegram sans l'afficher (coffre du poste) |
+| `jeton-executeur <nom> [--revoquer]` | créer ou révoquer le jeton d'un ordinateur d'appoint |
+| `executeur [installer]` | faire de ce PC un exécuteur d'un GoldenBrain chef |
+| `fiche` | fiche et statut proposé d'une exécution regroupée |
+| `natif <fichier>` | relais de l'interface native (lancé par GoldenBrain, pas à la main) |
+| `poste etat` | voir qui tient le poste |
 
 `python orch.py <commande> -h` donne les options de chacune.
 
@@ -326,7 +347,7 @@ Le vault est votre **second cerveau** : des notes ordinaires (fichiers Markdown)
 | `GET /api/arbre` | arbre des tâches |
 | `GET /api/recherche?q=<mots>` | chercher |
 | `GET /api/taches/{id}` | une tâche (statut, fiche, notes, exécution) |
-| `POST /api/taches` | créer : `titre`, `description`, et au choix `conteneur`, `parent`, `lancer`, `mission`, `harnais`, `modele`, `echeance`, `priorite` |
+| `POST /api/taches` | créer : `titre`, `description`, et au choix `conteneur`, `parent`, `lancer`, `mission`, `harnais`, `modele`, `echeance`, `priorite`, `forcer` (passer outre une tâche très proche), `groupe` |
 | `POST /api/taches/{id}/messages` | écrire à la tâche : `texte` (et `de` : l'id de la tâche qui écrit) |
 | `POST /api/taches/{id}/traces` | consigner : `texte`, `documents` (chemins absolus) |
 | `GET /api/accueil/reflexes` · `POST …/appliquer` · `POST …/plus-tard` | réflexes de l'agent (poste seulement) : état par assistant et aperçu ; `harnais`, `action` (`installer`, `retirer`) |
@@ -336,16 +357,16 @@ Le vault est votre **second cerveau** : des notes ordinaires (fichiers Markdown)
 | `POST /api/taches/{id}/relancer` | relancer |
 | `GET /api/propositions` · `POST /api/propositions` | lister · proposer : `type`, `tache`, `valeur`, `motif` |
 | `POST /api/propositions/{n}/accepter` · `…/refuser` | trancher — geste humain |
-| `GET /api/guide` | ce guide, en texte brut |
+| `GET /api/guide[?langue=fr\|en\|de\|es]` | ce guide, en texte brut (`orch guide` ne sert que le français) |
 | `GET /api/evenements` | flux d'événements (SSE) |
 
 **4. Règles**
 
 - **Rapprocher avant de créer** : `chercher` ou `rapprochement "<titre>"` d'abord ; une tâche proche se complète (`dire`) plutôt que d'être doublée.
 - **Réflexes et traçage** : au premier contact, `reflexes` montre si les consignes de l'assistant portent les réflexes GoldenBrain ; sinon, présenter l'aperçu à l'utilisateur et n'écrire (`--accord`) qu'avec son accord. En cours de travail, `tracer` consigne chaque document créé ou modifié, et le résultat en fin de travail.
-- **Intégration** : dans un projet qui déclare `integration:`, `creer` et `deleguer` relient d'office la nouvelle tâche à la tâche d'intégration (`alimente`) ; ailleurs, une tâche qui livre une branche propose ce lien (`proposer lier <id> alimente <intégration>`).
+- **Intégration** : dans un projet qui déclare `integration:`, `creer` et `deleguer` relient d'office la nouvelle tâche à la tâche d'intégration (`alimente`) ; ailleurs, une tâche qui livre une branche pose ce lien directement (`proposer lier <id> alimente <intégration>`) : un lien `alimente` vers une tâche permanente est un geste de routine, appliqué d'office et consigné dans les « Traces » de la tâche, jamais mis en attente dans Décisions ; les autres liens suivent la politique des propositions.
 - **Jamais de changement de statut sans accord humain** : un agent ne pose pas `fait`, n'accepte pas une proposition, ne valide pas une tâche ; il rend sa fiche et l'humain valide. Les routes `statut`, `valider`, `accepter` sont des gestes de l'interface.
-- **Tâches « Moi »** (`executant: humain`) : l'humain la mène ; GoldenBrain y refuse tout tour et toute écriture d'agent (un agent peut la lire et proposer) ; « Confier la suite » est le geste humain qui la rend à l'IA.
+- **Tâches « Moi »** (`executant: humain`) : l'humain la mène ; GoldenBrain y refuse tout tour et toute écriture d'agent, sauf les lignes et les liens (un agent peut la lire et proposer) ; « Confier la suite » est le geste humain qui la rend à l'IA.
 - Le vault est la seule base de données ; ne jamais reformater le frontmatter d'une note.
 - Ne jamais déplacer un dossier soi-même : proposer (`orch proposer`), l'humain accepte.
 - Aucun envoi, publication, paiement ni suppression sans accord écrit de l'utilisateur.

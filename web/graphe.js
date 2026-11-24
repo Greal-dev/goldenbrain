@@ -66,7 +66,7 @@ function barre(etat) {
     const prof = choix('profondeur', t('graphe.profondeur'), [['1', t('graphe.voisins_directs')], ['2', t('graphe.voisins_2')]], String(etat.profondeur), (v) => {
       localStorage.setItem('orch.graphe.profondeur', v || '1'); dessinerGraphe(etat.el, centre);
     });
-    return h('div', { class: 'g-barre' }, prof, recherche, compte,
+    return h('div', { class: 'g-barre' }, prof, recherche, compte, recentrer(etat),
       h('button', { class: 'btn petit', type: 'button', onclick: () => ouvrirGraphe(null) }, t('graphe.global')));
   }
   const f = etat.facettes || {};
@@ -78,7 +78,7 @@ function barre(etat) {
     choix('type', t('graphe.type'), (f.types || []).map((x) => [x, x]), etat.filtres.type, (v) => changer('type', v)),
     choix('tag', t('graphe.tag'), (f.tags || []).map((x) => [x, `#${x}`]), etat.filtres.tag, (v) => changer('tag', v)),
     choix('jours', t('graphe.periode'), jours, etat.filtres.jours, (v) => changer('jours', v)),
-    recherche, compte);
+    recherche, compte, recentrer(etat));
 }
 
 function legende() {
@@ -147,6 +147,17 @@ function pas(etat, alpha) {
   return mouvement / n;
 }
 
+// A14 : cadre l'ensemble des nœuds dans la zone visible ; suit la simulation tant que l'utilisateur n'a rien déplacé.
+function cadrer(etat) {
+  const p = etat.p; if (!p.length || !etat.l) return;
+  let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
+  for (const a of p) { x0 = Math.min(x0, a.x); x1 = Math.max(x1, a.x); y0 = Math.min(y0, a.y); y1 = Math.max(y1, a.y); }
+  const marge = 40, w = Math.max(1, x1 - x0), ht = Math.max(1, y1 - y0);
+  etat.vue.k = Math.min(1.5, (etat.l - 2 * marge) / w, (etat.ht - 2 * marge) / ht);
+  etat.vue.x = -(x0 + x1) / 2; etat.vue.y = -(y0 + y1) / 2;
+}
+const recentrer = (etat) => h('button', { class: 'btn petit', type: 'button', 'data-id': 'graphe-recentrer', onclick: () => { etat.manuel = false; cadrer(etat); dessiner(etat); } }, t('graphe.recentrer'));
+
 function demarrerSimulation(etat) {
   let alpha = 1, tours = 0;
   etat.anime = true;
@@ -154,6 +165,7 @@ function demarrerSimulation(etat) {
   const boucle = () => {
     if (G !== etat || !etat.canvas.isConnected) { etat.anime = false; return; }
     const m = pas(etat, alpha); alpha *= 0.985; tours++;
+    if (!etat.manuel) cadrer(etat);
     if (!fixe) dessiner(etat);
     // Arrêt dès stabilisation (mouvement moyen < 0,05 px) ou au plus 400 pas : plus aucun calcul ensuite.
     if ((m < 0.05 && tours > 30) || tours > 400) { etat.anime = false; if (fixe) dessiner(etat); etat.canvas.dataset.stable = '1'; return; }
@@ -224,6 +236,7 @@ function gestes(etat) {
   const local = (e) => { const r = c.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; };
   c.addEventListener('wheel', (e) => {
     e.preventDefault();
+    etat.manuel = true;
     etat.vue.k = Math.min(6, Math.max(0.05, etat.vue.k * (e.deltaY < 0 ? 1.15 : 1 / 1.15)));
     dessiner(etat);
   }, { passive: false });
@@ -232,7 +245,7 @@ function gestes(etat) {
     const m = local(e);
     if (glisse) {
       const dx = m.x - glisse.x, dy = m.y - glisse.y;
-      if (Math.abs(dx) + Math.abs(dy) > 3) glisse.bouge = true;
+      if (Math.abs(dx) + Math.abs(dy) > 3) { glisse.bouge = true; etat.manuel = true; }
       etat.vue.x = glisse.vx + dx / etat.vue.k; etat.vue.y = glisse.vy + dy / etat.vue.k;
       if (!etat.anime) dessiner(etat);
       return;
@@ -252,6 +265,7 @@ function gestes(etat) {
   });
   c.addEventListener('pointerleave', () => { glisse = null; if (etat.survol >= 0) { etat.survol = -1; if (!etat.anime) dessiner(etat); } });
   // Pour les scénarios d'interface : position à l'écran d'un nœud (le canvas n'a pas de DOM par nœud).
+  c.horsCadre = () => etat.p.filter((_, i) => { const q = versEcran(etat, etat.p[i]); return q.x < 0 || q.y < 0 || q.x > etat.l || q.y > etat.ht; }).length;
   c.positionNoeud = (id) => { const i = etat.d.noeuds.findIndex((n) => n.id === id); return i < 0 ? null : versEcran(etat, etat.p[i]); };
 }
 

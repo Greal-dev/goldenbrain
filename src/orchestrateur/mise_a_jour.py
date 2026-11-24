@@ -38,6 +38,10 @@ class Refus(ErreurOrch):
     code = 409
 
 
+class BrancheAbsente(Refus):
+    """La branche du canal choisi n'existe pas sur le dépôt distant (ex. bêta pas encore ouverte)."""
+
+
 def _git(depot, *args: str, delai: float = DELAI_GIT_S) -> str:
     # INV-MAJ-2 : liste d'arguments, jamais de shell ; pas d'invite d'identifiants qui bloquerait.
     env = {**os.environ, "GIT_TERMINAL_PROMPT": "0"}
@@ -82,7 +86,13 @@ def etat(depot, c: ConfigMiseAJour, recuperer: bool = True, canaux: tuple[str, .
     ref = f"{c.distant}/{c.branche}"
     if recuperer:
         # Refspec explicite : met à jour `<distant>/<branche>` même sans suivi configuré.
-        _git(depot, "fetch", "--quiet", c.distant, f"+refs/heads/{c.branche}:refs/remotes/{ref}")
+        try:
+            _git(depot, "fetch", "--quiet", c.distant, f"+refs/heads/{c.branche}:refs/remotes/{ref}")
+        except ErreurOrch:
+            # Réseau en panne ou branche absente ? Seule une réponse vide du distant prouve l'absence.
+            if not _git(depot, "ls-remote", "--heads", c.distant, c.branche):
+                raise BrancheAbsente(langues.t("serveur.mise_a_jour.branche_absente", branche=c.branche)) from None
+            raise
     locale = _git(depot, "rev-parse", "--short", "HEAD")
     distante = _git(depot, "rev-parse", "--short", ref)
     retard = int(_git(depot, "rev-list", "--count", f"HEAD..{ref}"))

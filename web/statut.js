@@ -86,7 +86,7 @@ function ouvrirMenu(n, declencheur) {
       g.statuts.map((s) => {
         const b = h('button', { type: 'button', role: 'menuitemradio', class: `ms-item st-${s}`, 'aria-checked': String(s === n.statut), tabindex: '-1',
           onclick: (e) => { e.stopPropagation(); choisir(n, declencheur, s); } },
-        h('span', { class: `pastille st-${s}`, 'aria-hidden': 'true' }), libelleStatut(s));
+        h('span', { class: `pastille st-${s}`, 'aria-hidden': 'true' }), s === n.statut && n.a_valider ? t('statut.a_valider') : libelleStatut(s));
         items.push(b);
         return b;
       }))));

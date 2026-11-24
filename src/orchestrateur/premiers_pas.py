@@ -16,7 +16,7 @@ import json
 
 from fastapi import APIRouter
 
-from . import fiches, installation, langues
+from . import cerveau, fiches, installation, langues
 
 ROUTE = "/api/accueil/premiers-pas"
 # Pages officielles, ouvertes par l'utilisateur lui-même ; GoldenBrain ne les télécharge jamais.
@@ -67,7 +67,7 @@ def routes(config, moteur, vault) -> APIRouter:
     @r.get(ROUTE)
     async def lire():
         # Léger, lu à chaque ouverture de l'interface : aucun outil n'est interrogé ici.
-        return {"propose": not etat() and not vault.index()[0], "etat": etat() or "jamais"}  # une fois, vault vide
+        return {"propose": not etat() and cerveau.parcours_ouvert(config, not vault.index()[0]), "etat": etat() or "jamais"}  # une fois, vault vide
 
     @r.get(ROUTE + "/assistants")
     async def diagnostic():

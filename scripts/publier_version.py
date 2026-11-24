@@ -54,6 +54,10 @@ LANGUES = [
      "sind nicht signiert: siehe README für den ersten Start.",
      "Neuerungen", "Interne Korrekturen und Verbesserungen."),
 ]
+# Repris tel quel en français faute de traduction : le dire dans la langue du titre (jamais du français muet).
+NON_TRADUIT = {"en": "*Not translated yet: the notes below are in French.*",
+               "es": "*Aún sin traducir: las notas siguientes están en francés.*",
+               "de": "*Noch nicht übersetzt: Die folgenden Hinweise sind auf Französisch.*"}
 TITRES = {"en": "English", "fr": "Français", "es": "Español", "de": "Deutsch"}
 
 
@@ -103,8 +107,9 @@ def note(entrees: list[str], deb: str, traduire=None) -> str:
     parties = []
     for code, nom, installer, titre, vide in LANGUES:
         liste = francais
-        if entrees and code != "fr" and traduire:
-            liste = traduire(nom, francais) or francais
+        if entrees and code != "fr":
+            traduite = traduire(nom, francais) if traduire else None
+            liste = traduite or f"{NON_TRADUIT[code]}\n\n{francais}"
         parties.append(f"## {TITRES[code]}\n\n{installer.format(deb=deb)}\n\n### {titre}\n\n{liste or '- ' + vide}\n")
     return "\n".join(parties)
 
