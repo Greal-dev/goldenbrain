@@ -131,6 +131,18 @@ class Systeme:
             return ""
         return shutil.which(binaire) or next((c for c in chemins if os.path.exists(c)), "")
 
+    def tete(self, binaire: str, chemins: tuple = (), harnais: bool = False) -> tuple:
+        """Argv complet qui lance l'outil, sans ses arguments (vide : introuvable). Un harnais résolu
+        par node vaut (node, script) : garder le seul interpréteur ferait lancer `node login status`."""
+        chemin = self.trouver(binaire, chemins, harnais)
+        if not chemin or not harnais:
+            return (chemin,) if chemin else ()
+        try:
+            complet = tuple(resoudre(binaire))
+        except FileNotFoundError:
+            return (chemin,)
+        return complet if complet[0] == chemin else (chemin,)
+
     def version_python(self) -> tuple:
         return sys.version_info[:2]
 
@@ -197,7 +209,7 @@ class Assistant:
     def _etat_connexion(self, o: Outil) -> str:
         if not o.etat_connexion:
             return "inconnu"
-        argv = (self.systeme.trouver(o.binaire, o.chemins, o.harnais) or o.binaire, *o.etat_connexion[1:])
+        argv = (*(self.systeme.tete(o.binaire, o.chemins, o.harnais) or (o.binaire,)), *o.etat_connexion[1:])
         return "ok" if self.systeme.code_de(argv) == 0 else "a_connecter"
 
     def ligne(self, ident: str) -> dict:

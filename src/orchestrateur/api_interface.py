@@ -48,6 +48,7 @@ class CorpsInterface(BaseModel):
     familles: dict[str, bool | None] | None = None
     propositions: str | None = None
     langue: str | None = None
+    office: list[str] | None = None
 
 
 def ecrire_section(chemin: Path, interface: ConfigInterface) -> None:
@@ -58,6 +59,8 @@ def ecrire_section(chemin: Path, interface: ConfigInterface) -> None:
         cles.append(("propositions", f'"{interface.propositions}"'))
     if interface.langue:
         cles.append(("langue", f'"{interface.langue}"'))
+    if interface.office is not None:  # INV-PROP-1
+        cles.append(("office", "[" + ", ".join(f'"{g}"' for g in interface.office) + "]"))
     remplacer_section(chemin, "interface", cles)
 
 
@@ -86,9 +89,9 @@ def remplacer_section(chemin: Path, nom: str, cles: list[tuple[str, str]], garde
 def appliquer(config: Config, c: CorpsInterface) -> dict:
     """Valide, applique en mémoire puis persiste. Changer de mode remet les familles au mode."""
     cible = ConfigInterface(**{k: getattr(config.interface, k) for k in
-                               ("mode", "propositions", "langue", *FAMILLES)})
-    if c.mode is not None:
-        cible = ConfigInterface(mode=c.mode, langue=cible.langue)  # la langue survit au changement de mode
+                               ("mode", "propositions", "langue", "office", *FAMILLES)})
+    if c.mode is not None:  # la langue et les gestes d'office survivent au changement de mode
+        cible = ConfigInterface(mode=c.mode, langue=cible.langue, office=cible.office)
     for famille, valeur in (c.familles or {}).items():
         if famille not in FAMILLES:
             raise ValueError(f"famille inconnue : {famille}")
@@ -97,6 +100,8 @@ def appliquer(config: Config, c: CorpsInterface) -> dict:
         cible.propositions = c.propositions
     if c.langue is not None:
         cible.langue = c.langue
+    if c.office is not None:
+        cible.office = list(c.office)
     cible.__post_init__()
     if config.chemin:
         ecrire_section(config.chemin, cible)  # d'abord le disque : en cas d'échec rien ne change

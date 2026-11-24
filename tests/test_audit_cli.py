@@ -154,6 +154,7 @@ def test_proposer_un_auto_lien_est_refuse_a_la_creation(client):
 
 
 def test_proposer_deux_fois_la_meme_chose_ne_depose_qu_une_proposition(config, vault, faux):
+    config.interface.office = []  # INV-PROP-1 : ce test éprouve le geste à trancher
     m = Moteur(config, vault, {"faux": faux})
     a = m.proposer("deplacer", "mere", "Projets/C2-Beta")
     b = m.proposer("deplacer", "mere", "Projets/C2-Beta")
@@ -292,6 +293,7 @@ def test_proposition_ticket_accepte_respecte_le_plafond_et_lie_l_integration(con
 
 
 def test_proposition_tache_acceptee_est_liee_a_l_integration(config, vault, faux, racine):
+    config.interface.office = []  # INV-PROP-1 : ce test éprouve le geste à trancher
     ecrire(racine, "Projets/C1-Alpha/contexte.md",
            "---\ntype: contexte\ncasquette: C1-Pro\nparent: \"[[Operation-X]]\"\nnom: Alpha\nintegration: integ\n---\n")
     ecrire(racine, "Projets/C1-Alpha/taches/integ.md", tache_md(titre="Intégrer les branches"))

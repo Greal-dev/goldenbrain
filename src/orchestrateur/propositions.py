@@ -6,7 +6,8 @@ Frontières : mélangé au `Moteur` (dont il emprunte vault, publier, soumettre,
 pas de HTTP.
 Invariants portés : INV-EXEC-5 (une proposition n'est exécutée que sur geste humain), INV-RAPPROCHEMENT-1,
 INV-PLAFOND-1 et INV-INTEG-2 (une tâche ou un ticket accepté passe les mêmes gardes que `orch creer`),
-INV-LIEN-2 (un lien `alimente` vers une tâche permanente est posé d'office).
+INV-LIEN-2 (un lien `alimente` vers une tâche permanente est posé d'office), INV-PROP-1 (gestes de
+routine appliqués d'office, tracés et annulables), INV-LIGNES-1 (la tâche proposée par un agent devient une ligne de sa tâche).
 """
 
 from __future__ import annotations
@@ -16,7 +17,7 @@ import json
 import logging
 from pathlib import Path
 
-from . import fiches, langues, liens, rangement, rapprochement, rattachement, temps, transformations
+from . import annulation, fiches, langues, liens, lignes, rangement, rapprochement, rattachement, temps, transformations
 from .vault import Conflit, Invalide, NonTrouve, exiger_description, titre_valide
 
 TYPES_PROPOSITION = ("deplacer", "ticket", "projet", "lier", "operation", "tache", "perimetre", "echeance", "fermer",
@@ -116,10 +117,18 @@ class MixinPropositions:
             return {"type": type_, "tache": tache, "valeur": valeur, "etat": "deja_proposee", "n": q["n"]}
         if self._deja_fait(type_, tache, valeur, (annexe or {}).get("taches")):  # rien à décider : on ne dépose pas
             return {"type": type_, "tache": tache, "valeur": valeur, "etat": "deja_fait"}
-        routine = type_ == "lier" and self._lien_de_routine(valeur)  # INV-LIEN-2
+        permanent = type_ == "lier" and self._lien_de_routine(valeur)  # INV-LIEN-2
         jardin = getattr(self, "jardinier", None)  # INV-JARD-2 : plafond par passage, jamais d'office
-        montrer = not routine and ((jardin is not None and jardin.admettre(de)) or montrer)
-        # INV-SCAN-1 : une préconisation du scan (`montrer`) attend toujours le geste humain.
+        montrer = not permanent and ((jardin is not None and jardin.admettre(de)) or montrer)
+        if type_ == "tache" and de and not montrer and de in self.vault.index()[0]:
+            # INV-LIGNES-1 : la suite d'un agent est une ligne de sa tâche, pas une tâche à trancher.
+            texte = valeur if not motif.strip() else f"{valeur} — {' '.join(motif.split())}"
+            lignes.ajouter(self.vault, de, texte[:lignes.LONGUEUR], auteur="ia")
+            self.publier("arbre")
+            return {"type": type_, "tache": de, "valeur": valeur, "etat": "ligne"}
+        # INV-PROP-1 : un geste de routine (réversible) est appliqué d'office ; INV-SCAN-1 : une préconisation
+        # du scan (`montrer`) attend toujours le geste humain.
+        routine = permanent or (not montrer and type_ in self.config.interface.gestes_office())
         politique = "accepter" if routine else "montrer" if montrer else self.config.interface.politique()
         if politique == "ignorer":  # INV-INTERFACE-3 : ignorée en silence, rien n'est mémorisé
             return {"type": type_, "tache": tache, "valeur": valeur, "etat": "ignoree"}
@@ -132,10 +141,32 @@ class MixinPropositions:
         self.publier("proposition", n=n)
         if politique != "accepter":
             return p
-        p = self.trancher(n, True)
-        if routine:  # mention discrète au journal de la tâche, rien à trancher
-            self.vault.consigner(tache, "Traces", f"- {dt.datetime.now():%Y-%m-%d %H:%M} — "
-                                                  + langues.t("serveur.propositions.lien_d_office", tache=tache, cible=_lien_propose(valeur)[1]))
+        if not routine:
+            return self.trancher(n, True)
+        p["avant"] = annulation.etat_avant(self.vault, p)
+        try:
+            p = self.trancher(n, True)
+        except (Conflit, Invalide, NonTrouve) as e:  # le geste d'office échoue : il attend la décision humaine
+            p.pop("auto", None)
+            p["echec"] = str(e)
+            self.propositions.sauver()
+            return p
+        self.vault.consigner(tache, "Traces", f"- {dt.datetime.now():%Y-%m-%d %H:%M} — "
+                             + langues.t("serveur.propositions.geste_d_office", n=n, geste=f"{type_} {valeur}"))
+        return p
+
+    def annuler(self, n: int) -> dict:
+        """INV-PROP-1 : défait un geste appliqué d'office (journal « Appliqué d'office » de Décisions)."""
+        p = self.propositions.get(n)
+        if not p.get("auto") or p["etat"] != "acceptee":
+            raise Conflit(langues.t("serveur.propositions.non_annulable", n=n))
+        annulation.defaire(self, p)
+        p["etat"] = "annulee"
+        self.propositions.sauver()
+        self.vault.consigner(p["tache"], "Traces", f"- {dt.datetime.now():%Y-%m-%d %H:%M} — "
+                             + langues.t("serveur.propositions.geste_annule", n=n, geste=f"{p['type']} {p['valeur']}"))
+        self.publier("proposition", n=n)
+        self.publier("arbre")
         return p
 
     def _lien_de_routine(self, valeur: str) -> bool:

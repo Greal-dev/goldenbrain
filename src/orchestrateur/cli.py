@@ -466,14 +466,18 @@ def main(argv: list[str] | None = None) -> int:
                                                   "motif": a.motif, **({"taches": a.aussi} if a.aussi else {})})
             if r.get("etat") == "deja_fait":  # l'effet est déjà en place : rien n'est déposé
                 sortie = ["rien à proposer : déjà fait"]
-            elif r.get("auto"):  # INV-LIEN-2 : lien vers une tâche permanente, posé d'office
-                sortie = [f"lien posé d'office ({r['tache']} -> {r['valeur']}) : rien à décider"]
+            elif r.get("etat") == "ligne":  # INV-LIGNES-1 : la suite d'un agent devient une ligne de sa tâche
+                sortie = [f"ligne ajoutée à {r['tache']} : {r['valeur']} (pas de tâche à trancher)"]
+            elif r.get("auto") and r.get("etat") == "acceptee":  # INV-PROP-1, INV-LIEN-2 : geste de routine
+                sortie = [f"appliqué d'office ({r['type']} {r['tache']} -> {r['valeur']}) : rien à décider, "
+                          f"annulable depuis Décisions (n°{r['n']})"]
             elif r.get("etat") == "deja_proposee":  # B7 : la même proposition attend déjà
                 sortie = [f"proposition identique déjà en attente (n°{r['n']}) : rien de nouveau déposé"]
             elif r.get("etat") == "ignoree":  # INV-INTERFACE-3 : mode simple, rien n'est mémorisé (installation à blanc, 19/11)
                 sortie = ["proposition ignorée : l'interface ne retient pas les propositions (mode simple ; Réglages > Propositions)"]
             else:
                 suite = "en attente de décision humaine" if r.get("etat", "en_attente") == "en_attente" else r["etat"]
+                suite += f" (application d'office refusée : {r['echec']})" if r.get("echec") else ""
                 sortie = [f"proposition n°{r['n']} enregistrée ({r['type']} {r['tache']} -> "
                           f"{r['valeur']}) ; {suite}"]
     except ErreurCli as e:

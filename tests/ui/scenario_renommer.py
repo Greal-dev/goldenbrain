@@ -35,21 +35,23 @@ def test_renommer_depuis_la_fiche(page, serveur):
     assert not page.erreurs, page.erreurs
 
 
-def test_proposition_renommer_acceptee_sur_la_page_decisions(page, serveur):
+def test_proposition_renommer_appliquee_d_office_et_annulable_depuis_decisions(page, serveur):
     projet(serveur, "C1-RenomProp", {"rp-un": ("Ventes du club RP", "")})
     p = page.request.post(serveur.url + "/api/propositions", headers=H, data={
         "type": "renommer", "tache": "rp-un", "valeur": "API/MCP ventes du club RP", "de": "revue-rp",
         "motif": "Le contenu est un accès MCP/API, pas les ventes."}).json()
-    assert p["etat"] == "en_attente"
+    assert p["etat"] == "acceptee" and p["auto"]  # INV-PROP-1 : geste de routine, appliqué d'office
+    fiche = serveur.vault.joinpath("Projets/C1-RenomProp/taches/rp-un.md")
+    assert "# API/MCP ventes du club RP" in fiche.read_text(encoding="utf-8")
     page.goto(page.url_serveur + "/#decisions")
-    carte = page.locator(".dc-q", has_text="Renommer « Ventes du club RP » en « API/MCP ventes du club RP »")
-    expect(carte).to_be_visible()
-    expect(page.get_by_text("Le contenu est un accès MCP/API, pas les ventes.")).to_be_visible()
-    assert serveur.vault.joinpath("Projets/C1-RenomProp/taches/rp-un.md").read_text(encoding="utf-8").count("# Ventes du club RP") == 1
-    page.locator("li, .dc", has=carte).get_by_role("button", name="Accepter").click()
-    expect(carte).to_have_count(0)
-    texte = serveur.vault.joinpath("Projets/C1-RenomProp/taches/rp-un.md").read_text(encoding="utf-8")
-    assert "# API/MCP ventes du club RP" in texte
+    office = page.locator(".dc-office")
+    office.locator(":scope > summary").click()
+    geste = office.locator(f"li.dc-office-geste[data-n='{p['n']}']")
+    expect(geste).to_contain_text("API/MCP ventes du club RP")
+    expect(geste).to_have_attribute("title", "Le contenu est un accès MCP/API, pas les ventes.")
+    geste.locator("[data-annuler]").click()
+    expect(geste).to_have_count(0, timeout=5000)
+    assert fiche.read_text(encoding="utf-8").count("# Ventes du club RP") == 1
     assert not page.erreurs, page.erreurs
 
 

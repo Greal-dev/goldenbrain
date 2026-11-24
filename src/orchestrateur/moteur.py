@@ -24,7 +24,7 @@ from dataclasses import asdict, dataclass, field
 from pathlib import Path
 
 from . import (apprendre, assistant_absent, instrumentation, agents_cc, langues, catalogue, codespace, decisions, depot, echecs, economie, executant, executeurs, fiches, incidents, liens, natif, ordonnancement, pilotage,
-               quota, regroupement, reprise, reseau, retour, sessions, simultanes, temps, transformations)
+               quota, regroupement, reprise, reseau, retour, session_perdue, sessions, simultanes, temps, transformations)
 from .propagation import MixinPropagation
 from .config import RACINE_DEPOT, Config
 from .harnais import HARNAIS, Harnais
@@ -266,8 +266,7 @@ class Moteur(retour.MixinRetour, MixinVerrou, MixinControle, MixinCompactage, Mi
             self.publier("arbre")
             self.vault.poser_statut(ident, "en-cours")
             connue = session if not deriver else None
-            if session:
-                session_valide(session)  # la valeur vient du fichier : jamais de --resume douteux
+            if session: session_valide(session)  # la valeur vient du fichier : jamais de --resume douteux
             modele = catalogue.modele_valide(choix.modele if choix else auto.modele)
             if not fabrique:
                 # INV-MOTEUR-1 : échec avant tout lancement, jamais de repli sur un autre harnais.
@@ -293,12 +292,12 @@ class Moteur(retour.MixinRetour, MixinVerrou, MixinControle, MixinCompactage, Mi
                              f"« {t.titre} » (id {ident}, fichier {t.chemin}). Ta fiche finale "
                              f"porte sur cette tâche, plus sur la précédente.]\n\n{texte}")
                 consigne = self._consigne(ident)
+                neuf = lambda: sessions.premier_message(texte, consigne, tour.harnais, self.sessions, t, nom, self.registre, self.config.harnais)  # noqa: E731
                 if not session:
-                    texte = sessions.premier_message(texte, consigne, tour.harnais, self.sessions,
-                                                     t, nom, self.registre, self.config.harnais)
+                    texte = neuf()
                 try:
-                    flux = tour.harnais.lancer(texte, session=session, deriver=deriver,
-                                               consigne=consigne, env=env, modele=modele)
+                    flux = session_perdue.avec_repli(tour.harnais.lancer, neuf, session, deriver,
+                                                     message=texte, consigne=consigne, env=env, modele=modele)
                     async with aclosing(flux), \
                             asyncio.timeout(self.config.moteur.duree_max_s or None):
                         async for ev in flux:
@@ -309,7 +308,9 @@ class Moteur(retour.MixinRetour, MixinVerrou, MixinControle, MixinCompactage, Mi
                                 # INV-EXEC-3 : la session est écrite dès qu'elle est connue.
                                 connue = session_valide(ev.session)
                                 self.vault.modifier(ident, {"session": connue, "harnais": nom})
-                            if ev.type == "texte":
+                            if ev.type == "session_perdue":  # INV-SESSION-1
+                                connue = None; self.vault.modifier(ident, {"session": None})
+                            elif ev.type == "texte":
                                 tour.dernier = ev.texte[-300:]
                                 self.publier("tour_texte", tache=ident,
                                              texte=fiches.sans_rendu(ev.texte))
@@ -326,8 +327,7 @@ class Moteur(retour.MixinRetour, MixinVerrou, MixinControle, MixinCompactage, Mi
                 finally:
                     # Toute sortie de la boucle tue l'arbre de processus : pas d'orphelin.
                     await asyncio.shield(tour.harnais.arreter())
-        except TimeoutError:
-            erreur = "durée maximale du tour dépassée"
+        except TimeoutError: erreur = "durée maximale du tour dépassée"
         except Exception as e:  # le serveur survit à tout échec d'un tour
             erreur = f"{type(e).__name__}: {e}"
         finally:
@@ -360,7 +360,7 @@ class Moteur(retour.MixinRetour, MixinVerrou, MixinControle, MixinCompactage, Mi
             statut, erreur = ("en-cours", None) if verdict == "relancer" else ("bloque", MOTIF_FICHE)
         else:
             statut = self._statut_controle(ident, self.vault.statut_declare(fiches.declaration(final)))
-        if not (tour and tour.arrete): self.economie.issue(ident, statut, final)  # INV-ECO-1 : escalade
+        if not (tour and tour.arrete) and not session_perdue.session_absente(erreur): self.economie.issue(ident, statut, final)  # INV-ECO-1 : escalade
         terminee, echec, message_echec = False, None, None
         if erreur and not (tour and tour.arrete):
             # INV-EXEC-8 : un tour en échec laisse un message du système (journal) et un repère

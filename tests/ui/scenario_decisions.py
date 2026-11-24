@@ -5,6 +5,7 @@ import re
 
 import univers
 from aides_arbre import nettoyer_vault  # noqa: F401  (fixture autouse)
+from playwright.sync_api import TimeoutError as PlaywrightTimeoutError
 from playwright.sync_api import expect
 
 H = {"X-Orchestrateur": "1"}
@@ -39,6 +40,10 @@ def test_page_decisions_question_decision_sur_place_et_lot(page, serveur):
     _monde(serveur)
     p1 = page.request.post(serveur.url + "/api/propositions", headers=H, data={
         "type": "echeance", "tache": "dc-q", "valeur": "2031-05-05", "de": "agent", "motif": "m"}).json()
+    assert p1["etat"] == "acceptee" and p1["auto"]  # INV-PROP-1 : geste de routine, appliqué d'office
+    for t in ("dc-q", "dc-f1"):
+        page.request.post(serveur.url + "/api/propositions", headers=H, data={
+            "type": "perimetre", "tache": t, "valeur": "Seulement le volet A", "de": "agent", "motif": "recentrer"})
     for t, s in (("dc-f1", "cloture"), ("dc-f2", "abandonne")):
         page.request.post(serveur.url + "/api/propositions", headers=H,
                           data={"type": "fermer", "tache": t, "valeur": s, "de": "revue-dec", "motif": "obsolète"})
@@ -77,12 +82,30 @@ def test_page_decisions_question_decision_sur_place_et_lot(page, serveur):
     else:
         raise AssertionError("la réponse n'a pas relancé la tâche")
 
-    # Accepter une proposition sur place.
-    ligne = page.locator(".dc-proposition")
-    expect(ligne).to_have_count(1)
-    ligne.get_by_role("button", name="Accepter").click()
+    # Propositions à trancher : une entrée repliée par tâche émettrice, « Tout accepter » d'un clic (INV-PROP-1).
+    lot = page.locator(".dc-proposition")
+    expect(lot).to_have_count(1)
+    expect(lot).to_contain_text("Propositions de")
+    expect(lot.locator("li.dc-prop")).to_have_count(2)
+    expect(lot.locator("li.dc-prop").first).to_have_attribute("title", "recentrer")
+    lot.get_by_role("button", name="Tout accepter").click()
     expect(page.locator(".dc-proposition")).to_have_count(0, timeout=5000)
-    assert page.request.get(serveur.url + f"/api/taches/dc-q").json()["frontmatter"]["echeance"]
+
+    # Geste appliqué d'office : listé à part, annulable depuis le journal.
+    assert page.request.get(serveur.url + "/api/taches/dc-q").json()["frontmatter"].get("echeance")
+    office = page.locator(".dc-office")
+    # Un rafraîchissement de la page referme parfois le volet entre l'ouverture et le clic : on le rouvre.
+    for _ in range(6):
+        page.evaluate("() => { const o = document.querySelector('.dc-office'); if (o) o.open = true }")
+        try:
+            office.locator(f"li.dc-office-geste[data-n='{p1['n']}'] [data-annuler]").click(timeout=4000)
+            break
+        except PlaywrightTimeoutError:
+            continue
+    else:
+        raise AssertionError("bouton « Annuler » du geste d'office introuvable")
+    expect(page.locator(f"li.dc-office-geste[data-n='{p1['n']}']")).to_have_count(0, timeout=5000)
+    assert not page.request.get(serveur.url + "/api/taches/dc-q").json()["frontmatter"].get("echeance")
 
     # Revue : seule la fermeture cochée est appliquée.
     revue = page.locator(".dc-revue")

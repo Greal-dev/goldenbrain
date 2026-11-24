@@ -47,6 +47,7 @@ def test_vault_refuse_un_titre_vide_ou_trop_long(vault):
 
 
 def test_proposition_renommer_applique_seulement_a_l_acceptation(config, vault, faux):
+    config.interface.office = []  # INV-PROP-1 : ce test éprouve le geste à trancher
     m = Moteur(config, vault, {"faux": faux})
     ancien = vault.tache("x").titre
     p = m.proposer("renommer", "x", "API/MCP ventes", de="mere", motif="Le contenu est un accès MCP/API")

@@ -58,6 +58,7 @@ def test_validation_porte_resultat_et_essai_et_rapide_seulement_avec_resultat(mo
 
 
 def test_proposition_en_attente_une_ligne_rapide_et_tranchee_disparait(monde):
+    monde.config.interface.office = []  # INV-PROP-1 : geste à trancher
     p = monde.proposer("echeance", "q-comm", "2030-01-01", de="agent", motif="m")
     d = par_tache(decisions.rassembler(monde))
     lg = next(x for x in decisions.rassembler(monde)["decisions"] if x["genre"] == "proposition")

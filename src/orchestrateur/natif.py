@@ -124,7 +124,7 @@ class Natifs:
                               "ORCH_URL": f"http://127.0.0.1:{m.config.port}"}}
         if hasattr(h, "argv_natif"):
             consigne = m._consigne(ident)
-            message = ""
+            message, neuve = "", False
             if not session:  # session neuve, préparée comme un premier tour GoldenBrain
                 session = str(uuid.uuid4())
                 message = sessions.premier_message(PREMIER.format(titre=t.titre), consigne, h,
@@ -135,6 +135,7 @@ class Natifs:
                 neuve = False
             spec["argv"] = h.argv_natif(session, neuve, consigne, modele, message)
         elif session:
+            neuve = False
             spec["commande"] = h.commande_terminal(session)
         else:
             raise Conflit(langues.t("serveur.natif.non_preparee", nom=nom))
@@ -146,7 +147,7 @@ class Natifs:
         fiches.ecrire_atomique(fichier, json.dumps(spec, ensure_ascii=False))
         ouvrir_onglet(t.titre, spec["dossier"],
                       [sys.executable, str(RACINE_DEPOT / "orch.py"), "natif", str(fichier)])
-        self.ouverts[ident] = {"depuis": maintenant(), "moteur": "/".join(x for x in (nom, modele) if x),
+        self.ouverts[ident] = {"neuve": neuve, "depuis": maintenant(), "moteur": "/".join(x for x in (nom, modele) if x),
                                "avant": avant}
         self.ouverts[ident]["veille"] = asyncio.get_running_loop().create_task(
             self._veiller(ident, fichier.with_suffix(".pid")))
@@ -179,6 +180,10 @@ class Natifs:
             t = m.vault.tache(ident)
             nom = str(t.fm.get("harnais") or m.config.moteur.harnais_defaut)
             h = m.registre[nom](depot.conf_harnais(m.vault, m.config.harnais.get(nom, {}), ident))
+            if o.get("neuve") and (sid := str(t.fm.get("session") or "")) \
+                    and not getattr(h, "chemin_transcript", lambda _: sid)(sid):
+                m.vault.modifier(ident, {"session": None})  # INV-SESSION-1 : fermée avant tout message
+                log.warning("interface native de %s : session %s sans transcript, retirée", ident, sid)
             neufs = self._transcript(h, str(t.fm.get("session") or ""))[o["avant"]:]
             if neufs:
                 # Coupé en plein travail : rien après le dernier message de l'utilisateur, ou le dernier

@@ -197,3 +197,20 @@ def test_attendre_fin_rend_la_main_sur_un_zombie_non_reclame(tmp_path):
     time.sleep(0.5)  # fini, jamais réclamé
     asyncio.run(asyncio.wait_for(natif.attendre_fin(tmp_path / "z.pid"), 5))
     proc.wait()
+
+
+def test_no_conversation_found_interface_fermee_avant_le_premier_message_retire_la_session(
+        config, vault, faux_natif, onglet):
+    """Cause du symptôme : la session posée à l'ouverture restait orpheline si rien n'était écrit."""
+    faux_natif.chemin_transcript = lambda self, session: ""
+
+    async def scenario():
+        onglet["ferme"] = asyncio.Event()
+        m = Moteur(config, vault, {"faux": faux_natif})
+        r = m.natif.ouvrir("mere")
+        assert vault.tache("mere").fm["session"] == r["session"]
+        onglet["ferme"].set()
+        await _finir(m)
+
+    asyncio.run(scenario())
+    assert not vault.tache("mere").fm.get("session")

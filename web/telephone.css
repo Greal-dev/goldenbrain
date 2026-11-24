@@ -91,5 +91,8 @@
   .conv-tete .btn-etapes { min-height: 28px; margin-left: 0; padding-top: 0; padding-bottom: 0; }
   /* Cibles de l'en-tête à 40 px : deux rangées au plus, pour que le fil garde l'écran (objectif ≤ 15 %). */
   .d-une > .btn, .d-une > select, .d-une .a-valider .btn { min-height: 40px; }
+  /* Pendant un tour : état, Résultat et Arrêter tiennent sur la 2e rangée (le texte complet reste en infobulle). */
+  .d-une .etat { display: block; flex: 0 1 auto; max-width: 84px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .d-une .etat .tourne { display: inline-block; vertical-align: middle; margin-right: 4px; }
   .d-details { max-height: 60dvh; padding: 8px 12px 10px; }
 }

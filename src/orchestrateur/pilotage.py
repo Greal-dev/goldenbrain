@@ -152,7 +152,7 @@ _GESTES = """Tu pilotes ce conteneur (nœud {noeud}). Gestes par {orch} :
 - la lancer, la relancer avec une consigne ou lui écrire : dire <id> "<message>" ; reprendre un tour coupé : relancer <id> ;
 - l'arrêter : arreter <id> ; lire son état : lire <id> ;
 - réorganiser : proposer deplacer|rattacher|projet|operation|ticket|tache|lier|renommer ... --motif "<pourquoi>".
-Valider, fermer ou déplacer un dossier restent des gestes humains : tu les proposes, tu ne les fais pas.
+Les gestes de routine (lier, rattacher, déplacer, renommer, échéance, ticket) sont appliqués d'office et annulables ; valider, fermer, faire un projet ou changer un périmètre restent des gestes humains : tu les proposes, tu ne les fais pas.
 Tu ne travailles pas toi-même dans les dépôts : tu confies le travail aux tâches."""
 
 

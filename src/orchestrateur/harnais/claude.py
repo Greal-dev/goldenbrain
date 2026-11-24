@@ -161,9 +161,12 @@ class HarnaisClaude:
                 elif brut.get("type") == "result":
                     conclu = True
                     if brut.get("is_error") or brut.get("subtype", "success") != "success":
+                        # `errors` porte la cause (« No conversation found with session ID »)
+                        # quand `result` est absent : INV-SESSION-1 la reconnaît.
+                        cause = (brut.get("result") or "; ".join(map(str, brut.get("errors") or []))
+                                 or brut.get("subtype"))
                         yield Evenement("erreur", brut=brut,
-                                        texte=_distant.indice(str(brut.get("result") or
-                                                                  brut.get("subtype")), self.distant))
+                                        texte=_distant.indice(str(cause), self.distant))
                     else:
                         yield Evenement("fin", session=brut.get("session_id", vue),
                                         texte=_texte_du_tour(textes, str(brut.get("result") or "")),

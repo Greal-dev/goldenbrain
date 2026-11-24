@@ -12,6 +12,7 @@ fiche, tri par le classement unique d'ordonnancement, aucun statut posé sans ge
 
 from __future__ import annotations
 
+import datetime as dt
 import re
 from collections import defaultdict
 
@@ -234,7 +235,15 @@ def rassembler(moteur) -> dict:
         toutes.append(lg)
     for lg in toutes:
         lg.pop("_age")
-    return {"decisions": toutes, "total": len(toutes), "reprises": reprises(moteur), "clos_auto": moteur.validation_auto.clos_recents()}
+    return {"decisions": toutes, "total": len(toutes), "reprises": reprises(moteur), "clos_auto": moteur.validation_auto.clos_recents(),
+            "office": office_recents(moteur)}
+
+
+def office_recents(moteur, jours: int = 7) -> list[dict]:
+    """INV-PROP-1 : journal des gestes appliqués d'office (7 derniers jours), le plus récent d'abord, annulables."""
+    seuil = (dt.datetime.now() - dt.timedelta(days=jours)).isoformat(timespec="seconds")
+    return sorted((p for p in moteur.propositions.liste if p.get("auto") and p.get("etat") == "acceptee"
+                   and str(p.get("cree") or "") >= seuil), key=lambda p: str(p.get("cree") or ""), reverse=True)
 
 
 def valider_lot(moteur, taches: list[str]) -> dict:

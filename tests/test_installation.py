@@ -266,3 +266,19 @@ def test_route_appairage_ne_rend_jamais_le_jeton(poste, monkeypatch):
     assert r.status_code == 200 and r.json() == {"nom": "portable", "relie": True}
     refus = local.post("/api/installation/appairage", json={"serveur": "ftp://x", "code": "A"}, headers=H)
     assert refus.status_code in (400, 422)
+
+
+def test_codex_non_authentifie_a_tort_quand_resolu_par_node(monkeypatch):
+    """Régression : un harnais résolu en [node, script] lançait `node login status` (code 1)."""
+    class PosteNode(Faux):
+        def trouver(self, binaire, chemins=(), harnais=False):
+            return "/n/node" if binaire in ("python", "git", "npm", "codex") else ""
+
+        def code_de(self, argv):
+            self.argv = argv
+            return 0 if argv[:2] == ("/n/node", "/n/codex.js") else 1
+
+    monkeypatch.setattr(installation, "resoudre", lambda c: ["/n/node", "/n/codex.js"])
+    f = PosteNode(presents=("python", "git", "npm", "codex"))
+    assert Assistant(f).ligne("codex-connexion")["etat"] == "ok"
+    assert f.argv == ("/n/node", "/n/codex.js", "login", "status")

@@ -66,7 +66,7 @@ def test_jardinage_debraye_ne_lance_rien(config, vault, faux):
 @pytest.mark.parametrize("politique,etat,nb", [("ignorer", "ignoree", 0), ("montrer", "en_attente", 1),
                                                ("accepter", "acceptee", 1)])
 def test_politique_des_propositions(config, vault, faux, politique, etat, nb):
-    config.interface = ConfigInterface(propositions=politique)
+    config.interface = ConfigInterface(propositions=politique, office=[])  # INV-PROP-1
     m = Moteur(config, vault, {"faux": faux})
     assert m.proposer("lier", "mere", "alimente:x")["etat"] == etat
     assert len(m.propositions.liste) == nb
@@ -143,3 +143,15 @@ def test_ecrire_section_garde_le_reste_octet_pour_octet(tmp_path):
     g = tmp_path / "vide.toml"
     ecrire_section(g, ConfigInterface(mode="simple"))
     assert g.read_text(encoding="utf-8") == '[interface]\nmode = "simple"\n'
+
+
+def test_famille_des_gestes_reglable_dans_reglages(client, config):
+    """INV-PROP-1 : Réglages → Propositions règle les gestes d'office, persistés dans `[interface]`."""
+    r = client.get("/api/interface").json()
+    assert r["office"] == ["lier", "rattacher", "deplacer", "renommer", "echeance", "ticket"] and "fermer" in r["gestes"]
+    assert client.put("/api/interface", headers=H, json={"office": ["lier", "renommer"]}).json()["office"] == \
+        ["lier", "renommer"]
+    assert charger_interface(config).gestes_office() == ("lier", "renommer")
+    client.put("/api/interface", headers=H, json={"mode": "simple"})  # le mode garde le choix
+    assert config.interface.gestes_office() == ("lier", "renommer")
+    assert client.put("/api/interface", headers=H, json={"office": ["supprimer"]}).status_code == 400

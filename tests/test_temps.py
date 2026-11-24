@@ -127,6 +127,7 @@ def test_creation_avec_temps(config, vault, faux):
 
 
 def test_proposition_echeance_jamais_ecrite_seule(config, vault, faux):
+    config.interface.office = []  # INV-PROP-1 : ce test éprouve le geste à trancher
     m = Moteur(config, vault, {"faux": faux})
     with pytest.raises(V.Invalide):
         m.proposer("echeance", "mere", "demain")

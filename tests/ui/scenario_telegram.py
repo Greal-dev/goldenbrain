@@ -33,7 +33,7 @@ def test_reglages_telegram(page, serveur):
     if not page.locator("[data-id=tg-avance]").evaluate("e => e.open"):
         page.click("[data-id=tg-avance] > summary")
     page.click("[data-id=tg-tester]")
-    page.wait_for_selector("[data-id=tg-resultat] >> text=Échec")
+    page.wait_for_selector("[data-id=tg-resultat] >> text=Échec", timeout=90000)  # sous charge, la réponse tarde
     assert "jeton du bot absent" in page.locator("[data-id=tg-resultat]").inner_text()
     assert not page.erreurs, page.erreurs
 

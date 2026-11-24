@@ -163,10 +163,27 @@ function blocTheme() {
     THEMES.map(([v, lib]) => h('button', { class: 'btn', type: 'button', 'data-id': `theme-${v}`, 'aria-pressed': String(v === theme()), onclick: () => choisir(v) }, lib)));
 }
 
+// INV-PROP-1 : deux familles de gestes, modifiables — appliqués d'office (tracés, annulables) ou à trancher.
 function blocPropositions() {
-  return [h('select', { 'data-id': 'propositions', 'aria-label': t('reglages.propositions'), onchange: (e) => agir({ propositions: e.target.value }) },
-    POLITIQUES.map(([v, l]) => h('option', { value: v, selected: v === (S.interface?.propositions ?? 'montrer') ? true : null }, l))),
-  h('p', { class: 'note' }, t('reglages.ecrits_dans'))];
+  const zone = h('div', { 'data-id': 'familles-gestes' });
+  const dessiner = () => {
+    const office = new Set(S.interface?.office ?? []), gestes = S.interface?.gestes ?? [];
+    const basculer = (g, oui) => agir({ office: gestes.filter((x) => (x === g ? oui : office.has(x))) }).then(dessiner);
+    const famille = (titre, aide, liste, oui) => h('fieldset', { class: 'rg-gestes', 'data-famille': oui ? 'office' : 'trancher' },
+      h('legend', null, titre), h('p', { class: 'note' }, aide),
+      liste.length ? h('ul', null, liste.map((g) => h('li', null, h('label', { class: 'case' },
+        h('input', { type: 'checkbox', 'data-geste': g, checked: oui ? true : null, onchange: (e) => basculer(g, e.target.checked) }),
+        ' ', t(`reglages.geste_${g}`))))) : h('p', { class: 'vide' }, '—'));
+    remplacer(zone,
+      famille(t('reglages.gestes_office'), t('reglages.gestes_office_aide'), gestes.filter((g) => office.has(g)), true),
+      famille(t('reglages.gestes_trancher'), t('reglages.gestes_trancher_aide'), gestes.filter((g) => !office.has(g)), false),
+      h('label', null, t('reglages.politique_trancher'), ' ',
+        h('select', { 'data-id': 'propositions', 'aria-label': t('reglages.propositions'), onchange: (e) => agir({ propositions: e.target.value }) },
+          POLITIQUES.map(([v, l]) => h('option', { value: v, selected: v === (S.interface?.propositions ?? 'montrer') ? true : null }, l)))),
+      h('p', { class: 'note' }, t('reglages.ecrits_dans')));
+  };
+  dessiner();
+  return zone;
 }
 
 function interrupteur(f) {

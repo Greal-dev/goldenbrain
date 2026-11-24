@@ -187,13 +187,14 @@ def test_propositions_api(client):
                     json={"type": "deplacer", "tache": "x", "valeur": "Projets/C2-Beta",
                           "de": "mere"})
     assert r.status_code == 201
-    p = r.json()
-    assert set(p) == {"n", "type", "tache", "titre_tache", "valeur", "de", "motif", "etat", "cree"}
-    assert client.get("/api/propositions").json()[0]["etat"] == "en_attente"
-    assert client.post(f"/api/propositions/{p['n']}/accepter", headers=H).json()["etat"] == \
-        "acceptee"
+    p = r.json()  # INV-PROP-1 : déplacer est un geste de routine, appliqué d'office
+    assert {"n", "type", "tache", "valeur", "de", "motif", "etat", "cree", "auto", "avant"} <= set(p)
+    assert p["etat"] == "acceptee" and p["auto"] is True
     assert client.get("/api/taches/x").json()["conteneur"] == "Projets/C2-Beta"
     assert client.post(f"/api/propositions/{p['n']}/refuser", headers=H).status_code == 409
+    assert client.post(f"/api/propositions/{p['n']}/annuler", headers=H).json()["etat"] == "annulee"
+    assert client.get("/api/taches/x").json()["conteneur"] != "Projets/C2-Beta"
+    assert client.post(f"/api/propositions/{p['n']}/annuler", headers=H).status_code == 409
     assert client.post("/api/propositions/42/refuser", headers=H).status_code == 404
 
 

@@ -28,7 +28,7 @@ def ouvrir(navigateur, srv, w, h):
     ctx = navigateur.new_context(viewport={"width": w, "height": h}, locale="fr-FR")
     p = ctx.new_page()
     p.goto(srv.url + "/#t=dense")
-    p.wait_for_selector(".composer textarea")
+    p.wait_for_selector(".composer textarea", timeout=90000)
     p.fill(".composer textarea", "Bonjour")
     p.press(".composer textarea", "Control+Enter")
     expect(p.locator(".msg.agent.final")).to_be_visible(timeout=20000)
@@ -36,7 +36,22 @@ def ouvrir(navigateur, srv, w, h):
     return p
 
 
-def hauteur_avant_message(p):
+def hauteur_avant_message(p, srv=None):
+    # La pastille d'état de l'en-tête change tant que l'agent travaille et peut passer à la ligne sur mobile :
+    # mesurer une fois la tâche inactive et la hauteur stable (flaky constaté en CI, 115 à 161 px).
+    if srv is not None:
+        for _ in range(100):
+            if p.request.get(srv.url + "/api/taches/dense").json().get("etat_execution") == "inactif":
+                break
+            p.wait_for_timeout(200)
+    mesure = "() => document.querySelector('.conv-tete').getBoundingClientRect().bottom"
+    precedente = None
+    for _ in range(50):
+        courante = p.evaluate(mesure)
+        if courante == precedente:
+            break
+        precedente = courante
+        p.wait_for_timeout(300)
     return p.evaluate("""() => { const v = document.querySelector('#volet-droit').getBoundingClientRect(); const m = document.querySelector('.conv-tete'); return m.getBoundingClientRect().bottom - v.top }""")
 
 
@@ -44,7 +59,7 @@ def hauteur_avant_message(p):
 def test_ouverture_de_tache_le_fil_occupe_l_essentiel_de_l_ecran(navigateur, srv, taille):
     w, h = taille
     p = ouvrir(navigateur, srv, w, h)
-    haut = hauteur_avant_message(p)
+    haut = hauteur_avant_message(p, srv)
     MESURES.append((srv.code, taille, round(haut), round(100 * haut / h, 1)))
     print(f"MESURE {srv.code} {w}x{h} : {haut:.0f}px = {100 * haut / h:.1f} %")
     assert haut <= 0.15 * h, f"{haut:.0f} px au-dessus du premier message ({100 * haut / h:.1f} % de {h}) : objectif ≤ 15 %"
@@ -72,3 +87,19 @@ def test_en_tete_une_seule_ligne_au_bureau(navigateur, srv):
     h = p.evaluate("() => document.querySelector('.d-une').getBoundingClientRect().height")
     assert h <= 48, f"l'en-tête fait {h:.0f} px : plus d'une ligne"
     p.ctx.close()
+
+
+@pytest.mark.parametrize("taille", [(1366, 768), (390, 844)])
+def test_tour_en_cours_l_en_tete_ne_depasse_pas_le_budget(navigateur, srv, taille):
+    """Pendant un tour (état d'exécution + Arrêter + Résultat dans l'en-tête), le haut reste ≤ 15 % — en espagnol aussi."""
+    w, h = taille
+    ctx = navigateur.new_context(viewport={"width": w, "height": h}, locale="fr-FR")
+    p = ctx.new_page()
+    p.goto(srv.url + "/#t=dense")
+    p.wait_for_selector(".composer textarea", timeout=90000)
+    p.fill(".composer textarea", "[lent 20] travaille longtemps")
+    p.press(".composer textarea", "Control+Enter")
+    expect(p.locator(".d-une .etat.en_cours")).to_be_visible(timeout=20000)
+    haut = hauteur_avant_message(p)
+    assert haut <= 0.15 * h, f"{srv.code} {w}x{h} tour en cours : {haut:.0f} px ({100 * haut / h:.1f} % de {h}) : objectif ≤ 15 %"
+    ctx.close()

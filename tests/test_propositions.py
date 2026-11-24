@@ -25,6 +25,7 @@ def test_motif_enregistre_et_ancienne_proposition_lisible(config, vault, faux):
 
 
 def test_lier_accepte(config, vault, faux):
+    config.interface.office = []  # INV-PROP-1 : ce test éprouve le geste à trancher
     m = Moteur(config, vault, {"faux": faux})
     p = m.proposer("lier", "mere", "alimente:x", motif="x dépend de mere")
     m.trancher(p["n"], True)
@@ -55,7 +56,7 @@ def test_operation_ne_s_accepte_pas_hors_api(config, vault, faux):
 def test_tache_acceptee_cree_une_tache_liee_non_lancee(config, vault, faux):
     async def scenario():
         m = moteur(config, vault, faux)
-        m.trancher(m.proposer("tache", "mere", "Idée manquante", de="enfant",
+        m.trancher(m.proposer("tache", "mere", "Idée manquante",
                               motif="Couvre un besoin que la tâche mère oublie")["n"], True)
         await finir(m)
 
@@ -88,6 +89,7 @@ def test_proposition_deplacer_ramene_le_nom_du_dossier_a_l_identifiant(config, v
 
 def test_accepter_un_lien_deja_present_conclut_sans_erreur_et_ne_depose_rien(config, vault, faux):
     """Symptôme (23/11) : « lien déjà présent » à l'acceptation, proposition restée en attente."""
+    config.interface.office = []  # INV-PROP-1 : ce test éprouve le geste à trancher
     m = Moteur(config, vault, {"faux": faux})
     p = m.proposer("lier", "mere", "alimente:x")
     liens.lier(vault, "mere", "alimente", "x")  # le lien est posé entre-temps
@@ -118,7 +120,7 @@ def test_livraison_bloquee_une_nuit_par_un_lien_d_integration_en_attente(config,
     assert p["etat"] == "acceptee" and p["auto"] is True
     assert [r["id"] for r in liens.refs(vault.index()[0], "mere")["alimente"]] == ["integ"]
     assert not [q for q in m.propositions.liste if q["etat"] == "en_attente"]
-    assert "mere alimente integ" in fiches.lire(vault.tache("mere").chemin)  # mention discrète dans « Traces »
+    assert "lier alimente:integ" in fiches.lire(vault.tache("mere").chemin)  # mention discrète dans « Traces »
 
 
 def test_lien_vers_une_tache_permanente_est_pose_meme_si_les_propositions_sont_ignorees(config, vault, faux, racine):
@@ -130,6 +132,7 @@ def test_lien_vers_une_tache_permanente_est_pose_meme_si_les_propositions_sont_i
 
 
 def test_les_autres_liens_gardent_la_politique(config, vault, faux, racine):
+    config.interface.office = []  # INV-PROP-1 : ce test éprouve le geste à trancher
     _integration_permanente(racine)
     m = Moteur(config, vault, {"faux": faux})
     assert m.proposer("lier", "mere", "alimente:x")["etat"] == "en_attente"  # cible ordinaire

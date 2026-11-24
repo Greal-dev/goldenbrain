@@ -331,6 +331,11 @@ FAMILLES = ("equipe", "liens", "alignement", "jardinage", "moteurs", "notes",
             "transformations", "conseil")
 MODES, LANGUES = ("simple", "avance"), ("fr", "en", "de", "es")
 POLITIQUES = ("montrer", "accepter", "ignorer")
+# INV-PROP-1 : familles de gestes proposés. Routine (réversible) : appliquée d'office, tracée, annulable ;
+# le reste engage (statut, projet, opération, périmètre) et suit la politique `propositions`.
+GESTES = ("lier", "rattacher", "deplacer", "renommer", "echeance", "ticket", "tache", "fermer", "projet", "operation",
+          "perimetre")
+GESTES_OFFICE = ("lier", "rattacher", "deplacer", "renommer", "echeance", "ticket")
 
 
 @dataclass
@@ -347,6 +352,7 @@ class ConfigInterface:
     conseil: bool | None = None
     propositions: str = ""  # sort des propositions d'agent : montrer (à valider), accepter ou ignorer en silence
     langue: str = ""  # INV-LANGUE-1 : fr, en, de, es ; vide = pas encore choisie (détectée par le navigateur)
+    office: list[str] | None = None  # INV-PROP-1 : gestes appliqués d'office ; None = GESTES_OFFICE
 
     def __post_init__(self):
         from . import langues  # import tardif : langues importe config
@@ -355,6 +361,8 @@ class ConfigInterface:
         for cle, permis in (("propositions", POLITIQUES), ("langue", LANGUES)):
             if getattr(self, cle) and getattr(self, cle) not in permis:
                 raise ValueError(langues.t("serveur.config.interface_cle", cle=cle, valeur=getattr(self, cle)))
+        if self.office is not None and (not isinstance(self.office, list) or set(self.office) - set(GESTES)):
+            raise ValueError(langues.t("serveur.config.interface_cle", cle="office", valeur=self.office))
 
     def actif(self, famille: str) -> bool:
         valeur = getattr(self, famille)
@@ -363,9 +371,13 @@ class ConfigInterface:
     def politique(self) -> str:
         return self.propositions or ("ignorer" if self.mode == "simple" else "montrer")
 
+    def gestes_office(self) -> tuple[str, ...]:
+        return GESTES_OFFICE if self.office is None else tuple(g for g in GESTES if g in self.office)
+
     def public(self) -> dict:
         return {"mode": self.mode, "familles": {f: self.actif(f) for f in FAMILLES},
-                "propositions": self.politique(), "langue": self.langue}
+                "propositions": self.politique(), "langue": self.langue,
+                "office": list(self.gestes_office()), "gestes": list(GESTES)}
 
 
 @dataclass

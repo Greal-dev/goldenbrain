@@ -433,6 +433,10 @@ def creer_app(config: Config, moteur: Moteur | None = None) -> FastAPI:
     async def refuser(n: int):
         return moteur.trancher(n, False)
 
+    @app.post("/api/propositions/{n}/annuler")  # INV-PROP-1 : défaire un geste appliqué d'office
+    async def annuler(n: int):
+        return moteur.annuler(n)
+
     @app.get("/api/evenements")
     async def evenements(request: Request):
         q = moteur.abonner()

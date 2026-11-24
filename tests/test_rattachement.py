@@ -21,6 +21,7 @@ def _parent(vault, ident):
 
 
 def test_lot_en_une_proposition_puis_detachement(config, vault, faux, racine):
+    config.interface.office = []  # INV-PROP-1 : ce test éprouve le geste à trancher
     m = _m(config, vault, faux, racine, groupe=("Développement", ""), a=("Corriger le code", ""), b=("Ajouter la branche", ""))
     p = m.proposer("rattacher", "a", "groupe", motif="ranger", annexe={"taches": ["b"]})
     assert p["taches"] == ["a", "b"] and len(m.propositions.liste) == 1
@@ -32,6 +33,7 @@ def test_lot_en_une_proposition_puis_detachement(config, vault, faux, racine):
 
 
 def test_cycle_refuse_a_la_proposition_et_a_l_acceptation(config, vault, faux, racine):
+    config.interface.office = []  # INV-PROP-1 : ce test éprouve le geste à trancher
     m = _m(config, vault, faux, racine)
     with pytest.raises(Conflit, match="cycle"):
         m.proposer("rattacher", "mere", "petit")  # petit descend de mère
@@ -62,6 +64,7 @@ def test_parent_d_un_autre_projet_refuse(config, vault, faux, racine):
 
 
 def test_plafond_de_dix_par_parent(config, vault, faux, racine):
+    config.interface.office = []  # INV-PROP-1 : ce test éprouve le geste à trancher
     noms = {f"t{i}": (f"Tâche {i}", "") for i in range(11)}
     m = _m(config, vault, faux, racine, g=("Groupe", ""), **noms)
     with pytest.raises(Conflit, match="10"):
@@ -72,6 +75,7 @@ def test_plafond_de_dix_par_parent(config, vault, faux, racine):
 
 
 def test_natures_non_melangees(config, vault, faux, racine):
+    config.interface.office = []  # INV-PROP-1 : ce test éprouve le geste à trancher
     m = _m(config, vault, faux, racine, g=("Groupe", ""), a=("Corriger le code", "genre: developpement\n"),
            b=("Relancer le mail", "genre: operation\n"))
     with pytest.raises(Conflit, match="natures"):

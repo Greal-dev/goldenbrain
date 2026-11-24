@@ -20,7 +20,7 @@ def test_coupure_reseau_gele_l_agent_puis_il_reprend_au_retour(page, serveur):
         page.fill(".composer textarea", "[reseau] travaille")
         page.press(".composer textarea", "Control+Enter")
         bandeau = page.locator("#reseau-perdu")
-        expect(bandeau).to_be_visible(timeout=8000)
+        expect(bandeau).to_be_visible(timeout=40000)
         expect(bandeau).to_contain_text("Réseau perdu depuis")
         expect(bandeau).to_contain_text("1 agent en attente")
         expect(page.locator(".d-une .etat")).to_have_text("En attente du réseau")

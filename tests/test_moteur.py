@@ -249,6 +249,7 @@ def test_derivation_avec_fil_et_sans(config, vault, faux):
 
 
 def test_propositions_creer_accepter_refuser_persistance(config, vault, faux):
+    config.interface.office = []  # INV-PROP-1 : ce test éprouve le geste à trancher
     async def scenario():
         m = moteur(config, vault, faux)
         p1 = m.proposer("deplacer", "enfant", "Projets/C2-Beta", de="mere")

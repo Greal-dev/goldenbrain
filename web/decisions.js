@@ -3,7 +3,7 @@
 // existante (valider, renvoyer, messages, temps, propositions) ou par les lots /decisions/valider|fermer|agents ; « Scanner le système » par /decisions/scan (INV-SCAN-1 : propositions en attente, rien d'appliqué) ; « Rouvrir » par /validation-auto/rouvrir.
 import { h, remplacer, pastille, nomLisible } from './dom.js';
 import { api, post } from './api.js';
-import { ouvrir, emit, erreur } from './store.js';
+import { ouvrir, emit, erreur, titreTache } from './store.js';
 import { formulaire } from './dialogue.js';
 import { description } from './propositions.js';
 import { libelleEcheance } from './temps.js';
@@ -99,7 +99,52 @@ function actions(d) {
   }
 }
 
+// Propositions restantes : une entrée repliée par tâche émettrice (et projet), une ligne chacune, motif au dépli.
+function regrouper(liste) {
+  const sortie = [], par = new Map();
+  for (const d of liste) {
+    if (d.genre !== 'proposition') { sortie.push(d); continue; }
+    const de = d.proposition.de || d.proposition.tache, cle = `${d.projet}|${de}`;
+    if (!par.has(cle)) { par.set(cle, { genre: 'lot', projet: d.projet, de, ds: [] }); sortie.push(par.get(cle)); }
+    par.get(cle).ds.push(d);
+  }
+  return sortie;
+}
+
+function ligneLot(g) {
+  const ps = g.ds.map((d) => d.proposition);
+  const tout = (action) => geste(async () => {
+    const echecs = [];
+    for (const p of ps) { try { await post(`/propositions/${p.n}/${action}`); } catch (e) { echecs.push(e.message); } }
+    if (echecs.length) erreur(t('decisions.refuses', { n: echecs.length, liste: echecs.join(' ; ') }));
+  });
+  return h('li', { class: 'dc dc-proposition', 'data-genre': 'proposition', 'data-de': g.de },
+    h('details', { class: 'dc-lot' },
+      h('summary', null, h('span', { class: 'tag' }, t('decisions.propositions_de', { de: titreTache(g.de) })), ' ', h('span', { class: 'n' }, ps.length)),
+      h('ul', { class: 'dc-props' }, ps.map((p) => h('li', { class: 'dc-prop', 'data-n': p.n, title: p.motif || null },
+        p.motif ? h('details', null, h('summary', null, description(p)), h('p', { class: 'dc-essai' }, p.motif)) : h('span', null, description(p)),
+        p.echec ? h('p', { class: 'dc-essai manque' }, t('decisions.echec_office', { motif: p.echec })) : null,
+        h('span', { class: 'dc-prop-btns' },
+          h('button', { class: 'btn primaire petit', type: 'button', 'data-accepter': '', onclick: () => geste(() => post(`/propositions/${p.n}/accepter`)) }, t('decisions.accepter')),
+          h('button', { class: 'btn petit', type: 'button', 'data-refuser': '', onclick: () => geste(() => post(`/propositions/${p.n}/refuser`)) }, t('decisions.refuser'))))))),
+    h('div', { class: 'dc-actions' },
+      h('button', { class: 'btn primaire petit', type: 'button', 'data-tout': 'accepter', onclick: () => tout('accepter') }, t('decisions.tout_accepter')),
+      h('button', { class: 'btn petit', type: 'button', 'data-tout': 'refuser', onclick: () => tout('refuser') }, t('decisions.tout_refuser'))));
+}
+
+// INV-PROP-1 : journal des gestes appliqués d'office (7 derniers jours), replié, chacun annulable.
+function office(liste) {
+  if (!liste?.length) return null;
+  return h('details', { class: 'dc-groupe dc-office' },
+    h('summary', null, t('decisions.office'), ' ', h('span', { class: 'n' }, liste.length)),
+    h('ul', { class: 'dc-liste' }, liste.map((p) => h('li', { class: 'dc dc-office-geste', 'data-n': p.n, title: p.motif || null },
+      h('span', null, description(p)), ' ',
+      h('span', { class: 'dc-motif' }, String(p.cree || '').slice(0, 16).replace('T', ' ')), ' ',
+      h('button', { class: 'btn petit', type: 'button', 'data-annuler': '', onclick: () => geste(() => post(`/propositions/${p.n}/annuler`)) }, t('decisions.annuler'))))));
+}
+
 function ligne(d) {
+  if (d.genre === 'lot') return ligneLot(d);
   if (d.genre === 'agent') return ligneAgent(d, { geste, lot, redessiner: dessiner });
   const lotable = d.genre === 'validation' && d.rapide;
   return h('li', { class: `dc dc-${d.genre}`, 'data-genre': d.genre, 'data-tache': d.tache },
@@ -158,7 +203,7 @@ function dessiner() {
   remplacer(coque, h('h2', { class: 'casc-titre' }, t('decisions.titre'), ' ', boutonAide('decisions')),
     h('p', { class: 'au-date' }, tn('decisions.en_attente', tout.length) + (seulementRapides ? ' — ' + tn('decisions.rapides', liste.length) : '')),
     donnees.reprises?.length ? h('p', { class: 'dc-reprises', 'data-reprises': '' }, t('decisions.reprises', { liste: donnees.reprises.map((r) => r.titre).join(', ') })) : null, // INV-DECISIONS-2
-    barre, liste.length ? groupes(liste) : h('p', { class: 'vide' }, t('decisions.rien')), closAuto(donnees.clos_auto));
+    barre, liste.length ? groupes(regrouper(liste)) : h('p', { class: 'vide' }, t('decisions.rien')), closAuto(donnees.clos_auto), office(donnees.office));
 }
 
 // Un redessin tardif d'un appel périmé est ignoré (même garde que « Aujourd'hui »).
