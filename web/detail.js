@@ -10,6 +10,7 @@ import { api, post } from './api.js';
 import { formulaire } from './dialogue.js';
 import { carteLiens } from './liens.js';
 import { carteLignes, selecteurNature, enLigne } from './lignes.js';
+import { pastilleLivrables } from './livrables.js';
 import { carteRevues, solliciter } from './revues.js';
 import { chargerHarnais, selecteurMoteur, libelleMoteur } from './moteur.js';
 import { blocEconomie } from './economie.js';
@@ -162,6 +163,7 @@ function dessinerTete() {
     alertes.length ? h('button', { class: 'd-alerte', type: 'button', 'data-id': 'alerte', title: alertes.join('\n'), onclick: () => { if (!detOuvert) basculerDetails(); } },
       h('span', { class: 'd-alerte-t' }, alertes[0]), alertes.length > 1 ? h('span', { class: 'd-alerte-n' }, t('detail.alertes_plus', { n: alertes.length - 1 })) : null) : null,
     aValider(tk) ? h('span', { class: 'a-valider', role: 'status', title: t('detail.a_valider') }, b(t('detail.valider'), valider, { cls: 'primaire' }), b(t('detail.renvoyer_btn'), renvoyer)) : null,
+    pastilleLivrables(tk), // INV-LIVRABLES-1 : une pastille ; le volet porte le reste
     b(t('resultat.bouton'), () => voirResultat(tk.id), { cls: aValider(tk) ? '' : 'primaire', titre: t('resultat.aide') }),
     tk.pause_ram ? b(t('detail.reprendre_maintenant'), reprendreRam, { cls: 'primaire', titre: t('detail.reprendre_ram_titre') }) : null,
     tk.etat_execution === 'en_pause' ? b(t('detail.reprendre_maintenant'), reprendreMaintenant, { cls: 'primaire', titre: t('detail.reprendre_quota_titre') }) : null,

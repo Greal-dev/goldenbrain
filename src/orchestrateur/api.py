@@ -18,7 +18,7 @@ from fastapi.responses import JSONResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
-from . import (api_compagnon, api_apprendre, api_accueil, api_lignes, modeles, api_appareils, api_arbre, api_codespace, api_executeurs, api_installation, api_retour, api_compactage, api_decisions,
+from . import (api_compagnon, api_apprendre, api_accueil, api_lignes, api_livrables, modeles, api_appareils, api_arbre, api_codespace, api_executeurs, api_installation, api_retour, api_compactage, api_decisions,
                api_economie, api_etoile, api_executant, api_execution, api_feux, api_interface, api_maj, api_notes, api_pilotage, api_poste,
                api_rapprochement, api_resultat, api_routines, api_simultanes, api_manager, api_telegram, api_temps, api_titre,
                api_reflexes, api_travaux, api_validation, api_vigie, api_chaines)
@@ -471,7 +471,7 @@ def creer_app(config: Config, moteur: Moteur | None = None) -> FastAPI:
     app.include_router(api_compactage.routes(config, moteur))  # INV-COMPACT-1
     app.include_router(api_apprendre.routes(config, moteur, tache))  # INV-APPRENDRE-1
     app.include_router(api_decisions.routes(moteur))
-    for rt in (api_lignes.routes(config, moteur, tache), api_routines.routes(moteur.routines), api_chaines.routes(moteur), api_compagnon.routes(config, moteur)): app.include_router(rt)  # INV-ROUTINE-1, INV-CHAINE-1
+    for rt in (api_lignes.routes(config, moteur, tache), api_livrables.routes(config, moteur), api_routines.routes(moteur.routines), api_chaines.routes(moteur), api_compagnon.routes(config, moteur)): app.include_router(rt)  # INV-ROUTINE-1, INV-CHAINE-1
     app.include_router(api_accueil.routes(config, moteur, vault))  # INV-ACCUEIL-1 : poste seulement
     app.include_router(api_installation.routes())  # INV-INSTALL-1 : poste seulement (garde INV-DISTANT-1)
     app.include_router(api_validation.routes(moteur))  # INV-VALID-2

@@ -23,7 +23,7 @@ from pathlib import Path
 from . import langues
 from .config import RACINE_DEPOT
 
-VERSION = 6  # à relever quand le texte du bloc change : les blocs posés deviennent « ancien »
+VERSION = 7  # à relever quand le texte du bloc change : les blocs posés deviennent « ancien »
 FIN = "<!-- goldenbrain:reflexes fin -->"
 DEBUT = re.compile(r"^<!-- goldenbrain:reflexes debut v(\d+) -->\r?$", re.M)
 LIGNE_FIN = re.compile(r"^" + re.escape(FIN) + r"(?=\r?$)", re.M)

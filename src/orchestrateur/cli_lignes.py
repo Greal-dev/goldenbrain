@@ -3,7 +3,7 @@
 Rôle : `orch ligne <id> "<texte>"` ajoute une ligne (travail court, sans livrable ni branche propres) à une
 tâche ; `--cocher N` s'assure que la ligne n° N est faite, `--decocher N` qu'elle ne l'est pas (1 = la première ; idempotents) ; `rendre_rangement` dit à l'agent quoi
 faire quand la création est refusée parce qu'un parent est plein ou qu'une autre nature s'y mélangerait.
-Frontières : passe par l'API (`POST /api/taches/{id}/lignes[/basculer]`), rien d'importé du moteur ni du vault.
+Frontières : passe par l'API (`POST /api/taches/{id}/lignes[/basculer]`, `POST /api/taches/{id}/livrables[/attendre]`), rien d'importé du moteur ni du vault.
 Invariants portés : INV-LIGNES-1, INV-PLAFOND-1, INV-NATURE-1.
 """
 
@@ -13,7 +13,7 @@ import os
 
 from .cli_erreurs import ErreurCli
 
-COMMANDES = ("ligne",)
+COMMANDES = ("ligne", "livrable")
 
 
 def ajouter(sous) -> None:
@@ -24,9 +24,32 @@ def ajouter(sous) -> None:
     li.add_argument("--fait", action="store_true", help="la ligne est déjà faite")
     li.add_argument("--cocher", type=int, default=0, help="s'assurer que la ligne n° N est faite (1 = la première)")
     li.add_argument("--decocher", type=int, default=0, help="s'assurer que la ligne n° N n'est pas faite")
+    lv = sous.add_parser("livrable", help="déclarer un livrable (document, fichier, adresse, branche, commit) d'une tâche, "
+                                          "ou en annoncer un attendu")
+    lv.add_argument("id")
+    lv.add_argument("cible", nargs="?", default="", help="chemin, adresse http(s), branche:<nom>, commit:<sha> ou publie:<adresse>")
+    lv.add_argument("--titre", default="", help="nom lisible (sinon déduit de la cible)")
+    lv.add_argument("--type", default="", choices=("", "note", "fichier", "url", "publie", "branche", "commit"))
+    lv.add_argument("--attendu", default="", metavar="TITRE", help="annoncer un livrable attendu, à produire plus tard")
+
+
+def _livrable(a, appeler, quoter) -> list[str]:
+    base = f"/taches/{quoter(a.id)}/livrables"
+    if a.attendu.strip():
+        appeler("POST", f"{base}/attendre", {"titre": a.attendu})
+        return [f"{a.id} : livrable attendu annoncé « {a.attendu.strip()} »"]
+    if not a.cible.strip():
+        raise ErreurCli("cible attendue : orch livrable <id> <chemin|adresse|branche:x|commit:sha> [--titre …] (ou --attendu \"titre\")")
+    cible = a.cible
+    if not cible.lower().startswith(("http://", "https://", "publie:", "branche:", "commit:")) and os.path.exists(cible):
+        cible = os.path.abspath(cible)  # le serveur ne connaît pas le dossier courant
+    r = appeler("POST", base, {"cible": cible, "titre": a.titre, "type": a.type})
+    return [f"{a.id} : {r['total']} livrable(s)"]
 
 
 def executer(a, appeler, quoter, source: str = "") -> list[str]:
+    if getattr(a, "commande", "") == "livrable":
+        return _livrable(a, appeler, quoter)
     base = f"/taches/{quoter(a.id)}/lignes"
     if a.cocher or a.decocher:  # B12 : idempotent (on lit l'état, on ne bascule que si nécessaire) ; le texte n'est pas ignoré
         if a.texte.strip() or (a.cocher and a.decocher):

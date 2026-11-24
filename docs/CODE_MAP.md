@@ -37,6 +37,8 @@ Les tests d'interface (`ui/`) se lancent à part : `python scripts/check_ui.py`.
 | `web/apprendre.js` | Mode « Apprendre » : section des Réglages, menu « Apprendre » d'une tâche, tous les libellés en tête de module. | INV-APPRENDRE-1 | `ui/scenario_apprendre.py` |
 | `web/lignes.js` | Carte « Lignes », sélecteur et pastille de nature, dialogue de rangement (409), réglage « Rangement ». | INV-LIGNES-1, INV-NATURE-1, INV-PLAFOND-1 | `ui/scenario_lignes.py` |
 | `web/lignes.css` | Lignes, pastille de nature, réglage de rangement. | INV-LIGNES-1 | — |
+| `web/livrables.js` | Pastille « Livrables (n) » de l'en-tête et volet (filtre, recherche, attendus, déclaration). | INV-LIVRABLES-1, INV-DETAIL-1 | `test_livrables.py` |
+| `web/livrables.css` | Volet des livrables, pastille. | INV-LIVRABLES-1 | — |
 | `web/apprendre.css` | Encadré d'explication du mode « Apprendre » et points à retenir. | INV-APPRENDRE-1 | — |
 | `web/accueil.css` | Mise en page de l'accueil. | — | — |
 | `tests/test_config_concurrente.py` | Écritures simultanées de sections de config.toml : aucune section perdue, aucun temporaire résiduel. | INV-INTERFACE-2 | — |
@@ -80,9 +82,11 @@ Les tests d'interface (`ui/`) se lancent à part : `python scripts/check_ui.py`.
 | `web/compagnon.css` | Mise en page de la vue « Accueil » du compagnon mobile. | INV-PWA-2 | `ui/scenario_compagnon.py` |
 | `src/orchestrateur/qr.py` | Code QR (mode octet, correction M, versions 1 à 10) rendu en SVG, calculé sur le poste. | INV-DISTANT-5 | `test_appareils.py` |
 | `src/orchestrateur/lignes.py` | Lignes de tâche : ajouter, cocher, retirer, promouvoir, tâche → ligne. | INV-LIGNES-1, INV-VAULT-1 | `test_lignes.py` |
+| `src/orchestrateur/livrables.py` | Livrables : déclarer, annoncer, relever d'office (traces, lignes), agréger la descendance, ouvrir un fichier du poste. | INV-LIVRABLES-1, INV-RESULTAT-1, INV-VAULT-1 | `test_livrables.py` |
 | `src/orchestrateur/rangement.py` | Nature déduite, propositions de rangement, parents en excès. | INV-PLAFOND-1, INV-NATURE-1, INV-RAPPROCHEMENT-1 | `test_lignes.py` |
 | `src/orchestrateur/config_rangement.py` | Réglage `[rangement]`. | INV-PLAFOND-1, INV-NATURE-1 | `test_lignes.py` |
 | `src/orchestrateur/api_lignes.py` | Routes lignes, nature, `/api/rangement`. | INV-LIGNES-1, INV-NATURE-1, INV-PLAFOND-1 | `test_lignes.py`, `ui/scenario_lignes.py` |
+| `src/orchestrateur/api_livrables.py` | Routes `/api/livrables` et `/api/taches/{id}/livrables…`. | INV-LIVRABLES-1, INV-API-1 | `test_livrables.py` |
 | `src/orchestrateur/cli_divers.py` | Aides de la commande `orch` : détection du harnais natif, Microsoft 365, agents de Claude Code. | INV-NATIF-1 | `test_cli.py` |
 | `src/orchestrateur/cli_erreurs.py` | `ErreurCli` (refus lisible, code 1) et `ParseurFr` (argparse en français, conseil des guillemets). | INV-LANGUE-1 | `test_audit_cli.py` |
 | `src/orchestrateur/cli_lignes.py` | `orch ligne` et rendu des gestes de rangement. | INV-LIGNES-1, INV-NATURE-1, INV-PLAFOND-1 | `test_lignes.py` |
@@ -120,7 +124,7 @@ Les tests d'interface (`ui/`) se lancent à part : `python scripts/check_ui.py`.
 | `src/orchestrateur/conseil.py` | Avis d'un agent rapide avant de promouvoir une tâche ou de réduire un projet. | INV-EXEC-4, INV-INTERFACE-1, INV-MOTEUR-1, INV-MOTEUR-2 | `test_conseil.py`, `test_bugs_usage.py`, `test_roles.py` |
 | `src/orchestrateur/equipe.py` | Équipe de personas : un fichier Markdown par persona (frontmatter + Mandat + Focus). | INV-VAULT-2 | `test_equipe.py` |
 | `src/orchestrateur/feux_verts.py` | Feu vert lié à une version : demande, verdict du contrôleur, vérification par sha exact. | INV-FEU-1, INV-MSG-1, INV-VAULT-1 | `test_feux_verts.py` |
-| `src/orchestrateur/fiches.py` | Lecture et réécriture d'UN fichier de tâche. | INV-APPRENDRE-1, INV-CHAINE-1, INV-DECISIONS-3, INV-EXEC-3, INV-EXECUTANT-1, INV-EXECUTANT-2, INV-LIGNES-1, INV-ROUTINE-2, INV-VAULT-1, INV-VAULT-2, INV-VAULT-4 | `test_fiches.py` |
+| `src/orchestrateur/fiches.py` | Lecture et réécriture d'UN fichier de tâche. | INV-APPRENDRE-1, INV-CHAINE-1, INV-DECISIONS-3, INV-EXEC-3, INV-EXECUTANT-1, INV-EXECUTANT-2, INV-LIGNES-1, INV-ROUTINE-2, INV-VAULT-1, INV-VAULT-2, INV-VAULT-4, INV-LIVRABLES-1 | `test_fiches.py` |
 | `src/orchestrateur/geste.py` | Geste d'arbre sur un projet ou une opération : le dossier se déplace (le dossier fait foi). | INV-ALIGN-1, INV-ALIGN-3, INV-ARBRE-2 | `test_geste.py` |
 | `src/orchestrateur/guide.py` | Guide d'utilisation : registre des sections attendues, contrôle de complétude (porte), route `GET /api/guide`. | INV-GUIDE-1, INV-LANGUE-1 | `test_guide.py`, `ui/scenario_guide.py` |
 | `src/orchestrateur/langues.py` | Traduction des messages du serveur destinés à l'utilisateur : `t(cle, langue, **params)` sur les dictionnaires de `web/langues/`, langue réglée du processus, ligne de langue des consignes d'agent. | INV-LANGUE-1 | `test_langues.py`, `test_langues_serveur.py` |
@@ -378,6 +382,8 @@ Les tests d'interface (`ui/`) se lancent à part : `python scripts/check_ui.py`.
 | `tests/test_harnais_cli.py` | Adaptateurs codex et opencode (faux exécutables Python, jamais les vrais CLI), Claude --model, | — | — |
 | `tests/test_interface.py` | Mode simple / avancé : drapeaux par famille, routes en 409, persistance de `[interface]` | — | — |
 | `tests/test_lignes.py` | Lignes, nature, plafond, rangement, jardinier, CLI, réflexes. | INV-LIGNES-1, INV-NATURE-1, INV-PLAFOND-1 | — |
+| `tests/ui/scenario_livrables.py` | Pastille, volet, déclaration, attendu, agrégation parent, filtre. | INV-LIVRABLES-1, INV-DETAIL-1 | — |
+| `tests/test_livrables.py` | Livrables : relevé d'office, dédoublonnage, agrégation parent, fichier disparu, distant, CLI. | INV-LIVRABLES-1 | — |
 | `tests/ui/scenario_lignes.py` | Carte Lignes, nature, plafond et 409 de rangement. | INV-LIGNES-1, INV-NATURE-1, INV-PLAFOND-1 | — |
 | `tests/test_apprendre.py` | Mode « Apprendre » : consigne seulement si actif, réglage de tâche prioritaire, champ de fiche `retenir`, routes. | INV-APPRENDRE-1 | — |
 | `tests/test_statut_retour.py` | Statut de retour réglable : défaut neutre, nom invalide refusé, ancien nom déclaré reconnu, nom inconnu jamais pris pour le retour, nom transmis à l'interface. | INV-STATUT-1 | — |

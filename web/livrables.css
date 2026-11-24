@@ -1,0 +1,22 @@
+/* Livrables (INV-LIVRABLES-1) : volet ouvert depuis la pastille de l'en-tête ; rien de plus au-dessus du fil. */
+.d-livrables.manque { border-color: var(--c-bloque); }
+.liv-volet { display: grid; gap: 10px; min-width: min(640px, 80vw); max-width: 100%; }
+.liv-filtres { display: flex; gap: 8px; flex-wrap: wrap; }
+.liv-filtres input { flex: 1 1 14ch; min-width: 0; }
+.liv-zone { max-height: 50vh; overflow: auto; }
+.liv-groupe h4 { margin: 8px 0 4px; font-size: 13px; }
+.liv-liste, .liv-attendus { list-style: none; margin: 0 0 6px; padding: 0; display: grid; gap: 4px; }
+.liv { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.liv-type { font-size: 11px; padding: 1px 6px; border-radius: 10px; border: 1px solid #8885; flex: none; }
+.liv-nom { background: none; border: 0; padding: 0; color: inherit; text-decoration: underline; cursor: pointer; text-align: left; min-width: 0; overflow-wrap: anywhere; }
+.liv-nom:disabled { text-decoration: none; opacity: .6; cursor: default; }
+.liv-disparu { color: var(--c-bloque); font-size: 12px; font-weight: 600; }
+.liv-inconnu, .liv-meta { font-size: 12px; opacity: .7; }
+.liv-att { display: flex; gap: 8px; align-items: center; }
+.liv-att.fait span:not(.liv-disparu) { text-decoration: line-through; opacity: .7; }
+.liv-ajout { display: grid; gap: 6px; }
+.liv-form { display: flex; gap: 6px; }
+.liv-form input { flex: 1 1 0; min-width: 0; }
+/* Téléphone : l'en-tête ne passe pas à la ligne (INV-DETAIL-1) : un trombone seul, le compte reste dans le titre du bouton. */
+@media (max-width: 600px) { .liv-form { flex-wrap: wrap; } .d-livrables { padding-inline: 8px; } .d-une > button.d-livrables { order: 2; }
+  .d-livrables .liv-mot { font-size: 0; } .d-livrables .liv-mot::before { content: '📎'; font-size: 14px; } }
