@@ -5,6 +5,7 @@ temporaire et un harnais factice. Hors de la porte rapide : `scripts/check.py` n
 Frontières : aucune installation ; si Playwright ou son navigateur manque, échec explicite.
 """
 
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -27,6 +28,9 @@ def main() -> int:
         return 2
     cmd = [sys.executable, "-m", "pytest", "-q", "-p", "no:cacheprovider", "tests/ui",
            "-o", "python_files=scenario_*.py", *sys.argv[1:]]
+    if sys.platform != "win32":  # priorité minimale : le bureau (clavier, pavé) passe avant la porte
+        cmd = [*(c for c in ("nice", "-n", "19") if shutil.which("nice")),
+               *(c for c in ("ionice", "-c3") if shutil.which("ionice")), *cmd]
     code = subprocess.run(cmd, cwd=RACINE).returncode
     print("CHECK_UI : vert" if code == 0 else "CHECK_UI : rouge")
     return code
