@@ -4,7 +4,7 @@
 import { S, emit } from './store.js';
 import { api } from './api.js';
 import { reglerRetour } from './dom.js';
-import { t } from './langues.js';
+import { t, etatInterfaceInitial } from './langues.js';
 
 export const FAMILLES = ['equipe', 'liens', 'alignement', 'jardinage', 'moteurs', 'notes', 'transformations', 'conseil'];
 
@@ -46,5 +46,5 @@ function adopter(etat) {
   return true;
 }
 
-export async function chargerInterface() { adopter(await api('/interface')); }
+export async function chargerInterface() { adopter(etatInterfaceInitial() || await api('/interface')); }
 export async function changerInterface(corps) { adopter(await api('/interface', { methode: 'PUT', corps })); }

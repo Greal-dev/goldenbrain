@@ -34,6 +34,8 @@ class Message:
     # Message de l'agent en réponse à un hook de fin de session, après sa vraie réponse :
     # l'interface le range parmi les étapes, jamais comme réponse finale.
     secondaire: bool = False
+    # Message du système : « echec » (tour échoué), « remontee » (compte rendu d'une descendante), « regroupe ». Vide sinon.
+    genre: str = ""
 
 
 class Harnais(Protocol):

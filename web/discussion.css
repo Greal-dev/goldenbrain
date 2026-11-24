@@ -61,7 +61,7 @@ body.discussion .volet-t-notes.replie > .p-tete:hover { background: var(--survol
   body.discussion .volet-t-notes.replie .p-replier { position: static; opacity: 1; width: auto; padding: 2px 8px; }
 }
 
-/* 5. Premier usage : bulle qui dit où sont passés les volets ; elle ne capte aucun clic (sauf son bouton). */
-.bulle-discussion { position: fixed; top: 52px; left: 40px; z-index: 50; max-width: 340px; display: flex; flex-direction: column; gap: 6px; padding: 10px 12px;
-  background: var(--panneau); border: 1px solid var(--accent); border-radius: 8px; box-shadow: var(--ombre); font-size: 12.5px; pointer-events: none; }
-.bulle-discussion button { align-self: flex-end; pointer-events: auto; }
+/* 5. Premier usage : bandeau en flux (avant le corps) qui dit où sont passés les volets ; rien n'est recouvert. */
+.bulle-discussion { flex: none; display: flex; align-items: center; gap: 12px; padding: 6px 12px; background: var(--panneau-2); border-bottom: 1px solid var(--accent); font-size: 12.5px; }
+.bulle-discussion span { flex: 1; min-width: 0; }
+.bulle-discussion button { flex: none; }

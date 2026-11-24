@@ -10,7 +10,7 @@ import { dessinerGraphe } from './graphe.js';
 import { initArbre, dessiner as dessinerArbre } from './arbre.js';
 import { initBandeau, chargerRevue } from './bandeau.js';
 import { initIncidents } from './incidents.js';
-import { initDetail, ouvrirDetail, rafraichir, evtDetail } from './detail.js';
+import { initDetail, ouvrirDetail, rafraichir, evtDetail, tacheOuverte } from './detail.js';
 import { dessinerCascade, etatCascade, initCascade } from './cascade.js';
 import { dessinerEquipe } from './equipe.js';
 import { dessinerReglages, etatReglages, fixerAncreReglages, hashReglages } from './reglages.js';
@@ -56,9 +56,22 @@ const chargerEtat = rapporter(async () => { S.etat = await api('/etat'); emit('e
 const chargerProps = rapporter(async () => { S.props = await api('/propositions'); emit('props'); });
 
 let minuteurArbre = 0;
-function planifier() {
+// INV-REACTIVITE-1 : un événement qui ne concerne pas la tâche ouverte (autre tâche, ou « arbre » seul) ne recharge que l'arbre et l'état ; la tâche ouverte
+// ne se relit que si sa propre ligne de l'arbre a changé. Ni propositions ni manager (leurs événements propres s'en chargent).
+let autres = true;
+const signe = (id) => JSON.stringify(S.arbre?.find((n) => n.id === id) ?? null);
+function planifier(tache = null, arbreSeul = false) {
+  const ailleurs = arbreSeul || (!!tache && tache !== tacheOuverte());
+  autres = autres && !!ailleurs;
   clearTimeout(minuteurArbre);
-  minuteurArbre = setTimeout(() => { chargerArbre(); chargerEtat(); chargerProps(); rafraichir(); rechargerManager(); }, 300);
+  minuteurArbre = setTimeout(async () => {
+    const seul = autres; autres = true;
+    const ouverte = tacheOuverte(), avant = signe(ouverte);
+    if (!seul) { chargerArbre(); chargerEtat(); chargerProps(); rafraichir(); rechargerManager(); return; }
+    chargerEtat();
+    await chargerArbre();
+    if (ouverte && ouverte === tacheOuverte() && signe(ouverte) !== avant) rafraichir();
+  }, 300);
 }
 setInterval(chargerArbre, 60000); // la pastille « intégration en retard » apparaît et disparaît sans geste (INV-INTEG-1)
 function toutRecharger() { chargerArbre(); chargerEtat(); chargerProps(); rafraichir(); }
@@ -76,13 +89,13 @@ function surEvenement(e) {
         const titre = S.etat.tours?.find((x) => x.tache === e.tache)?.titre || e.tache;
         erreur(t('app.tour_echec', { titre, erreur: e.erreur }));
       }
-      chargerEtat(); evtDetail(e); evtTransfo(e); evtTourManager(e); planifier(); rechargerCompactage(); break; // mesure par tour (INV-REGLAGES-1 : plus de redessin complet sur etat)
+      chargerEtat(); evtDetail(e); evtTransfo(e); evtTourManager(e); planifier(e.tache); rechargerCompactage(); break; // mesure par tour (INV-REGLAGES-1 : plus de redessin complet sur etat)
     }
-    case 'tour_debut': chargerEtat(); evtDetail(e); evtTourManager(e); planifier(); break;
+    case 'tour_debut': chargerEtat(); evtDetail(e); evtTourManager(e); planifier(e.tache); break;
     case 'manager': evtManager(e); break; // INV-MANAGER-1
     case 'revue': evtDetail(e); chargerEtat(); break;
     case 'remontee': evtDetail(e); break; // INV-PILOTAGE-3 : ligne d’une descendante, sans tour
-    case 'natif_fin': chargerEtat(); evtDetail(e); planifier(); break; // INV-NATIF-1
+    case 'natif_fin': chargerEtat(); evtDetail(e); planifier(e.tache); break; // INV-NATIF-1
     case 'controle': evtDetail(e); break;
     case 'tour_texte': case 'tour_outil': {
       let t = S.etat.tours.find((x) => x.tache === e.tache);
@@ -94,12 +107,12 @@ function surEvenement(e) {
       evtDetail(e);
       break;
     }
-    case 'arbre': planifier(); break;
+    case 'arbre': planifier(null, true); break;
     case 'pause_ram': chargerEtat(); planifier(); rechargerSimultanes(); break;
     case 'simultanes': rechargerSimultanes(); break;
     case 'executeurs': rechargerExecuteurs(); break; // INV-DISTANT-4
     case 'economie': rechargerEconomie(); break;
-    case 'pause': chargerEtat(); evtDetail(e); planifier(); break; // INV-EXEC-10
+    case 'pause': chargerEtat(); evtDetail(e); planifier(e.tache); break; // INV-EXEC-10
     case 'note': evtNoteArbre(e); evtNoteVue(e); break;
     case 'proposition': chargerProps(); chargerEtat(); break;
     case 'poste': chargerEtat(); planifier(); break;

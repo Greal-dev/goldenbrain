@@ -477,6 +477,8 @@
  "conversation.etapes_ouvert.un": "{n} Schritt · ausblenden",
  "conversation.modifier": "Ändern",
  "conversation.modifier_titre": "Diese Nachricht ändern und die Unterhaltung an dieser Stelle fortsetzen",
+ "conversation.regroupe": "GoldenBrain · gebündelte Ausführung",
+ "conversation.remontee": "GoldenBrain · Bericht einer Aufgabe",
  "conversation.repondre": "Von hier aus antworten",
  "conversation.repondre_titre": "Die Unterhaltung auf den Punkt direkt nach dieser Antwort zurücksetzen und antworten",
  "conversation.travaille": "der Agent arbeitet …",

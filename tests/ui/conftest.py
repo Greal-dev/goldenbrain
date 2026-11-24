@@ -35,7 +35,7 @@ def serveur(tmp_path_factory):
     yield from demarrer(tmp_path_factory.mktemp("ui"))
 
 
-def demarrer(dossier: Path, supplement: str = "", cerveau_fait: bool = True):
+def demarrer(dossier: Path, supplement: str = "", cerveau_fait: bool = True, ttl: float = 0):
     """Vrai serveur sur un univers neuf ; `supplement` s'ajoute à la fin de son config.toml. `cerveau_fait` : le second cerveau est
     réglé (INV-CERVEAU-1) ; faux = poste neuf, le parcours « Configurer votre second cerveau » ouvre l'interface."""
     port = port_libre()
@@ -44,6 +44,8 @@ def demarrer(dossier: Path, supplement: str = "", cerveau_fait: bool = True):
     if cerveau_fait:
         (dossier / "etat").mkdir(exist_ok=True)
         (dossier / "etat" / "cerveau.json").write_text('{"etat": "fait"}', encoding="utf-8")
+    if ttl:
+        config.write_text(config.read_text(encoding="utf-8").replace("index_ttl_s = 0", f"index_ttl_s = {ttl}", 1), encoding="utf-8")
     if supplement:
         config.write_text(config.read_text(encoding="utf-8") + supplement, encoding="utf-8")
     # Journal sur fichier, jamais sur un tuyau : un tuyau que personne ne vide se remplit (quelques Ko

@@ -434,6 +434,7 @@ export async function ouvrirDetail(nouvelId) {
   instantane = ''; // un rafraîchissement parti pendant le chargement a pu dessiner sans la liste
   await rafraichir(true);
 }
+export const tacheOuverte = () => id;
 export async function rafraichir(initial = false) {
   const courant = id;
   if (!courant) return;

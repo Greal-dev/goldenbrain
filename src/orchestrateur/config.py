@@ -37,7 +37,7 @@ class ConfigVault:
     statut_retour: str = "retour-humain"  # INV-STATUT-1 : la main revient à l'humain ; toujours ouvert
     gabarit_tache: dict = field(default_factory=dict)
     libelles: dict = field(default_factory=dict)  # libellés d'affichage des casquettes (code -> nom)
-    index_ttl_s: float = 0  # validité de l'index en mémoire (0 = relu à chaque appel)
+    index_ttl_s: float = 2  # validité de l'index en mémoire en secondes (0 = relu à chaque appel) ; une écriture de l'orchestrateur le périme aussitôt
     verrou_paperclip: bool = True  # INV-VAULT-4 : faux = verrou des tâches portant `paperclip:` levé (Paperclip arrêté)
     casquettes: str = "Casquettes"  # dossier des casquettes (lot 5 : alignement des dossiers sur l'arbre)
 

@@ -42,7 +42,7 @@ async def conversation(config, moteur, harnais_de, ident: str, limite: int = 200
     else:  # le transcript ignore les échecs de tour : on les relit au journal (INV-EXEC-8)
         lus = sessions.inserer_par_date(
             list(lus), await asyncio.to_thread(sessions.echecs_journaux, config.donnees, ident))
-    messages = [asdict(m) for m in lus]
+    messages = [{k: v for k, v in asdict(m).items() if k != "genre" or v} for m in lus]  # `genre` seulement pour les messages du système
     for m in messages:
         m["texte"] = fiches.sans_rendu(m["texte"])
     messages = [m for m in messages if m["texte"] or m["outils"]]

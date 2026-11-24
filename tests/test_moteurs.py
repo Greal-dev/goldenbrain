@@ -295,3 +295,14 @@ def test_codex_de_bout_en_bout_par_le_moteur(config, vault, monkeypatch, tmp_pat
     # INV-COMPACT-1 : seuil par défaut 45 % de la fenêtre de gpt (272 000 jetons)
     assert situation["argv"] == ["exec", "--json", "-c", "model_auto_compact_token_limit=122400", "-m", "gpt-6", "-"]
     assert situation["prompt"].startswith("Tâche Mère (") and situation["prompt"].endswith("fais")
+
+
+def test_compte_rendu_de_tache_n_est_pas_relu_comme_un_echec(tmp_path):
+    """Symptôme : « X a fini un tour — livré, portes vertes » s'affichait en rouge sous « échec de la séance de travail »."""
+    jour = tmp_path / "journal" / "2026-11-24"
+    jour.mkdir(parents=True)
+    lignes = [json.dumps({"type": t, "texte": x, "date": "2026-11-24T10:00:00"})
+              for t, x in (("orch_echec", "arrêt"), ("orch_remontee", "X a fini un tour [fait] — livré"), ("orch_regroupe", "regroupé"))]
+    (jour / "t-100000.jsonl").write_text("\n".join(lignes), encoding="utf-8")
+    msgs = sessions.relire_journaux(tmp_path, "t", 200, {})
+    assert [(m.role, m.genre) for m in msgs] == [("systeme", "echec"), ("systeme", "remontee"), ("systeme", "regroupe")]

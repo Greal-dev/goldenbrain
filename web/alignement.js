@@ -55,6 +55,5 @@ export function initAlignement() {
   document.addEventListener('click', (e) => { if (!e.target.closest('.rel-align')) ouvrirPanneau(false); });
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !$('#panneau-align').hidden) ouvrirPanneau(false); });
   // Après chaque geste d'arbre (ou changement signalé par le serveur) ; regroupé pour ne pas multiplier les appels.
-  on('arbre', () => { clearTimeout(minuteur); minuteur = setTimeout(rafraichirEcarts, 600); });
-  rafraichirEcarts();
+  on('arbre', () => { clearTimeout(minuteur); minuteur = setTimeout(rafraichirEcarts, 600); }); // le premier chargement de l'arbre déclenche la première lecture
 }

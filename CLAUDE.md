@@ -11,6 +11,7 @@ L'orchestrateur pilote ; il n'exécute rien : chaque tâche est une conversation
 ## Commandes canoniques
 - Python 3.12 avec FastAPI, uvicorn, PyYAML, et pour les tests pytest et httpx (`pip install .[test]` ; TestClient l'exige — sans lui la collecte échoue) ; ne rien installer d'autre. Les lanceurs (`.cmd`, `.sh`) lisent son chemin dans `python.local` (non suivi), sinon `python` du PATH.
 - Gate unique : `python scripts/check.py` (tests + contrôles) — doit être vert avant tout commit.
+- Intégration : `python scripts/porte.py` lance la porte complète (check.py + check_ui.py) et, si elle est verte sur un arbre propre, écrit le reçu signé que la CI locale relit (INV-PORTE-1) ; `porte.py verifier` le contrôle.
 - Interface : `python scripts/check_ui.py` (Playwright, vrai serveur, vault temporaire, harnais factice ; hors porte rapide) — voir `tests/ui/README.md`.
 - Lancer : `lancer.cmd` (Windows) ou `./lancer.sh` (Linux) (le Python embarqué ignore `PYTHONPATH` : le script ajoute `src` lui-même), puis http://127.0.0.1:8300. `config.toml` se copie de `config.exemple.toml`.
 - Commande des agents : `python orch.py …` (jamais par un `.cmd` : espaces du chemin et guillemets).

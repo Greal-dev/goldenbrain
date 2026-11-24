@@ -26,10 +26,12 @@ async function charger() {
       body: JSON.stringify({ langue }) });
   }
   const dict = (await lireJson(`/langues/${langue}.json`)) || (langue === 'fr' ? {} : await lireJson('/langues/fr.json')) || {};
-  return { langue, dict };
+  return { langue, dict, etat };
 }
 
-const { langue, dict } = await charger();
+const { langue, dict, etat: etatInitial } = await charger();
+let initial = etatInitial; // réglages lus pour choisir la langue : interface.js les adopte sans relire la route
+export const etatInterfaceInitial = () => { const e = initial; initial = null; return e; };
 export const LANGUE = langue;
 export const LOCALE = LOCALES[langue];
 document.documentElement.lang = langue;

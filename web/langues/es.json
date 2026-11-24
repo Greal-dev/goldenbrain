@@ -477,6 +477,8 @@
  "conversation.etapes_ouvert.un": "{n} paso · ocultar",
  "conversation.modifier": "Modificar",
  "conversation.modifier_titre": "Modificar este mensaje y retomar la conversación desde aquí",
+ "conversation.regroupe": "GoldenBrain · ejecución agrupada",
+ "conversation.remontee": "GoldenBrain · informe de una tarea",
  "conversation.repondre": "Responder desde aquí",
  "conversation.repondre_titre": "Volver a la conversación justo después de esta respuesta y responder",
  "conversation.travaille": "el agente está trabajando…",

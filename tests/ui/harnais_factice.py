@@ -128,6 +128,10 @@ class HarnaisFactice:
     def transcript(self, session, limite):
         if session.startswith("s-journaux"):
             raise NotImplementedError
+        if session == "s-long":  # fil de 200 messages (tests/ui/charge.py) : texte markdown, outils, échanges alternés
+            return [Message("utilisateur" if i % 2 == 0 else "assistant",
+                            f"Message {i}\n\n" + "Un paragraphe de **texte** avec du `code` et une [liste](#) :\n\n- point un\n- point deux\n- point trois\n\n" * 2,
+                            [] if i % 2 == 0 else ["Read", "Edit", "Bash"], f"2026-11-12T10:{i % 60:02d}:00") for i in range(200)]
         texte = f"bonjour {session}" + (f"\n\n{EXPLICATION}" if session == "s-apprendre" else "")
         envoyes = [Message("utilisateur", m, [], "2026-11-12T09:59:00") for m in ENVOYES.get(session, [])]
         return envoyes + [Message("assistant", texte, ["Read"], "2026-11-12T10:00:00")]

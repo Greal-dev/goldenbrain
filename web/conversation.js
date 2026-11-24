@@ -13,10 +13,12 @@ export const memoriserEtapes = (v) => localStorage.setItem(CLE, v ? '1' : '0');
 const resumeOutils = (o) => { const m = {}; o.forEach((x) => { m[x] = (m[x] || 0) + 1; }); return Object.entries(m).map(([k, n]) => (n > 1 ? `${k} ×${n}` : k)).join(' · '); };
 
 export function elMsg(m, classes = '') {
-  // Message du système (échec d'un tour) : signé GoldenBrain, jamais confondu avec l'agent ni avec Vous.
+  // Message du système, signé GoldenBrain, jamais confondu avec l'agent ni avec Vous. Le titre et la couleur suivent l'issue réelle :
+  // « echec » seul est une alerte rouge ; un compte rendu de tâche (« remontee ») ou un regroupement est une information neutre.
   if (m.role === 'systeme') {
-    return h('article', { class: `msg systeme${classes ? ` ${classes}` : ''}`, role: 'alert' },
-      h('header', null, h('b', null, t('conversation.echec')), m.horodatage ? h('time', null, heure(m.horodatage)) : null),
+    const genre = ['remontee', 'regroupe'].includes(m.genre) ? m.genre : 'echec';
+    return h('article', { class: `msg systeme ${genre}${classes ? ` ${classes}` : ''}`, role: genre === 'echec' ? 'alert' : 'status' },
+      h('header', null, h('b', null, t(`conversation.${genre}`)), m.horodatage ? h('time', null, heure(m.horodatage)) : null),
       h('div', { class: 'md' }, m.texte));
   }
   const u = m.role === 'utilisateur';

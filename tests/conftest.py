@@ -51,7 +51,8 @@ def config(racine: Path, tmp_path: Path) -> Config:
         port=PORT,
         vault=ConfigVault(racine=racine, taches=["Projets/*/taches/*.md", "_meta/taches/*.md",
                                                  "_meta/templates/taches/*.md"],
-                          exclure=["_meta/templates/*"], gabarit_tache={"palier": "P1"}),
+                          exclure=["_meta/templates/*"], gabarit_tache={"palier": "P1"},
+                          index_ttl_s=0),  # les tests écrivent des fiches à la main puis relisent aussitôt
         moteur=ConfigMoteur(simultanes_max=2, sauts_max=3, harnais_defaut="faux"),
         harnais={"faux": {}},
         consigne="Tâche {titre} ({chemin}) place {fil_ariane} orch {orch} inconnue {autre}",

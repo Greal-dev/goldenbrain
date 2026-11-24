@@ -341,6 +341,8 @@ Les tests d'interface (`ui/`) se lancent à part : `python scripts/check_ui.py`.
 | `scripts/check_ui.py` | Lance les scénarios d'interface sur le vrai serveur (hors porte) | — | `ui/scenario_fumee.py` |
 | `scripts/captures.py` | Captures et vidéo du README : rejoue `ui/scenario_captures.py` dans les quatre langues et dépose images et vidéos dans `docs/captures/` (hors porte) | — | `ui/scenario_captures.py` |
 | `scripts/verrou.py` | Verrou d’exemplaire unique (fcntl/msvcrt) : une seule porte d’interface à la fois | — | `test_arbre_verrou.py` |
+| `scripts/porte.py` | Porte complète avec reçu signé de l'arbre testé (`lancer`) et son contrôle (`verifier`), pour que la CI ne rejoue pas une suite déjà validée | INV-PORTE-1 | `test_porte_recu.py` |
+| `tests/test_porte_recu.py` | Reçu de porte : arbre exact, signature, 24 h, arbre sale, porte rouge | INV-PORTE-1 | — |
 | `scripts/nouveautes.py` | Nouveautés d'une version publiée : `CHANGELOG.md`, note de version, commande `gh release create` (exécutée seulement avec `--envoyer`) | INV-NOUV-1 | `test_nouveautes.py` |
 | `tests/test_arbre_verrou.py` | Arrêt de l’arbre (petit-fils tué) et verrou de check_ui | — | — |
 | `scripts/essai_pause_ram.py` | Essai réel sur le poste (hors porte) : un agent factice suspendu puis repris, mémoire de travail mesurée avant et après | INV-SIMULT-1 | — |
@@ -483,6 +485,8 @@ Les tests d'interface (`ui/`) se lancent à part : `python scripts/check_ui.py`.
 | `tests/ui/scenario_ordonnancement.py` | Scénario de l'ordonnancement : lien « a pour prérequis » posé par « Lier… », « En attente de : … » puis départ seul, rang et motif dans « En file » et sur la tâche | — | — |
 | `tests/ui/scenario_ecrans_audit.py` | Audit L4 : fil sans « ? »/_meta, libellé « À valider », bandeau, colonnes DE/ES, gouttières, modale, graphe cadré, mobile | — | — |
 | `tests/ui/scenario_discussion.py` | Mode discussion : conversation ≥ 70 % de l'écran, rail de l'arbre (survol, clic, clavier), menu, notes en intercalaire, « Tout afficher », choix mémorisés | INV-DISCUSSION-1 | — |
+| `tests/ui/scenario_reactivite.py` | Budget de réactivité sur vault chargé : premier affichage, ouverture d'une tâche, intercalaires, frappe, défilement, événement d'une autre tâche, requêtes en double. | INV-REACTIVITE-1 | — |
+| `tests/ui/charge.py` | Peuple un vault de charge (260 tâches, 150 décisions, fil de 200 messages) pour `scenario_reactivite.py`. | INV-REACTIVITE-1 | — |
 | `tests/ui/scenario_detail_allege.py` | Ouverture de tâche allégée : hauteur au-dessus des messages ≤ 15 % (bureau, téléphone, trois langues), « Détails » à un clic, choix mémorisé | INV-DETAIL-1 | — |
 | `tests/ui/scenario_graphe.py` | Scénarios du second cerveau : mentions non liées, notes liées d'une tâche, graphe local et global filtré, clic d'ouverture | — | — |
 | `tests/ui/scenario_notes.py` | Scénarios des notes : lecture, édition, conflit d'édition (409) | — | — |

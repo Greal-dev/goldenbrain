@@ -118,7 +118,7 @@ def echecs_journaux(donnees: Path, ident: str) -> list[Message]:
                 continue
             if isinstance(brut, dict) and brut.get("type") in SYSTEME:
                 out.append(Message("systeme", str(brut.get("texte") or ""), [],
-                                   str(brut.get("date") or "")))
+                                   str(brut.get("date") or ""), genre=brut["type"].removeprefix("orch_")))
     return out
 
 
@@ -166,7 +166,7 @@ def relire_journaux(donnees: Path, ident: str, limite: int, registre: dict) -> l
                 continue
             if brut.get("type") in SYSTEME:  # INV-EXEC-8, INV-PILOTAGE-3 : message du système
                 messages.append(Message("systeme", str(brut.get("texte") or ""), [],
-                                        str(brut.get("date") or "")))
+                                        str(brut.get("date") or ""), genre=brut["type"].removeprefix("orch_")))
                 courant = None
                 continue
             if analyser:

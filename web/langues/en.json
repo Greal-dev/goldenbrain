@@ -477,6 +477,8 @@
  "conversation.etapes_ouvert.un": "{n} step · hide",
  "conversation.modifier": "Edit",
  "conversation.modifier_titre": "Edit this message and resume the conversation from here",
+ "conversation.regroupe": "GoldenBrain · grouped run",
+ "conversation.remontee": "GoldenBrain · task report",
  "conversation.repondre": "Reply from here",
  "conversation.repondre_titre": "Roll the conversation back to just after this reply and respond",
  "conversation.travaille": "the agent is working…",
