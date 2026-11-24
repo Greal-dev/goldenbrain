@@ -130,10 +130,19 @@ def test_premier_lancement_se_propose_meme_sur_vault_garni_et_bloque_l_ancien_pa
     assert client.get("/api/accueil/premiers-pas").json()["propose"] is False
 
 
-def test_plus_tard_laisse_un_rappel_et_aucun_ecran(client):
+def test_plus_tard_laisse_un_rappel_et_aucun_ecran_sur_vault_vide(client):
+    for f in client.cfg.vault.racine.rglob("*.md"):
+        f.unlink()
     assert client.post(BASE + "/plus-tard", headers=H).json()["etat"] == "differe"
     lu = client.get(BASE).json()
-    assert lu["propose"] is False and lu["rappel"] is True
+    assert lu["propose"] is False and lu["vide"] is True and lu["rappel"] is True
+
+
+def test_plus_tard_sur_vault_garni_ne_laisse_pas_de_rappel(client):
+    """Un vault déjà garni (217 tâches chez l'utilisateur) est configuré de fait : « Votre second cerveau n'est pas encore configuré » serait faux."""
+    assert client.post(BASE + "/plus-tard", headers=H).json()["etat"] == "differe"
+    lu = client.get(BASE).json()
+    assert lu["vide"] is False and lu["rappel"] is False
 
 
 def test_appliquer_meme_dossier_pas_de_redemarrage_et_rejoue_le_parcours(client):

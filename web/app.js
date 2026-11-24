@@ -41,6 +41,7 @@ import { initPremiersPas } from './premiers-pas.js';
 import { initCerveau } from './cerveau.js';
 import { initEconomie, recharger as rechargerEconomie } from './economie.js';
 import { initTelephone } from './telephone.js';
+import { initDiscussion } from './discussion.js';
 import { initManager, rechargerManager, evtManager, evtTourManager } from './manager.js';
 
 const droit = () => $('#volet-droit');
@@ -218,6 +219,7 @@ async function demarrer() {
   initBandeau();
   initIncidents();
   initTelephone();
+  initDiscussion();
   initCascade();
   initNoteVue();
   initPonts(creerDepuisLien);

@@ -37,6 +37,13 @@ def garni(tmp_path_factory):
     gen.close()
 
 
+@pytest.fixture
+def vide(tmp_path_factory):
+    gen, s = poste_neuf(tmp_path_factory, "vide")
+    yield s
+    gen.close()
+
+
 def ouvrir(navigateur, s):
     ctx = navigateur.new_context(viewport={"width": 1366, "height": 768}, locale="fr-FR")
     p = ctx.new_page()
@@ -124,8 +131,9 @@ def test_dossier_refuse_bloque_le_bouton_et_le_dit(navigateur, garni, tmp_path_f
     page.ctx.close()
 
 
-def test_plus_tard_laisse_un_rappel_visible_puis_reglages_rouvre(navigateur, garni):
-    page = ouvrir(navigateur, garni)
+def test_plus_tard_laisse_un_rappel_visible_puis_reglages_rouvre(navigateur, vide):
+    # Sur un vault garni le rappel ne revient pas (il serait faux) : voir tests/test_cerveau.py.
+    page = ouvrir(navigateur, vide)
     page.goto(page.url_serveur)
     page.click('[data-id="cerveau-plus-tard"]')
     expect(page.locator('[data-id="cerveau-rappel"]')).to_be_visible()

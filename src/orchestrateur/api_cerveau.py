@@ -35,8 +35,10 @@ def routes(config, moteur, vault) -> APIRouter:
     @r.get(ROUTE)
     async def lire():
         e = cerveau.etat(config)
-        return {"propose": e["etat"] == "", "etat": e["etat"] or "jamais", "rappel": e["etat"] == "differe",
-                "vault": str(vault.racine), "vide": squelette.vide(vault.racine, vault.cfg.arrivee),
+        vide = squelette.vide(vault.racine, vault.cfg.arrivee)
+        # Le rappel ne vaut que pour un second cerveau encore vide : un vault déjà garni est, de fait, configuré.
+        return {"propose": e["etat"] == "", "etat": e["etat"] or "jamais", "rappel": e["etat"] == "differe" and vide,
+                "vault": str(vault.racine), "vide": vide,
                 "defaut": str(vault.racine), "maison": str(Path.home())}
 
     @r.post(ROUTE + "/examiner")

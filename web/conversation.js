@@ -59,9 +59,10 @@ function blocTour(msgs, i, direct, deplies) {
 }
 
 // Historique -> nœuds. `direct` : le dernier tour est en cours (ligne d'activité au lieu d'une réponse finale).
-export function rendreConversation(msgs, direct, deplies) {
+// `n0` : numéro du premier tour (rendu en deux temps : la fin d'abord, le début ensuite, voir detail.js).
+export function rendreConversation(msgs, direct, deplies, n0 = 0) {
   const sortie = [];
-  let suite = [], n = 0;
+  let suite = [], n = n0;
   const vider = (dernier) => {
     if (suite.length || (dernier && direct)) sortie.push(blocTour(suite, n++, dernier && direct, deplies));
     suite = [];
@@ -71,6 +72,15 @@ export function rendreConversation(msgs, direct, deplies) {
   }
   vider(true);
   return sortie;
+}
+
+// Nombre de tours (groupes de messages de l'agent) que `rendreConversation` numérote dans `msgs`.
+export function nbTours(msgs) {
+  let n = 0, ouvert = false;
+  for (const m of msgs) {
+    if (m.role === 'utilisateur' || m.role === 'systeme') { if (ouvert) n++; ouvert = false; } else ouvert = true;
+  }
+  return n + (ouvert ? 1 : 0);
 }
 
 // --- direct (SSE) ---

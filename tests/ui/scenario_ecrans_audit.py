@@ -35,6 +35,7 @@ def srv_simple(tmp_path_factory):
 
 def ouvrir(navigateur, srv, route="/", w=1366, h=768):
     ctx = navigateur.new_context(viewport={"width": w, "height": h}, locale="fr-FR")
+    ctx.add_init_script("try{localStorage.setItem('gb.disposition','{\"tout\":true}')}catch(e){}")  # INV-DISCUSSION-1 : disposition complète
     p = ctx.new_page()
     p.goto(srv.url + route)
     p.wait_for_timeout(900)
@@ -82,7 +83,8 @@ def test_titres_tronques_portent_une_info_bulle(navigateur, srv):
 
 def test_bandeau_deux_rangees_nettes_sans_orphelin(navigateur, srv):
     p = ouvrir(navigateur, srv, "/", 1440, 900)
-    rangs = p.evaluate("""() => { const m = {}; for (const e of document.querySelector('.b-haut').children) { if (!e.offsetParent || !e.getBoundingClientRect().width) continue;
+    rangs = p.evaluate("""() => { const m = {}; const plat = (n) => [...n.children].flatMap(e => getComputedStyle(e).display === 'contents' ? plat(e) : [e]);
+      for (const e of plat(document.querySelector('.b-haut'))) { if (!e.offsetParent || !e.getBoundingClientRect().width) continue;
       const r = e.getBoundingClientRect(); const y = Math.round((r.top + r.height / 2) / 30); (m[y] = m[y] || []).push(e.id || e.className); } return m }""")
     assert len(rangs) <= 2, f"bandeau sur {len(rangs)} rangées : {rangs}"
     assert all(len(v) >= 4 for v in rangs.values()), f"éléments orphelins : {rangs}"

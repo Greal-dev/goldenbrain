@@ -176,6 +176,12 @@ The vault is your **second brain**: ordinary notes (Markdown files) that GoldenB
 - **Other actions**: “Link…” (prerequisite, feeds, see also), “Create from this” (neighbouring task), “Promote to project”, “Ask…” (opinion of a team expert).
 - **Good to know**: statuses: Not started → In progress → Waiting (a human is needed) or Finished → Approved. “Blocked” signals the technical failure of a work session. A project may require a check (`controle:` in its `contexte.md`) before a task can become “Finished”. In the vault, “Waiting” is written `statut: retour-humain`; a vault that uses another name declares it in `config.toml`: `[vault]` then `statut_retour = "<name>"`.
 
+### Discussion mode {#mode-discussion}
+
+- **What it is for**: as soon as a task is open, the conversation takes most of the screen (over 70% of a 1366×768 screen). Nothing is removed: everything stays one gesture away.
+- **How to do it**: the top bar fits on one row (logo, counters, search, “In progress”, “New task”, “Menu”). “Menu” (hover or click, Alt+M) drops down Team, Consistency review, Routine, Chains, Settings, Manager and the guide. The task tree folds into a rail on the left: hover for a preview, click to pin it (Alt+T). The notes fold into a tab on the right showing their count: click to open them (Alt+N). “Show everything” (in “Menu”, Alt+D) restores the full layout; “Discussion mode” goes back. Each choice is remembered per computer; a bubble explains it on first use. On a phone nothing changes.
+- **Good to know**: on opening, the latest exchanges appear first, the start of the history afterwards. The reminder “Your second brain is not configured yet” no longer appears once the vault already holds notes.
+
 ### Decisions {#decisions}
 
 - **What it is for**: a single place to settle everything that awaits a human.

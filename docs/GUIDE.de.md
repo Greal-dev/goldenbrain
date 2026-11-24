@@ -176,6 +176,12 @@ Der Vault ist Ihr **zweites Gehirn**: gewöhnliche Notizen (Markdown-Dateien), d
 - **Weitere Handlungen**: „Verknüpfen …“ (Voraussetzung, speist, siehe auch), „Daraus erstellen“ (benachbarte Aufgabe), „Zum Projekt hochstufen“, „Anfragen …“ (Meinung eines Experten des Teams).
 - **Gut zu wissen**: Status: Nicht begonnen → In Arbeit → Wartet (ein Mensch wird gebraucht) oder Abgeschlossen → Bestätigt. „Blockiert“ meldet das technische Scheitern einer Arbeitssitzung. Ein Projekt kann eine Prüfung verlangen (`controle:` in seiner `contexte.md`), bevor eine Aufgabe auf „Abgeschlossen“ wechselt. Im Vault wird „Wartet“ als `statut: retour-humain` geschrieben; ein Vault, der einen anderen Namen verwendet, deklariert ihn in `config.toml`: `[vault]`, dann `statut_retour = "<nom>"`.
 
+### Gesprächsmodus {#mode-discussion}
+
+- **Wozu**: Sobald eine Aufgabe geöffnet ist, nimmt das Gespräch den Großteil des Bildschirms ein (über 70 % eines 1366×768-Bildschirms). Nichts wird entfernt: Alles bleibt einen Handgriff entfernt.
+- **So geht es**: Die obere Leiste passt in eine Zeile (Logo, Zähler, Suche, „In Arbeit“, „Neue Aufgabe“, „Menü“). „Menü“ (Darüberfahren oder Klick, Alt+M) klappt Team, Konsistenzprüfung, Routine, Ketten, Einstellungen, Manager und die Anleitung auf. Der Aufgabenbaum klappt links zu einer Leiste zusammen: Darüberfahren zeigt eine Vorschau, ein Klick heftet ihn an (Alt+T). Die Notizen klappen rechts zu einem Reiter mit ihrer Anzahl zusammen: Ein Klick öffnet sie (Alt+N). „Alles anzeigen“ (im „Menü“, Alt+D) stellt die vollständige Ansicht wieder her; „Gesprächsmodus“ kehrt zurück. Jede Wahl wird pro Rechner gemerkt; beim ersten Mal erklärt eine Sprechblase alles. Auf dem Telefon ändert sich nichts.
+- **Gut zu wissen**: Beim Öffnen erscheinen zuerst die letzten Beiträge, danach der Anfang des Verlaufs. Der Hinweis „Ihr zweites Gehirn ist noch nicht eingerichtet“ erscheint nicht mehr, wenn der Vault schon Notizen enthält.
+
 ### Entscheidungen {#decisions}
 
 - **Wozu es dient**: ein einziger Ort, um alles zu entscheiden, was auf einen Menschen wartet.

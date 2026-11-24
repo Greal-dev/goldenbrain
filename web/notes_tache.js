@@ -8,28 +8,45 @@ import { api, post } from './api.js';
 import { rendreMd } from './md.js';
 import { creerIA } from './notes_ia.js';
 import { t } from './langues.js';
+import { notesRepliees } from './discussion.js';
 
 const enc = encodeURIComponent;
 const CLE = 'gb.panneaux-tache';
 const replis = () => { try { return JSON.parse(localStorage.getItem(CLE)) || {}; } catch { return {}; } };
 
-// Panneau réductible d'un clic ; replié, il se réduit à une bande portant son titre.
+// Panneau réductible d'un clic ; replié, il se réduit à une bande portant son titre (en mode discussion : un intercalaire vertical
+// à droite, avec le nombre de notes). Les notes sont repliées tant que l'utilisateur ne les a pas ouvertes (INV-DISCUSSION-1).
 export function panneau(nom, titre, ...contenu) {
   const bouton = h('button', { type: 'button', class: 'btn petit p-replier' });
+  const compte = h('span', { class: 'p-n n', hidden: true });
   const el = h('section', { class: `volet-t volet-t-${nom}`, 'data-panneau': nom },
-    h('header', { class: 'p-tete' }, h('h3', { class: 'p-titre' }, titre), bouton), h('div', { class: 'p-corps' }, ...contenu));
+    h('header', { class: 'p-tete' }, h('h3', { class: 'p-titre' }, titre), compte, bouton), h('div', { class: 'p-corps' }, ...contenu));
   const poser = (replie) => {
     el.classList.toggle('replie', replie);
     bouton.textContent = replie ? t('notes_tache.deplier') : t('notes_tache.replier');
     bouton.setAttribute('aria-expanded', String(!replie));
     bouton.title = replie ? t('notes_tache.deplier_titre', { titre }) : t('notes_tache.replier_titre', { titre });
   };
+  const etat = () => { const e = replis(); return nom in e ? !!e[nom] : nom === 'notes' && notesRepliees(); };
   bouton.addEventListener('click', () => {
     const e = replis(); e[nom] = !el.classList.contains('replie');
     try { localStorage.setItem(CLE, JSON.stringify(e)); } catch { /* stockage indisponible : l'état vaut pour la séance */ }
     poser(e[nom]);
   });
-  poser(!!replis()[nom]);
+  el.querySelector('.p-tete').addEventListener('click', (e) => { if (el.classList.contains('replie') && !e.target.closest('button')) bouton.click(); });
+  // « Tout afficher » déplie les notes ; le retour au mode discussion les replie (retour au défaut).
+  const suivre = (e) => {
+    if (!el.isConnected) { document.removeEventListener('gb-disposition', suivre); return; }
+    if (nom === 'notes') {
+      const x = replis();
+      if (e.detail?.tout) x[nom] = false; else delete x[nom];
+      try { localStorage.setItem(CLE, JSON.stringify(x)); } catch { /* stockage indisponible : séance */ }
+    }
+    poser(etat());
+  };
+  document.addEventListener('gb-disposition', suivre);
+  poser(etat());
+  el.compte = (n) => { compte.textContent = String(n); compte.hidden = !n; compte.title = t('notes_tache.compteur', { n }); };
   return el;
 }
 

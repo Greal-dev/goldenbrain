@@ -176,6 +176,12 @@ El vault es su **segundo cerebro**: notas corrientes (archivos Markdown) que Gol
 - **Otros gestos**: «Vincular…» (requisito previo, alimenta, ver también), «Crear a partir de esta» (tarea vecina), «Promover a proyecto», «Consultar…» (opinión de un experto del equipo).
 - **Conviene saber**: estados: Sin empezar → En curso → En espera (hace falta una persona) o Terminada → Validada. «Bloqueada» señala el fallo técnico de una sesión de trabajo. Un proyecto puede exigir una comprobación (`controle:` en su `contexte.md`) antes de que una tarea pase a «Terminada». En el vault, «En espera» se escribe `statut: retour-humain`; un vault que emplee otro nombre lo declara en `config.toml`: `[vault]` y luego `statut_retour = "<nombre>"`.
 
+### Modo conversación {#mode-discussion}
+
+- **Para qué sirve**: en cuanto se abre una tarea, la conversación ocupa la mayor parte de la pantalla (más del 70 % de una pantalla de 1366×768). No se elimina nada: todo queda a un gesto.
+- **Cómo se hace**: la barra superior cabe en una fila (logotipo, contadores, búsqueda, «En curso», «Nueva tarea», «Menú»). «Menú» (cursor encima o clic, Alt+M) despliega Equipo, Revisión de coherencia, Rutina, Cadenas, Ajustes, Manager y la guía. El árbol de tareas se pliega en un carril a la izquierda: pasar el cursor muestra una vista previa y un clic lo fija (Alt+T). Las notas se pliegan en una pestaña a la derecha con su número: un clic las despliega (Alt+N). «Mostrar todo» (en «Menú», Alt+D) restablece la disposición completa; «Modo conversación» vuelve a ella. Cada elección se recuerda por equipo; un globo lo explica la primera vez. En el teléfono no cambia nada.
+- **Conviene saber**: al abrir, aparecen primero los últimos intercambios y después el principio del historial. El aviso «Su segundo cerebro aún no está configurado» ya no aparece cuando el vault contiene notas.
+
 ### Decisiones {#decisions}
 
 - **Para qué sirve**: un único lugar para resolver todo lo que espera a una persona.

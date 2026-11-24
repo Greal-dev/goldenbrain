@@ -181,6 +181,12 @@ Le vault est votre **second cerveau** : des notes ordinaires (fichiers Markdown)
 - **Autres gestes** : « Lier… » (prérequis, alimente, voir aussi), « Créer à partir de » (tâche voisine), « Promouvoir en projet », « Solliciter… » (avis d'un expert de l'équipe).
 - **À savoir** : statuts : Non commencée → En cours → En attente (il faut un humain) ou Terminée → Validée. « Bloquée » signale l'échec technique d'une séance de travail. Un projet peut exiger une vérification (`controle:` dans son `contexte.md`) avant qu'une tâche passe « Terminée ». Il peut aussi déclarer sa tâche d'intégration (`integration: <identifiant>` dans son `contexte.md`) : toute tâche créée dans ce projet l'alimente d'office, si bien que ses branches terminées sont fusionnées sans qu'on y pense. Dans le vault, « En attente » s'écrit `statut: retour-humain` ; un vault qui emploie un autre nom le déclare dans `config.toml` : `[vault]` puis `statut_retour = "<nom>"`.
 
+### Mode discussion {#mode-discussion}
+
+- **À quoi ça sert** : dès qu'une tâche est ouverte, la conversation occupe l'essentiel de l'écran (plus de 70 % d'un écran 1366×768). Rien n'est supprimé : tout reste à un geste.
+- **Comment faire** : la barre du haut tient sur une rangée (logo, compteurs, recherche, « En cours », « Nouvelle tâche », « Menu »). « Menu » (survol ou clic, Alt+M) déroule Équipe, Revue de cohérence, Routine, Chaînes, Réglages, Manager et le guide. L'arbre des tâches se replie en un rail à gauche : le survol en montre un aperçu, un clic l'épingle (Alt+T). Les notes se replient en un intercalaire à droite portant leur nombre : un clic les déplie (Alt+N). « Tout afficher » (dans « Menu », Alt+D) rétablit la disposition complète ; « Mode discussion » y revient. Chaque choix est mémorisé par poste ; une bulle le rappelle au premier usage. Au téléphone, rien ne change.
+- **À savoir** : à l'ouverture, les derniers échanges s'affichent d'abord, le début de l'historique ensuite. Le rappel « Votre second cerveau n'est pas encore configuré » n'apparaît plus quand le vault contient déjà des notes.
+
 ### Décisions
 
 - **À quoi ça sert** : un seul endroit pour trancher tout ce qui attend un humain.

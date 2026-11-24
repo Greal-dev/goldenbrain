@@ -17,7 +17,7 @@ import { blocEconomie } from './economie.js';
 import { selecteurApprendre } from './apprendre.js';
 import { modifierMessage, blocVersions } from './modifier.js';
 import { selecteurExecution, motifExecution } from './execution.js';
-import { elMsg, rendreConversation, evenementDirect, groupeDirect, etapesAffichees, memoriserEtapes } from './conversation.js';
+import { elMsg, rendreConversation, nbTours, evenementDirect, groupeDirect, etapesAffichees, memoriserEtapes } from './conversation.js';
 import { deplacerVers } from './glisser.js';
 import { promouvoir as promouvoirTache } from './transfo.js';
 import { editeurTemps } from './temps.js';
@@ -84,7 +84,8 @@ function squelette() {
   // INV-EXECUTANT-2 : deux panneaux réductibles, côte à côte (empilés sur écran étroit), sans onglet.
   r.notes = creerNotes(() => rafraichir(), erreur);
   r.pConv = panneau('conv', t('detail.conversation'), h('div', { class: 'p-defile' }, r.defile, r.bas), form);
-  remplacer(racine, h('div', { class: 'detail' }, r.tete, h('div', { class: 'd-zone' }, r.pConv, panneau('notes', t('detail.notes'), r.notes.el))));
+  r.pNotes = panneau('notes', t('detail.notes'), r.notes.el);
+  remplacer(racine, h('div', { class: 'detail' }, r.tete, h('div', { class: 'd-zone' }, r.pConv, r.pNotes)));
 }
 
 function descendre(force) { if (force || colle) { r.defile.scrollTop = r.defile.scrollHeight; colle = true; r.bas.hidden = true; } }
@@ -238,6 +239,7 @@ function dessiner() {
   rendreMd(r.corpsMd, tache.corps || '');
   r.corps.hidden = !(tache.corps || '').trim();
   r.notes.dessiner(tache);
+  r.pNotes.compte((tache.notes || []).length);
   modeMoi();
 }
 // INV-EXECUTANT-1 : tâche « Moi » → conversation lisible mais inactive (aucun tour d'agent) ; le travail s'écrit dans les Notes.
@@ -263,18 +265,39 @@ function basculerEtapes() {
   if (colle) descendre(true);
   else if (ancre) d.scrollTop += ancre.getBoundingClientRect().top - avant;
 }
+// Ouverture (INV-DISCUSSION-1) : le fil est demandé dès l'ouverture, en parallèle des moteurs et de la fiche, puis les derniers
+// échanges s'affichent d'abord ; le début de l'historique se dessine ensuite, sans bouger ce qu'on lit.
+const lireConv = (i) => api(`/taches/${enc(i)}/conversation?limite=200`);
+let prechargee = null; // { id, p } : fil lancé par ouvrirDetail
+const PREMIERS = 30; // messages rendus avant le reste de l'historique
+function afficherConv(l, initial) {
+  const contenu = (x, n0 = 0) => (x.length || direct ? rendreConversation(x, direct, deplies, n0) : h('p', { class: 'vide' }, t('detail.aucun_echange')));
+  let k = l.length - PREMIERS;
+  while (initial && k > 0 && l[k].role !== 'utilisateur' && l[k].role !== 'systeme') k--; // coupe au début d'un échange
+  if (!initial || k <= 0) { remplacer(r.conv, contenu(l)); return; }
+  const debut = l.slice(0, k), conv = r.conv, courant = id;
+  remplacer(conv, contenu(l.slice(k), nbTours(debut)));
+  descendre(true);
+  setTimeout(() => {
+    if (r.conv !== conv || courant !== id) return;
+    const d = r.defile, h0 = d.scrollHeight, t0 = d.scrollTop, noeuds = rendreConversation(debut, false, deplies);
+    const v = conv.querySelector(':scope > .modif-versions');
+    if (v) v.after(...noeuds); else conv.prepend(...noeuds);
+    d.scrollTop = t0 + d.scrollHeight - h0; // le défilement est géré à la main (lot7.css) : on compense l'ajout au-dessus
+  }, 0);
+}
 async function chargerConv(initial) {
   const courant = id;
-  const l = await agir(() => api(`/taches/${enc(id)}/conversation?limite=200`));
+  const pre = initial && prechargee?.id === courant ? prechargee.p : null;
+  prechargee = null;
+  const l = (pre && await pre) || await agir(() => lireConv(id));
   if (!l || courant !== id) return;
   const avait = colle;
-  remplacer(r.conv, l.length || direct ? rendreConversation(l, direct, deplies) : h('p', { class: 'vide' }, t('detail.aucun_echange')));
+  afficherConv(l, initial);
+  if (initial || avait) descendre(true); // le dernier échange d'abord : la fiche vit derrière « Détails »
   const versions = await blocVersions(courant); // INV-RETOUR-2 : la fin retirée reste consultable
   if (versions && courant === id) { r.conv.querySelector(':scope > .modif-versions')?.remove(); r.conv.prepend(versions); } // deux chargements concurrents : un seul bloc
-  if (initial) {
-    // Tour en cours : on suit le direct ; sinon on montre la fiche d'abord.
-    if (direct) descendre(true); else { r.defile.scrollTop = 0; colle = r.defile.scrollHeight - r.defile.clientHeight < 48; }
-  } else if (avait) descendre(true);
+  if (initial || avait) descendre(true);
 }
 function ajouter(el, avant = null) {
   r.conv.querySelector('.vide')?.remove();
@@ -406,6 +429,7 @@ export async function ouvrirDetail(nouvelId) {
   id = nouvelId; tache = null; instantane = ''; colle = true; ficheAbsente = false; choixMoteur = null; direct = false; deplies = new Set();
   squelette();
   remplacer(r.une, h('p', { class: 'vide' }, t('detail.chargement')));
+  prechargee = { id, p: lireConv(id).catch(() => null) };
   await agir(chargerHarnais); // liste des moteurs avant le premier dessin de l'en-tête
   instantane = ''; // un rafraîchissement parti pendant le chargement a pu dessiner sans la liste
   await rafraichir(true);

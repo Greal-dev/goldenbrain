@@ -235,6 +235,8 @@ Les tests d'interface (`ui/`) se lancent à part : `python scripts/check_ui.py`.
 | `web/cascade.js` | vue en cascade du volet droit — sous-arbre des tâches en tableau indenté repliable, | — | chargement par `ui/scenario_fumee.py` seulement |
 | `web/conseil.js` | avis d'un agent rapide avant une promotion ou une réduction — attente annulable, dialogue « L'agent déconseille… ». | — | chargement par `ui/scenario_fumee.py` seulement |
 | `web/conversation.js` | rendu de la conversation d'une tâche — messages, tours, étapes à la demande, activité en direct. | INV-WEB-1 | `ui/scenario_fumee.py` (arbre, tâche, conversation), `ui/scenario_modifier.py` |
+| `web/discussion.css` | mode discussion : grille à rail, barre d'une rangée, menu déroulant, notes en intercalaire | INV-DISCUSSION-1 | `ui/scenario_discussion.py` |
+| `web/discussion.js` | mode discussion : barre haute d'une rangée, rail de l'arbre, menu, « Tout afficher » (disposition mémorisée par poste). | INV-DISCUSSION-1 | `ui/scenario_discussion.py` |
 | `web/detail.js` | volet droit — tâche sélectionnée (en-tête, actions, fiche, corps, conversation, saisie). | — | `ui/scenario_fumee.py` (arbre, tâche, conversation), `ui/scenario_console.py`, `ui/scenario_modifier.py` |
 | `web/notes_tache.js` | panneau « Notes » de la tâche : liste datée en Markdown, ajout, « Modifier » ; repli des deux panneaux. | INV-EXECUTANT-2 | `ui/scenario_executant.py` |
 | `web/notes_ia.js` | barre « IA » du panneau Notes : portée (sélection ou tout), proposition avec différence, Remplacer / Insérer / Annuler, annulation après application. | INV-EXECUTANT-3 | `ui/scenario_executant.py` |
@@ -480,6 +482,7 @@ Les tests d'interface (`ui/`) se lancent à part : `python scripts/check_ui.py`.
 | `tests/ui/scenario_poste.py` | Scénario du poste : bandeau « Poste réservé », tâche lourde « En attente du poste », départ après « Libérer » | — | — |
 | `tests/ui/scenario_ordonnancement.py` | Scénario de l'ordonnancement : lien « a pour prérequis » posé par « Lier… », « En attente de : … » puis départ seul, rang et motif dans « En file » et sur la tâche | — | — |
 | `tests/ui/scenario_ecrans_audit.py` | Audit L4 : fil sans « ? »/_meta, libellé « À valider », bandeau, colonnes DE/ES, gouttières, modale, graphe cadré, mobile | — | — |
+| `tests/ui/scenario_discussion.py` | Mode discussion : conversation ≥ 70 % de l'écran, rail de l'arbre (survol, clic, clavier), menu, notes en intercalaire, « Tout afficher », choix mémorisés | INV-DISCUSSION-1 | — |
 | `tests/ui/scenario_detail_allege.py` | Ouverture de tâche allégée : hauteur au-dessus des messages ≤ 15 % (bureau, téléphone, trois langues), « Détails » à un clic, choix mémorisé | INV-DETAIL-1 | — |
 | `tests/ui/scenario_graphe.py` | Scénarios du second cerveau : mentions non liées, notes liées d'une tâche, graphe local et global filtré, clic d'ouverture | — | — |
 | `tests/ui/scenario_notes.py` | Scénarios des notes : lecture, édition, conflit d'édition (409) | — | — |

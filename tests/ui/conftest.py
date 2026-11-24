@@ -94,6 +94,7 @@ def navigateur():
 def page(navigateur, serveur):
     ctx = navigateur.new_context(viewport={"width": 1366, "height": 768}, locale="fr-FR")  # INV-LANGUE-1 : sinon la langue détectée serait celle de Chromium (en-US)
     ctx.add_init_script("try{localStorage.setItem('gb.detail-ouvert','1')}catch(e){}")  # INV-DETAIL-1 : les scénarios existants visent le contenu des Détails ; la fermeture par défaut est gardée par scenario_detail_allege
+    ctx.add_init_script("try{localStorage.setItem('gb.disposition','{\"tout\":true}')}catch(e){}")  # INV-DISCUSSION-1 : les scénarios existants visent la disposition complète ; le mode discussion est gardé par scenario_discussion
     p = ctx.new_page()
     p.erreurs = []
     p.on("console", lambda m: p.erreurs.append(m.text) if m.type in ("error", "warning") else None)

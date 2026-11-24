@@ -82,7 +82,7 @@ export function initEconomie() {
   const bouton = document.getElementById('btn-reglages');
   if (!bouton) return;
   repere = h('span', { class: 'eco-repere', id: 'eco-repere', 'data-id': 'eco-repere', hidden: true });
-  bouton.before(repere);
+  (bouton.closest('.b-menu-zone') || bouton).before(repere); // le repère reste sur la rangée, le bouton est dans le menu (INV-DISCUSSION-1)
   recharger();
 }
 

@@ -78,6 +78,7 @@ def test_captures_et_video(navigateur, demo, tmp_path):
     sortie.mkdir(parents=True, exist_ok=True)
     films = tmp_path / "films"
     ctx = navigateur.new_context(viewport=TAILLE, locale=code, record_video_dir=str(films), record_video_size=TAILLE)
+    ctx.add_init_script("try{localStorage.setItem('gb.disposition','{\"tout\":true}')}catch(e){}")  # INV-DISCUSSION-1 : disposition complète
     page = ctx.new_page()
     erreurs = []
     page.on("pageerror", lambda e: erreurs.append(str(e)))

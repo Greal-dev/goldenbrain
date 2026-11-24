@@ -13,11 +13,16 @@ import datetime as dt
 import json
 import os
 import shutil
+import threading
 from pathlib import Path
 from typing import AsyncIterator
 
 from . import Evenement, Message, distant as _distant, suivi as _suivi
 from .processus import SESSION_PROPRE, arreter_arbre
+
+
+_VERROU = threading.Lock()
+_TRANSCRIPTS: dict[tuple, list[Message]] = {}  # analyses récentes de transcripts (voir `transcript`)
 
 
 def _instant(texte: str):
@@ -202,6 +207,20 @@ class HarnaisClaude:
         fichier = next(self.transcripts.glob(f"*/{session}.jsonl"), None) if session else None
         if not fichier:
             return []
+        # Analyse mémorisée par (fichier, date, taille) : l'ouverture d'une tâche relit son fil plusieurs fois (premier affichage,
+        # puis chaque fin de tour) ; un transcript de plusieurs Mo ne se ré-analyse que s'il a changé.
+        st = fichier.stat()
+        cle = (str(fichier), st.st_mtime_ns, st.st_size)
+        if (vu := _TRANSCRIPTS.get(cle)) is None:
+            vu = self._analyser(fichier)
+            with _VERROU:  # appelé depuis des fils de travail
+                while len(_TRANSCRIPTS) >= 4:
+                    _TRANSCRIPTS.pop(next(iter(_TRANSCRIPTS)))
+                _TRANSCRIPTS[cle] = vu
+        return list(vu[-limite:] if limite > 0 else vu)
+
+    @staticmethod
+    def _analyser(fichier: Path) -> list[Message]:
         messages: list[Message] = []
         apres_hook = False
         for ligne in fichier.read_text(encoding="utf-8", errors="replace").splitlines():
@@ -228,7 +247,7 @@ class HarnaisClaude:
             messages.append(Message(role, "\n".join(textes).strip(), outils,
                                     str(brut.get("timestamp") or ""),
                                     secondaire=apres_hook and role == "assistant"))
-        return messages[-limite:] if limite > 0 else messages
+        return messages
 
     def point_de_reprise(self, session: str, texte: str, date: str) -> str:
         """INV-RETOUR-1 : identifiant de l'entrée qui précède le message `texte` dans la session

@@ -85,6 +85,7 @@ def srv(tmp_path_factory, navigateur):
 def _un_tour(navigateur, url: str) -> None:
     """Un tour factice terminé : la tâche montre conversation et fiche, Décisions une validation à trancher."""
     ctx = navigateur.new_context(locale="fr-FR")
+    ctx.add_init_script("try{localStorage.setItem('gb.disposition','{\"tout\":true}')}catch(e){}")  # INV-DISCUSSION-1 : disposition complète
     page = ctx.new_page()
     try:
         page.goto(url + "/#t=maquette")
@@ -213,6 +214,7 @@ def _parcours(page, url: str, code: str) -> list[str]:
 @pytest.mark.parametrize("code", ["en", "de", "es"])
 def test_aucun_francais_visible(navigateur, srv, code):
     ctx = navigateur.new_context(viewport={"width": 1366, "height": 768}, locale="fr-FR")
+    ctx.add_init_script("try{localStorage.setItem('gb.disposition','{\"tout\":true}')}catch(e){}")  # INV-DISCUSSION-1 : disposition complète
     page = ctx.new_page()
     erreurs = []
     page.on("pageerror", lambda e: erreurs.append(str(e)))
@@ -230,6 +232,7 @@ def test_captures_quatre_langues(navigateur, srv):
     sortie = Path(os.environ["GB_CAPTURES_LANGUES"])
     sortie.mkdir(parents=True, exist_ok=True)
     ctx = navigateur.new_context(viewport={"width": 1366, "height": 768}, locale="fr-FR")
+    ctx.add_init_script("try{localStorage.setItem('gb.disposition','{\"tout\":true}')}catch(e){}")  # INV-DISCUSSION-1 : disposition complète
     page = ctx.new_page()
     try:
         for code in ("fr", "en", "de", "es"):

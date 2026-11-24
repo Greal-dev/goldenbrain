@@ -6,10 +6,10 @@
    laisser « Intelligent / Réglages / Manager / ? » tomber seuls à la ligne selon la langue. */
 @media (min-width: 481px) {
   .b-haut { row-gap: 4px; }
-  .b-haut::before { content: ""; flex: 0 0 100%; order: 2; height: 0; }
-  .b-haut > :is(#btn-equipe, #btn-revue, #btn-nouvelle, #btn-routine, #btn-chaines, #eco-repere, #btn-reglages, #btn-manager, #btn-guide, #conn) { order: 3; }
+  body:not(.discussion) .b-haut::before { content: ""; flex: 0 0 100%; order: 2; height: 0; }
+  body:not(.discussion) .b-haut > :is(#btn-nouvelle, #eco-repere, #conn), body:not(.discussion) .b-menu > * { order: 3; }
   .b-haut > #eco-repere { margin-left: auto; }
-  .b-haut > .rech-zone { order: 1; }
+  body:not(.discussion) .b-haut > .rech-zone { order: 1; }
   #recherche { min-width: 120px; }
 }
 

@@ -38,6 +38,7 @@ SECTIONS: dict[str, str] = {
     "reprise-de-vos-projets": "Reprise de vos projets",
     "arbre-et-listes": "Arbre et listes",
     "tache": "Tâche",
+    "mode-discussion": "Mode discussion",
     "decisions": "Décisions",
     "aujourd-hui": "Aujourd'hui",
     "en-cours": "En cours",
