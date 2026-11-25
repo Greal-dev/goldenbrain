@@ -201,6 +201,7 @@ def creer_app(config: Config, moteur: Moteur | None = None) -> FastAPI:
     def tache(ident: str) -> dict:
         d, origine = depot.dossier_de_travail(vault, ident)
         return {**vault.detail(ident), "etat_execution": moteur.etat_de(ident),
+                "reprise_auto": moteur.reprise_auto.attendue(ident),  # INV-REPRISE-1
                 "dossier_travail": d, "dossier_travail_origine": origine,
                 "attente_poste": moteur.attente_poste(ident), "rang_poste": moteur.poste.rang(ident),  # INV-POSTE-1
                 "pause_ram": moteur._sem.en_pause(ident), "pause": moteur.pause_de(ident),  # INV-SIMULT-1, INV-EXEC-10

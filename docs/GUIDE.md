@@ -120,7 +120,7 @@ Dix minutes, sans rien configurer de plus.
 5. **Valider** : quand l'agent se déclare « Terminée », la tâche attend votre « Valider » ou « Renvoyer… » (avec un motif rendu à l'agent).
 6. **Décisions** : le bouton « Décisions » (en haut) rassemble tout ce qui attend votre geste : tâches à valider, questions des agents, propositions de rangement et de liens, dont celles du jardinier (la revue de cohérence : elle ne fait que proposer, jamais d'écriture d'office ; `plafond` dans `[jardinage]` borne leur nombre par passage, 7 par défaut).
 
-À savoir : l'installation neuve est en mode **Simple** (projets, tâches, conversation, statut, valider). Réglages → « Avancé » montre tout le reste.
+À savoir : l'installation neuve est en mode **Simple** (projets, tâches, conversation, statut, valider). Réglages → « Avancé » montre tout le reste. En Simple, le fil d'Ariane ne montre pas le dossier technique « _meta », la tâche « Assistant Telegram » est traduite dans la langue choisie et la ligne « Prévu : moteur (motif) » d'une tâche est masquée.
 
 ## Organiser votre second cerveau
 
@@ -325,7 +325,7 @@ Le vault est votre **second cerveau** : des notes ordinaires (fichiers Markdown)
 | `livrable <id> <chemin\|url> [--titre …] [--type …] [--attendu "<titre>"]` | déclarer un livrable produit (fichier, page, `branche:…`, `commit:…`, `publie:<url>`) ou annoncer un livrable attendu ; à faire pour tout artefact créé |
 | `dire <id> "<message>" [--rouvrir]` | écrire à la tâche (refusé si elle est close ou abandonnée, sauf `--rouvrir`) : son agent le reçoit au prochain tour (le lance s'il est libre) |
 | `renommer <id> "<titre>"` | changer le titre d'une tâche (identifiant et fichier inchangés) |
-| `relancer <id>` | relancer une tâche en échec ou interrompue |
+| `relancer <id>` | relancer une tâche en échec ou interrompue ; une séance coupée par la mémoire du poste, un redémarrage ou une erreur passagère du service repart seule (trois fois au plus, « interrompu (reprise automatique dans la file) »), puis la tâche vous est rendue ; un arrêt demandé par vous ne reprend jamais seul. Commitez une étape sur votre branche à chaque palier : la reprise retrouve l'arbre de travail et la branche |
 | `arreter <id>` | arrêter le tour en cours |
 | `deleguer "<titre>" "<brief>"` | confier un travail à une tâche enfant lancée par GoldenBrain |
 | `proposer deplacer\|rattacher\|projet\|operation\|ticket\|tache\|lier\|perimetre\|echeance\|fermer\|renommer …` | proposer un changement de structure (`--motif`, obligatoire pour `renommer`) ; `rattacher <id> <parent|racine> [--aussi <id>…]` range un lot de tâches sous une tâche parente (ou les détache vers leur projet) en UNE proposition, refusée si cycle, tâche en cours, autre projet, plafond de 10 ou natures mêlées ; l'humain accepte d'un clic. En mode simple, les propositions sont ignorées (Réglages > Propositions); un geste dont l'effet est déjà en place n'est pas déposé, et s'il le devient avant l'acceptation, il est conclu « déjà fait » sans erreur Les gestes de routine (Réglages > Propositions) sont appliqués d'office et annulables depuis Décisions ; une proposition `tache` venue d'un agent devient une ligne de sa tâche. |

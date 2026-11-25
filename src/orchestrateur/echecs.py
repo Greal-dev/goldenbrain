@@ -28,6 +28,15 @@ REPRISE = re.compile(r"(?:try again|retry|resets?)\s*(?:at|in|after|on)?\s+(\d[^
                      re.I)
 
 
+# Erreur d'API passagère (service sans réponse ou surchargé) : reprise d'office bornée (INV-REPRISE-1).
+PASSAGERE = re.compile(r"no response from api|overloaded|api error:? ?\(?(?:500|502|503|504|529)\b|internal server error"
+                       r"|service unavailable|bad gateway|gateway time-?out", re.I)
+
+
+def est_passagere(motif: str) -> bool:
+    return bool(motif) and not est_quota(motif) and bool(PASSAGERE.search(motif))
+
+
 def est_quota(motif: str) -> bool:
     return bool(QUOTA.search(motif or ""))
 

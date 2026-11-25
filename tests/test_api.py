@@ -65,7 +65,7 @@ def test_tache_forme_et_404(client):
     t = client.get("/api/taches/enfant").json()
     assert set(t) == {"id", "chemin", "titre", "conteneur", "fil_ariane", "fil", "frontmatter",
                       "statut", "genre", "genre_pose",
-                      "statut_verrouille", "harnais", "session", "etat_execution", "attente_poste", "rang_poste", "pause_ram", "pause",
+                      "statut_verrouille", "harnais", "session", "etat_execution", "reprise_auto", "attente_poste", "rang_poste", "pause_ram", "pause",
                       "controle", "attente_prerequis", "rang_file", "execution", "executant", "notes", "signe", "raison_attente", "incident", "fiche",
                       "corps", "enfants", "parent", "liens", "revues", "renvois", "echeance", "priorite",
                       "retard", "dossier_travail", "dossier_travail_origine"}

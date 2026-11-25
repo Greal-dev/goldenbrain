@@ -116,15 +116,16 @@ class MixinReveil:
             t.cancel()
         self._relancer(ident)
 
-    def _reveil_fin(self, ident: str, envoi, erreur: str | None, nom: str, arrete: bool) -> None:
+    def _reveil_fin(self, ident: str, envoi, erreur: str | None, nom: str, arrete: str) -> None:  # arrete : cause (« ram », « serveur », « humain ») ou vide
         """Fin d'un tour : programme le réveil sur un quota épuisé, l'efface sinon (INV-EXEC-10)."""
         prec = self.reveils.get(ident)
         if not erreur and not arrete:
             self.incidents.clore(ident)  # INV-INCIDENT-1 : tour abouti, bandeau levé
         if arrete:  # INV-INCIDENT-1 : un arrêt se voit aussi (manuel, ou serveur arrêté)
-            self.incidents.noter(ident, nom, "redémarrage du serveur" if self.ferme else "tour interrompu",
-                                 langues.t("serveur.reveil.repris_demarrage") if self.ferme
-                                 else langues.t("serveur.reveil.rendu_humain"), envoi.role or "tache")
+            motif, action = {"ram": ("mémoire du poste saturée", "serveur.reveil.repris_ram"),
+                             "serveur": ("redémarrage du serveur", "serveur.reveil.repris_demarrage")}.get(
+                arrete if not self.ferme else "serveur", ("tour interrompu", "serveur.reveil.rendu_humain"))
+            self.incidents.noter(ident, nom, motif, langues.t(action), envoi.role or "tache")
         if arrete or not erreur or not echecs.est_quota(erreur) or envoi.role not in ("", "tache") \
                 or not self.config.economie.quota_attente:  # INV-QUOTA-1 : attente réglable
             if erreur and not arrete:

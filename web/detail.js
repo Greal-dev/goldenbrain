@@ -3,7 +3,7 @@
 import { h, libelleStatut, nomLisible, pastille, remplacer, ajouter as ajouterDom } from './dom.js';
 import { rendreMd } from './md.js';
 import { S, on, emit, erreur, ouvrir, ouvrirVue, ouvrirNote, ouvrirGraphe, noeudTache } from './store.js';
-import { filVisible } from './interface.js';
+import { filVisible, simple } from './interface.js';
 import { cheminVaultTache } from './ponts.js';
 import { notesLiees } from './notes-liees.js';
 import { api, post } from './api.js';
@@ -112,9 +112,9 @@ const normT = (s) => (s || '').normalize('NFD').replace(/\p{M}/g, '').toLowerCas
 function segmentsFil(tk) {
   const aller = (type, nid) => (type === 'tache' ? ouvrir(nid) : ouvrirVue('cascade', `${type}:${nid}`));
   const lien = (txt, type, nid) => h('span', null, h('button', { class: 'crumb', type: 'button', title: t('detail.aller', { titre: txt }), onclick: () => aller(type, nid) }, txt));
-  if (tk.fil?.length) return filVisible(tk.fil).filter((s) => s.titre !== '?').map((s) => lien(nomLisible(s.titre), s.type, s.id));
+  if (tk.fil?.length) return filVisible(tk.fil).filter((s) => s.titre !== '?' && !(simple() && s.titre === '_meta')).map((s) => lien(nomLisible(s.titre), s.type, s.id));
   let niveau = S.arbre;
-  return (tk.fil_ariane || []).map((txt) => {
+  return (tk.fil_ariane || []).filter((txt) => txt !== '?' && !(simple() && txt === '_meta')).map((txt) => {
     const q = normT(txt);
     const n = niveau.find((x) => normT(x.titre) === q || (x.type === 'casquette' && normT(x.titre).startsWith(q)));
     niveau = n?.enfants || [];
@@ -152,7 +152,7 @@ function dessinerTete() {
     : tk.attente_poste ? t('detail.poste_reserve', { titre: tk.attente_poste.titre })
     : tk.etat_execution === 'en_file' && tk.rang_file ? t('detail.en_file_rang', { libelle: tk.rang_file.libelle, motif: tk.rang_file.motif }) // INV-ORDO-2
     : tk.etat_execution === 'en_pause' ? (tk.pause || t('detail.pause_quota'))
-    : { en_cours: t('detail.tour_en_cours'), en_file: t('detail.en_file'), interrompu: t('detail.tour_interrompu'), attente_reseau: t('detail.attente_reseau') }[tk.etat_execution];
+    : { en_cours: t('detail.tour_en_cours'), en_file: t(tk.reprise_auto ? 'detail.reprise_auto' : 'detail.en_file'), interrompu: t(tk.reprise_auto ? 'detail.reprise_auto' : 'detail.tour_interrompu'), attente_reseau: t('detail.attente_reseau') }[tk.etat_execution];
   const b = (txt, f, o = {}) => h('button', { class: `btn petit${o.cls ? ' ' + o.cls : ''}`, type: 'button', onclick: f, disabled: o.off ? true : null, title: o.titre || null }, txt);
   // Alertes : la plus importante en tête de ligne, les autres en compteur ; toutes se lisent dans « Détails » (INV-DETAIL-1).
   const alertes = [tk.incident && tk.incident.libelle, tk.pause_ram && t('detail.pause_ram'), tk.controle?.verdict && tk.controle.verdict.verdict !== 'reussi' && t('detail.controle_echoue')].filter(Boolean);

@@ -6,7 +6,7 @@ Rôle : remplace le sémaphore du moteur. `Creneaux` décide si un tour peut dé
 (suspension de son arbre de processus, mémoire de travail vidée) et reprend les pauses en
 ordre inverse quand la RAM redevient disponible.
 Frontières : aucun appel système direct (tout passe par `poste_ram`) ; aucune écriture vault ;
-le repli (suspension impossible) arrête le tour et le remet en file par `reprise`.
+le repli (suspension impossible) arrête le tour et le remet en file par `reprise_auto`.
 Invariants portés : INV-SIMULT-1 (une pause ne perd aucun travail ; tant qu'une pause dure ou
 que le seuil est dépassé, aucun tour en file ne démarre), INV-ALIGN-2 (`bloquer` : aucun tour
 ne démarre pendant une opération exclusive), INV-ORDO-2 (un créneau libre va au tour en tête du
@@ -21,7 +21,7 @@ import itertools
 import logging
 from dataclasses import asdict, dataclass
 
-from . import langues, ordonnancement, poste_ram, reprise
+from . import langues, ordonnancement, poste_ram
 from .propositions import maintenant
 from .vault import Conflit
 
@@ -264,7 +264,7 @@ class Creneaux:
     async def _repli(self, cle: str, tour) -> None:
         """Suspension impossible : arrêt du tour (INV-EXEC-1) puis remise en file en tête, même
         session ; la file attend que la RAM le permette."""
-        tour.arrete = True
+        tour.arrete, tour.arret = True, "ram"
         log.warning("tour %s arrêté et remis en file (suspension impossible)", cle)
         await asyncio.shield(tour.harnais.arreter())
         for _ in range(600):
@@ -272,11 +272,9 @@ class Creneaux:
             if self.m.tours.get(cle) is not tour and (boucle is None or boucle.done()):
                 break
             await asyncio.sleep(0.05)
-        if (self.m.interrompus.get(tour.tache) or {}).get("reprise"):
-            log.warning("tour %s recoupé sans progrès après sa remise en file : relance humaine", cle)
-            return  # INV-EXEC-1 : une seule reprise automatique par incident, repli compris
         try:
-            reprise._resoumettre(self.m, tour.tache, MOTIF_REPLI, auto=True)
+            if not self.m.reprise_auto.reprendre(tour.tache, MOTIF_REPLI):  # INV-REPRISE-1 : au plus 3 reprises
+                return
             self.m.files[tour.tache].rotate(1)  # le tour repris passe avant les messages en file
         except Exception as e:
             log.warning("remise en file de %s impossible : %s", tour.tache, e)

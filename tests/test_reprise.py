@@ -61,9 +61,9 @@ def test_redemarrage_force_pendant_un_tour_le_reprend_dans_la_meme_session(confi
     assert vault.tache("mere").fm["statut"] == "retour-humain"
 
 
-def test_tour_deja_repris_une_fois_n_est_pas_repris_en_boucle(config, vault, faux):
+def test_tour_deja_repris_trois_fois_n_est_pas_repris_en_boucle(config, vault, faux):
     vault.modifier("mere", {"session": "s-1"})
-    poser_tours(config, [{"tache": "mere", "texte": "x", "reprise": True}])
+    poser_tours(config, [{"tache": "mere", "texte": "x", "reprise": True, "reprises": 3}])
 
     async def scenario():
         m = Moteur(config, vault, {"faux": faux})
@@ -94,7 +94,7 @@ def _tour_repris_enregistre(config, vault, faux, scenario_faux):
 def test_tour_repris_d_office_sans_rien_produire_porte_la_marque(config, vault, faux):
     rec = _tour_repris_enregistre(config, vault, faux, ["attendre"])
     assert rec == [{"tache": "mere", "texte": faux.lances[0]["message"], "sauts": 0, "de": "",
-                    "source": "", "mandat": False, "role": "", "reprise": True}]
+                    "source": "", "mandat": False, "role": "", "reprise": True, "reprises": 1}]
 
 
 def test_tour_repris_qui_a_progresse_redevient_eligible(config, vault, faux):
@@ -116,8 +116,8 @@ def test_double_redemarrage_un_tour_qui_a_progresse_est_repris_de_nouveau(config
     assert all("reprise après interruption" in l["message"] for l in faux.lances[1:])
 
 
-def test_tour_repris_sans_progres_n_est_pas_repris_a_chaque_demarrage(config, vault, faux):
-    poser_tours(config, [{"tache": "mere", "texte": "x", "reprise": True}])
+def test_tour_repris_trois_fois_n_est_pas_repris_a_chaque_demarrage(config, vault, faux):
+    poser_tours(config, [{"tache": "mere", "texte": "x", "reprise": True, "reprises": 3}])
     m = Moteur(config, vault, {"faux": faux})
     assert asyncio.run(_demarrer(m)) == [] and faux.lances == []
 

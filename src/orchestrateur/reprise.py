@@ -14,7 +14,7 @@ import json
 import logging
 from pathlib import Path
 
-from . import fiches, langues
+from . import etape, fiches, langues
 from .propositions import lire_liste
 from .vault import Conflit, Invalide
 
@@ -24,8 +24,8 @@ log = logging.getLogger(__name__)
 MESSAGE_REPRISE = ("[GoldenBrain — reprise après interruption] Ton tour précédent a été "
                    "interrompu ({motif}) avant sa fin. Reprends ton travail là où tu en étais, "
                    "sans refaire ce qui est déjà fait, puis termine par ta fiche.")
-CHAMPS = ("texte", "sauts", "de", "source", "mandat", "role", "reprise")
-CHAMPS_FILE = ("texte", "sauts", "de", "harnais", "modele", "source", "mandat", "role", "reprise", "pour")
+CHAMPS = ("texte", "sauts", "de", "source", "mandat", "role", "reprise", "reprises")
+CHAMPS_FILE = ("texte", "sauts", "de", "harnais", "modele", "source", "mandat", "role", "reprise", "reprises", "pour")
 FICHIER_FILE = "file.json"
 
 
@@ -75,6 +75,7 @@ def restaurer_file(moteur) -> list[str]:
                              role=str(rec.get("role") or ""))
             e = moteur.files[ident][-1]
             e.de, e.pour, e.reprise = str(rec.get("de") or ""), str(rec.get("pour") or ""), bool(rec.get("reprise"))
+            e.reprises = int(rec.get("reprises") or 0)
             restaures.append(ident)
         except Exception as ex:  # un message refusé n'empêche pas les suivants
             log.warning("message en file de %s non restauré : %s", ident, ex)
@@ -101,33 +102,32 @@ def _resoumettre(moteur, ident: str, motif: str, auto: bool) -> str:
     if session and role in ("", "tache", "mandat"):
         # Même session du harnais : l'agent a déjà le contexte, un message de reprise suffit.
         # Le mandat éventuel reste en attente et sera traité par ce tour s'il réussit.
-        etat = moteur.soumettre(ident, MESSAGE_REPRISE.format(motif=motif),
-                                sauts=int(rec.get("sauts") or 0),
+        etat = moteur.soumettre(ident, MESSAGE_REPRISE.format(motif=motif) + etape.rappel(moteur, ident),
+                                sauts=int(rec.get("sauts") or 0), direct=True,
                                 source=str(rec.get("de") or rec.get("source") or ""))
     elif rec.get("texte"):
         # Pas de session (premier tour) ou tour éphémère d'un rôle : le même message repart.
         etat = moteur.soumettre(ident, str(rec["texte"]), sauts=int(rec.get("sauts") or 0),
-                                mandat=bool(rec.get("mandat")), role=role,
+                                mandat=bool(rec.get("mandat")), role=role, direct=True,
                                 source=str(rec.get("de") or rec.get("source") or ""))
     else:
         raise Invalide(langues.t("serveur.reprise.rien_a_relancer"))
-    # INV-EXEC-1 : tant qu'il n'a rien produit, un tour repris automatiquement ne l'est pas deux fois.
-    moteur.files[ident][-1].reprise = auto
+    # INV-REPRISE-1 : le compte des reprises d'office suit le tour ; un geste humain le remet à zéro.
+    e = moteur.files[ident][-1]
+    e.reprise, e.reprises = auto, int(rec.get("reprises") or 0) + 1 if auto else 0
     moteur.interrompus.pop(ident, None)
     return etat
 
 
 def reprendre_au_demarrage(moteur) -> list[str]:
-    """Resoumet chaque tour interrompu par l'arrêt du serveur ; rend les tâches reprises."""
+    """Resoumet chaque tour interrompu par l'arrêt du serveur, dans l'ordre d'arrêt (celui du
+    démarrage des tours) ; rend les tâches reprises. INV-REPRISE-1 : au plus trois fois par tour."""
     reprises = []
-    for ident, rec in list(moteur.interrompus.items()):
+    for ident in list(moteur.interrompus):
         try:
-            if rec.get("reprise"):
-                continue  # INV-EXEC-1 : repris sans avoir progressé (même incident) : geste humain
-            if not moteur.vault.ouverte(moteur.vault.tache(ident)):
-                continue  # tâche fermée entre-temps : rien à reprendre
-            _resoumettre(moteur, ident, "redémarrage du serveur", auto=True)
-            reprises.append(ident)
+            if moteur.vault.ouverte(moteur.vault.tache(ident)) \
+                    and moteur.reprise_auto.reprendre(ident, "redémarrage du serveur"):
+                reprises.append(ident)
         except Exception as e:  # une tâche disparue ou invalide n'empêche pas les autres
             log.warning("reprise de %s impossible : %s", ident, e)
     restaurer_file(moteur)  # INV-EXEC-9 : après les tours repris, les messages qui attendaient leur tour

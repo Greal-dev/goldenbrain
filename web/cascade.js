@@ -70,12 +70,12 @@ function activite(n) {
   switch (n.etat_execution) {
     case 'en_cours': return [h('span', { class: 'tourne', title: t('cascade.seance_titre') }), h('span', { class: 'act-txt' }, t('cascade.seance'))];
     case 'en_file': return [h('span', { class: 'file', title: t('cascade.file_titre') }), h('span', { class: 'act-txt' }, t('cascade.file'))];
-    case 'interrompu': return [h('span', { class: 'interrompu', title: t('cascade.interrompu_titre') }, '!'), h('span', { class: 'act-txt' }, t('cascade.interrompu'))];
+    case 'interrompu': return [h('span', { class: 'interrompu', title: t(n.reprise_auto ? 'cascade.reprise_auto_titre' : 'cascade.interrompu_titre') }, '!'), h('span', { class: 'act-txt' }, t(n.reprise_auto ? 'cascade.reprise_auto' : 'cascade.interrompu'))];
     case 'en_pause': return [h('span', { class: 'echec', title: t('cascade.quota_titre') }, '⏸'), h('span', { class: 'act-txt' }, S.etat.pauses?.[n.id] || t('cascade.pause_quota'))];
     default: return n.echec ? [h('span', { class: 'echec', title: t('cascade.echec_titre', { motif: n.echec }) }, '!'), h('span', { class: 'act-txt' }, t('cascade.echec'))] : [];
   }
 }
-const sigActivite = (n) => { const tr = tourDe(n.id); return tr ? `t${derniere(tr)}` : `${n.etat_execution || ''}${n.echec ? 'e' : ''}`; };
+const sigActivite = (n) => { const tr = tourDe(n.id); return tr ? `t${derniere(tr)}` : `${n.etat_execution || ''}${n.reprise_auto ? 'r' : ''}${n.echec ? 'e' : ''}`; };
 const texteActivite = (n) => { const tr = tourDe(n.id); return tr ? derniere(tr) : ''; };
 
 function compteursGroupe(n) {

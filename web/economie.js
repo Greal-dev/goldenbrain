@@ -3,6 +3,7 @@
 // moteur prévu d'une tâche et bascule proposée (INV-ECO-1, INV-ECO-2).
 // Frontières : GET/PUT /api/economie, GET /api/taches/{id}/economie ; accepter une bascule passe par POST /taches/{id}/moteur.
 import { h, remplacer } from './dom.js';
+import { simple } from './interface.js';
 import { api } from './api.js';
 import { erreur, emit } from './store.js';
 import { t, tn, LOCALE } from './langues.js';
@@ -89,6 +90,7 @@ export function initEconomie() {
 // Moteur prévu d'une tâche : famille et motif ; bascule proposée pour une conversation commencée.
 export function blocEconomie(tache, surBascule) {
   const el = h('span', { class: 'eco-tache', 'data-id': 'eco-tache' });
+  if (simple()) { queueMicrotask(() => el.remove()); return el; } // mode simple : moteur et motif sont du jargon
   api(`/taches/${encodeURIComponent(tache.id)}/economie`).then((d) => {
     remplacer(el, h('span', { title: d.motif }, t('economie.prevu', { choix: d.harnais + (d.modele ? ` · ${d.modele}` : ''), motif: d.motif })),
       d.bascule ? h('button', { class: 'btn', type: 'button', 'data-id': 'eco-bascule', title: d.bascule.motif,

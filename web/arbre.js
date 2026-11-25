@@ -50,7 +50,7 @@ const sauver = () => localStorage.setItem(CLE, JSON.stringify(ouverts));
 function indicateur(n) {
   if (n.etat_execution === 'en_cours') return h('span', { class: 'tourne', title: t('arbre.seance_titre') });
   if (n.etat_execution === 'en_file') return h('span', { class: 'file', title: t('arbre.file_titre') });
-  if (n.etat_execution === 'interrompu') return h('span', { class: 'interrompu', title: t('arbre.interrompu_titre') }, '!');
+  if (n.etat_execution === 'interrompu') return h('span', { class: 'interrompu', title: t(n.reprise_auto ? 'arbre.reprise_auto_titre' : 'arbre.interrompu_titre') }, '!');
   if (n.etat_execution === 'en_pause') return h('span', { class: 'echec', title: S.etat.pauses?.[n.id] || t('arbre.pause_titre') }, '⏸');
   if (n.echec) return h('span', { class: 'echec', title: t('arbre.echec_titre', { motif: n.echec }) }, '!');
   return null;

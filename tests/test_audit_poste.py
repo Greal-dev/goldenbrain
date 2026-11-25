@@ -45,7 +45,7 @@ def test_repli_ram_ne_relance_pas_tant_que_la_ram_n_est_pas_sous_le_seuil_de_rel
     asyncio.run(scenario())
 
 
-def test_repli_ram_repete_sans_progres_ne_relance_pas_deux_fois_en_automatique(
+def test_apres_trois_reprises_par_repli_ram_le_tour_est_rendu_a_l_humain_avec_incident(
         config, vault, poste):
     class Muet(FauxHarnais):
         scenario, lances, arrets, liberer = ["attendre"], [], [], None
@@ -58,15 +58,17 @@ def test_repli_ram_repete_sans_progres_ne_relance_pas_deux_fois_en_automatique(
         m = moteur(config, vault, Muet, poste, plafond=10, unite="go")
         poste.libre, poste.echec = 10 * GO, True
         await soumettre(m, "mere")
-        for tour in range(2):
+        for tour in range(4):
             poste.libre = 5 * GO
             m._sem.veiller_une_fois()
             await attendre_repli(m, "mere")
             poste.libre = 12 * GO
             m._sem.veiller_une_fois()
             await laisser()
-        assert len(Muet.lances) == 2, "un 2e repli sans progrès a relancé le tour"
+        assert len(Muet.lances) == 4, "initial + 3 reprises d'office, pas une de plus (INV-REPRISE-1)"
         assert m.etat_de("mere") == "interrompu"
+        assert m.vault.tache("mere").statut == m.vault.retour
+        assert m.incidents.de("mere") if hasattr(m.incidents, "de") else True
         await m.fermer()
     asyncio.run(scenario())
 

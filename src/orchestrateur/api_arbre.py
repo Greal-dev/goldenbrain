@@ -62,9 +62,16 @@ def routes(config, moteur, aligneur, index_notes) -> APIRouter:
     suivi = integration.Suivi(integration.charger(config.chemin))
     r.include_router(api_integration.routes(config, suivi))  # INV-INTEG-1
 
+    def reprise_auto(ns: list[dict]) -> None:  # INV-REPRISE-1 : l'écran dit « reprise automatique dans la file »
+        for n in ns:
+            if n["type"] == "tache":
+                n["reprise_auto"] = moteur.reprise_auto.attendue(n["id"])
+            reprise_auto(n["enfants"])
+
     def arbre_(toutes: int) -> dict:
         taches = vault.index()[0]
         noeuds = liens.annoter(vault.arbre(bool(toutes), moteur.etat_de), taches)
+        reprise_auto(noeuds)
         suivi.annoter(noeuds, taches)  # cache seul : ne bloque jamais l'arbre
         return {"noeuds": moteur.routines.annoter(noeuds) if hasattr(moteur, "routines") else noeuds}  # INV-ROUTINE-5
 

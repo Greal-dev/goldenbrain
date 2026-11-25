@@ -24,7 +24,7 @@ from dataclasses import asdict, dataclass, field
 from pathlib import Path
 
 from . import (apprendre, assistant_absent, instrumentation, agents_cc, langues, catalogue, codespace, decisions, depot, echecs, economie, executant, executeurs, fiches, incidents, liens, natif, ordonnancement, pilotage,
-               quota, regroupement, reprise, reseau, retour, session_perdue, sessions, simultanes, temps, transformations)
+               quota, regroupement, reprise, reprise_auto, reseau, retour, session_perdue, sessions, simultanes, temps, transformations)
 from .propagation import MixinPropagation
 from .config import RACINE_DEPOT, Config
 from .harnais import HARNAIS, Harnais
@@ -66,6 +66,7 @@ class Envoi:
     role: str = ""  # rôle assistant du tour (INV-MOTEUR-2) ; "tache" = travail principal
     reprise: bool = False  # INV-EXEC-1 : repris automatiquement (la marque tombe au premier signe de progrès)
     progres: bool = False  # INV-EXEC-1 : le tour repris a produit un événement
+    reprises: int = 0  # INV-REPRISE-1 : reprises d'office déjà faites de ce tour (plafond 3)
     pour: str = ""  # sous-tâche portée par ce tour de sa mère (INV-REGROUPE-2)
     t_file: float = field(default_factory=lambda: instrumentation.horloge())  # mesure d'attente (instrumentation.py)
 
@@ -77,6 +78,7 @@ class Tour:
     harnais: Harnais
     dernier: str = ""
     arrete: bool = False
+    arret: str = ""  # cause de l'arrêt : "humain", "ram", "serveur" (INV-REPRISE-1)
     persona: str = ""  # tour de revue d'un persona (INV-EQUIPE-1), vide pour un tour de tâche
 
 
@@ -90,33 +92,27 @@ class Moteur(retour.MixinRetour, MixinVerrou, MixinControle, MixinCompactage, Mi
         self.etats: dict[str, str] = {}; self.tours: dict[str, Tour] = {}; self.boucles: dict[str, asyncio.Task] = {}
         self.a_deriver: dict[str, str] = {}; self.relance_fiche = RelanceFiche()  # INV-EXEC-12
         self.envois: dict[str, Envoi] = {}  # message du tour en cours (conversation en direct)
-        self.en_file_depuis: dict[str, str] = {}  # INV-VERROU-1 : « depuis » avant tout tour
-        self.abonnes: set[asyncio.Queue] = set()
+        self.en_file_depuis: dict[str, str] = {}; self.abonnes: set[asyncio.Queue] = set()  # INV-VERROU-1 : « depuis » avant tout tour
         self._sem = simultanes.Creneaux(self)  # INV-SIMULT-1 : nombre fixe, optimisation ou plafond de RAM
-        self.propositions = Propositions(config.donnees / "etat" / "propositions.json")
-        self.sessions = sessions.Sessions(config.donnees / "etat" / "sessions.json")
-        # INV-EXEC-1 : un tour actif au dernier arrêt (ou plantage) est marqué interrompu ; son
-        # message est gardé pour la reprise (`reprise`, au démarrage ou sur « Relancer »).
+        self.propositions = Propositions(config.donnees / "etat" / "propositions.json"); self.sessions = sessions.Sessions(config.donnees / "etat" / "sessions.json")
+        # INV-EXEC-1 : un tour actif au dernier arrêt est marqué interrompu ; son message est gardé pour la reprise.
         self.fichier_tours = config.donnees / "etat" / "tours.json"
-        self.actifs: dict[str, dict] = {}
+        self.actifs: dict[str, dict] = {}; self.ferme = False
         self.attente: dict[str, Envoi] = {}  # INV-EXEC-9 : sorti de la file, pas encore démarré
         self.file_precedente = reprise.lire_file(config.donnees / "etat" / reprise.FICHIER_FILE)
-        self.ferme = False
         self.interrompus = reprise.charger(lire_liste(self.fichier_tours))
         self.etats.update(dict.fromkeys(self.interrompus, "interrompu"))
         self._sauver_actifs()
         self._init_reveils()  # INV-EXEC-10
-        self.revues = Revues(self)
-        self.validation_auto = ValidationAuto(self)
+        self.revues, self.validation_auto = Revues(self), ValidationAuto(self)
         self.agents_cc = agents_cc.Releve(self)  # INV-AGENTSCC-1
-        self.roles = Roles(config, self.registre)
-        self.mandats = transformations.Mandats(config.donnees / "etat" / "mandats.json")
+        self.roles = Roles(config, self.registre); self.mandats = transformations.Mandats(config.donnees / "etat" / "mandats.json")
         self._init_verrou()
         self.natif = natif.Natifs(self)  # INV-NATIF-1 : tâches ouvertes au terminal
         self.economie = economie.Economie(self)  # INV-ECO-1 : moteur du travail principal
         self.reseau = reseau.Reseau(self)  # INV-RESEAU-1
         self.executeurs = executeurs.Executeurs(self)  # INV-DISTANT-2
-        self.quota, self.incidents = quota.Quotas(self), incidents.Incidents(self)  # INV-QUOTA-1, INV-INCIDENT-1
+        self.quota, self.incidents, self.reprise_auto = quota.Quotas(self), incidents.Incidents(self), reprise_auto.RepriseAuto(self)  # INV-QUOTA-1, INV-INCIDENT-1
 
     def _sauver_actifs(self) -> None:
         if self.ferme:
@@ -133,7 +129,7 @@ class Moteur(retour.MixinRetour, MixinVerrou, MixinControle, MixinCompactage, Mi
         self.ferme = True
         self.fermer_reveils()
         for tour in list(self.tours.values()):
-            tour.arrete = True
+            tour.arrete, tour.arret = True, "serveur"
             await asyncio.shield(tour.harnais.arreter())
 
     # --- événements --------------------------------------------------------------------
@@ -152,7 +148,8 @@ class Moteur(retour.MixinRetour, MixinVerrou, MixinControle, MixinCompactage, Mi
     # --- files et tours ----------------------------------------------------------------
     def soumettre(self, ident: str, texte: str, de: str | None = None, sauts: int = 0,
                   harnais: str | None = None, modele: str | None = None,
-                  mandat: bool = False, source: str = "", role: str = "", humain: bool = False) -> str:
+                  mandat: bool = False, source: str = "", role: str = "", humain: bool = False,
+                  direct: bool = False) -> str:  # direct : jamais acheminé vers la mère (reprise d'office)
         executant.exiger_ia(self.vault.tache(ident))  # INV-EXECUTANT-1 : rien ne part sur une tâche « Moi »
         if humain: self.retenus.discard(ident)  # INV-EXEC-11 : un message humain débloque la file retenue
         harnais = harnais if self.config.interface.actif("moteurs") else None  # INV-INTERFACE-1
@@ -164,7 +161,7 @@ class Moteur(retour.MixinRetour, MixinVerrou, MixinControle, MixinCompactage, Mi
             raise Invalide(langues.t("serveur.moteur.harnais_inconnu", nom=harnais))
         catalogue.modele_valide(modele or "")
         pour = ""
-        if not (mandat or role):  # INV-REGROUPE-2 : la mère travaille pour une sous-tâche regroupée
+        if not (mandat or role or direct):  # INV-REGROUPE-2 : la mère travaille pour une sous-tâche regroupée
             ident, texte, pour = regroupement.acheminer(self, ident, texte, de or "")
             harnais, modele = (None, None) if pour else (harnais, modele)  # jamais le moteur de la mère
         if de:
@@ -229,7 +226,7 @@ class Moteur(retour.MixinRetour, MixinVerrou, MixinControle, MixinCompactage, Mi
             contexte=str(self.vault.racine / t.conteneur / self.config.vault.contexte),
             soeurs=", ".join(soeurs) or "aucune", equipe=(self.revues.equipe.consigne() if self.config.interface.actif("equipe")
                     else "aucun persona actif."),
-            orch=f'"{Path(sys.executable).as_posix()}" "{(RACINE_DEPOT / "orch.py").as_posix()}"')) + "\n" + langues.consigne_langue() + apprendre.consigne(self.config, t.fm)  # INV-APPRENDRE-1
+            orch=f'"{Path(sys.executable).as_posix()}" "{(RACINE_DEPOT / "orch.py").as_posix()}"')) + "\n" + langues.consigne_langue() + self.reprise_auto.consigne(ident) + apprendre.consigne(self.config, t.fm)  # INV-APPRENDRE-1
 
     def _journal(self, ident: str):
         # INV-EXEC-4 : un journal brut par tour.
@@ -338,6 +335,7 @@ class Moteur(retour.MixinRetour, MixinVerrou, MixinControle, MixinCompactage, Mi
         if erreur and not choix and not (tour and tour.arrete) and await self.reseau.signaler(ident, envoi, erreur, nom):
             return  # INV-RESEAU-1 : gelé jusqu'au retour du réseau
         if not choix and self.quota.basculer(ident, envoi, erreur, nom, bool(tour and tour.arrete)): return  # INV-QUOTA-1
+        if erreur and not choix and not (tour and tour.arrete) and self.reprise_auto.api_passagere(ident, envoi, erreur, nom): return  # INV-REPRISE-1
         if self.roles.reprendre(self, ident, envoi, choix, final, erreur, outils,
                                 bool(tour and tour.arrete)):
             return  # INV-MOTEUR-2 : le même message repart sur le moteur de la tâche
@@ -345,7 +343,7 @@ class Moteur(retour.MixinRetour, MixinVerrou, MixinControle, MixinCompactage, Mi
             await self._conclure_tour(ident, tour, final, erreur, envoi)  # INV-CONTROLE-1, INV-COMPACT-1
         except Exception as e:  # INV-EXEC-6 : une conclusion en échec ne tue pas la boucle
             self._echec_boucle(ident, e)
-        self._reveil_fin(ident, envoi, erreur, nom, bool(tour and tour.arrete))
+        self._reveil_fin(ident, envoi, erreur, nom, (tour.arret or "humain") if tour and tour.arrete else "")
 
     def _conclure(self, ident: str, tour: Tour | None, final, erreur, sauts: int = 0,
                   de: str = "") -> None:
@@ -354,6 +352,7 @@ class Moteur(retour.MixinRetour, MixinVerrou, MixinControle, MixinCompactage, Mi
             # INV-EXEC-1 : interrompu, rendu à l'humain, jamais relancé.
             self.etats[ident] = "interrompu"
             statut, erreur = self.vault.retour, "tour interrompu"
+            if self.reprise_auto.marquer(ident, tour): statut = "en-cours"  # INV-REPRISE-1 : reprise d'office, statut inchangé
         elif erreur or final is None:
             statut, erreur = "bloque", erreur or "tour terminé sans résultat"
         elif verdict := self.relance_fiche.juger(ident, final):  # INV-EXEC-12 : fiche absente ≠ question
@@ -408,8 +407,9 @@ class Moteur(retour.MixinRetour, MixinVerrou, MixinControle, MixinCompactage, Mi
         self.vault.tache(ident)
         self.files[ident].clear()
         self.annuler_reveil(ident)  # INV-EXEC-10
+        self.reprise_auto.annuler(ident)  # INV-REPRISE-1 : un arrêt humain ne reprend jamais
         if tour := self.tours.get(ident):
-            tour.arrete = True
+            tour.arrete, tour.arret = True, "humain"
             self.etats[ident] = "interrompu"
             await tour.harnais.arreter()
         elif (boucle := self.boucles.get(ident)) and not boucle.done():
