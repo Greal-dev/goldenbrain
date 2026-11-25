@@ -32,7 +32,7 @@ LIBRES = {"/appairer.html", "/appairer.js", "/favicon.svg", "/style.css", "/icon
 POSTE_SEUL = ("/api/appareils", "/api/installation", "/api/executeurs/jetons", "/api/executeurs/appairage",
               "/api/executeurs/reparations")
 POSTE_SEUL_RE = re.compile(r"/api/taches/[^/]+/(natif|console|resultat(/ouvrir)?|livrables/ouvrir)")  # terminal, fichiers et navigateur du poste
-RISQUE_RE = re.compile(r"/api/(redemarrer|mise-a-jour|taches/[^/]+/(arret|vigie/arreter-enfant))")
+RISQUE_RE = re.compile(r"/api/(redemarrer|mise-a-jour|lots(/[^/]+/annuler)?|taches/[^/]+/(arret|vigie/arreter-enfant))")
 TAILSCALE = "https://tailscale.com/download"
 
 

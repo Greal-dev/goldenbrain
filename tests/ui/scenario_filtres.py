@@ -2,6 +2,8 @@
 chaque ligne, filtres combinés (statut, priorité, échéance) avec compteur, regroupement par statut,
 mémoire du navigateur et usage au clavier."""
 
+import re
+
 import aides_arbre
 import univers
 from aides_arbre import nettoyer_vault  # noqa: F401  (fixture autouse)
@@ -47,11 +49,11 @@ def test_statut_visible_filtres_combines_groupement_et_memoire(page, serveur):
     page.locator('.f-st[data-statut="en-cours"]').click()
     page.locator('.f-st[data-statut="bloque"]').click()
     assert sorted(mes(page)) == ["Alpha Filtre", "Gamma Filtre"]
-    expect(page.locator("#f-compte")).to_have_text("2 tâches")
+    expect(page.locator("#f-compte")).to_have_text(re.compile(r"^2 sur \d+$"))
     # Combiné avec la priorité : l'intersection seule demeure.
     page.select_option("#f-priorite", "haute")
     assert mes(page) == ["Alpha Filtre"]
-    expect(page.locator("#f-compte")).to_have_text("1 tâche")
+    expect(page.locator("#f-compte")).to_have_text(re.compile(r"^1 sur \d+$"))
     # Mémoire du navigateur : le filtre survit au rechargement.
     page.reload()
     page.wait_for_selector("#arbre .ligne")

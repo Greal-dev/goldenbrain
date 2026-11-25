@@ -13,8 +13,17 @@ const CLE = 'orch.filtres';
 const VIDE = { statuts: [], priorite: '', echeance: '', portee: '', harnais: '', executant: '', nature: '', ia: false, routines: false, amoi: false, groupe: '', tri: 'arbre' };
 let F = { ...VIDE, ...(() => { try { return JSON.parse(localStorage.getItem(CLE) || '{}'); } catch { return {}; } })() };
 F.statuts = Array.isArray(F.statuts) ? F.statuts : [];
+// Lien partageable : ?st=a-faire,bloque l'emporte sur la mémoire du poste (volet et vue principale partagent cet état).
+const deLien = new URLSearchParams(location.search).get('st');
+if (deLien !== null) F.statuts = deLien.split(',').filter(Boolean);
 S.filtreAMoi = !!F.amoi;
-const sauver = () => { F.amoi = S.filtreAMoi; localStorage.setItem(CLE, JSON.stringify(F)); };
+function sauver() {
+  F.amoi = S.filtreAMoi;
+  localStorage.setItem(CLE, JSON.stringify(F));
+  const u = new URL(location.href);
+  if (F.statuts.length) u.searchParams.set('st', F.statuts.join(',')); else u.searchParams.delete('st');
+  if (u.href !== location.href) history.replaceState(history.state, '', u);
+}
 
 // Statut lisible d'une tâche : clé, libellé court (pastille de la ligne), libellé du filtre.
 export const STATUTS_COURTS = [
@@ -31,6 +40,16 @@ const TRIS = [['arbre', t('filtres.tri_arbre')], ['priorite', t('filtres.tri_pri
 
 const semaine = (n) => { if (!n.echeance) return false; const e = ecartJours(n.echeance); return e >= 0 && e <= 7; };
 const filtresActifs = () => F.statuts.length + ['priorite', 'echeance', 'portee', 'harnais', 'executant', 'nature'].filter((k) => F[k]).length + (F.ia ? 1 : 0) + (F.routines ? 1 : 0) + (S.filtreAMoi ? 1 : 0);
+// État de statut partagé par le volet, la vue principale et Aujourd'hui.
+export const statutsActifs = () => F.statuts;
+export const passeStatut = (n) => !F.statuts.length || F.statuts.includes(cleStatut(n));
+export const basculerStatut = (k) => changer({ statuts: F.statuts.includes(k) ? F.statuts.filter((x) => x !== k) : [...F.statuts, k] });
+export const effacerStatuts = () => changer({ statuts: [] });
+export function comptesStatut(ns) {
+  const c = {};
+  for (const n of parcourir(ns)) if (n.type === 'tache') { const k = cleStatut(n); c[k] = (c[k] || 0) + 1; }
+  return c;
+}
 export const actif = () => filtresActifs() > 0 || !!F.groupe || F.tri !== 'arbre';
 
 function passe(n, chem) {
@@ -118,13 +137,15 @@ export function dessinerBarre() {
   for (const x of parcourir(S.arbre)) if (x.type === 'casquette' || x.type === 'conteneur') portees.push([cleNoeud(x), x.titre]);
   const harnais = ['', ...new Set([...parcourir(S.arbre)].filter((x) => x.type === 'tache' && x.harnais).map((x) => x.harnais))].map((k) => [k, k || t('filtres.tous')]);
   const n = filtresActifs();
+  const comptes = comptesStatut(S.arbre);
   const d = h('details', { class: 'f-boite', ...(ouvert ? { open: '' } : {}) },
     h('summary', null, t('filtres.titre'), n ? h('span', { class: 'compte', title: tn('filtres.actifs', n) }, n) : null,
       h('span', { class: 'f-compte', id: 'f-compte', role: 'status', 'aria-live': 'polite' })),
     h('div', { class: 'f-statuts', role: 'group', 'aria-label': t('filtres.statut') }, STATUTS_COURTS.map(([k, l]) => h('button', {
       type: 'button', class: `f-st bs-${k}`, 'aria-pressed': String(F.statuts.includes(k)), 'data-statut': k,
-      onclick: () => changer({ statuts: F.statuts.includes(k) ? F.statuts.filter((x) => x !== k) : [...F.statuts, k] }),
-    }, l))),
+      onclick: () => basculerStatut(k),
+    }, l, ' ', h('span', { class: 'n' }, comptes[k] || 0)))),
+    F.statuts.length ? h('button', { type: 'button', class: 'btn-discret', id: 'f-st-raz', onclick: effacerStatuts }, t('filtres.effacer_statuts')) : null,
     h('div', { class: 'f-grille' },
       liste('f-priorite', t('filtres.priorite'), [['', t('filtres.toutes')], ['haute', t('filtres.haute')], ['moyenne', t('filtres.moyenne')], ['basse', t('filtres.basse')], ['aucune', t('filtres.sans_priorite')]], F.priorite, (v) => changer({ priorite: v })),
       liste('f-echeance', t('filtres.echeance'), ECHEANCES, F.echeance, (v) => changer({ echeance: v })),
@@ -146,7 +167,9 @@ export function dessinerBarre() {
 export function compteur(k) {
   dernier = k;
   const e = $('#f-compte');
-  if (e) e.textContent = tn('filtres.n_taches', k);
+  if (!e) return;
+  const total = compter(S.arbre);
+  e.textContent = actif() && k !== total ? t('filtres.n_sur_n', { n: k, total }) : tn('filtres.n_taches', k);
 }
 export function initFiltres() {
   on('filtre', dessinerBarre);

@@ -177,6 +177,8 @@ Les tests d'interface (`ui/`) se lancent à part : `python scripts/check_ui.py`.
 | `src/orchestrateur/poste_ram.py` | Mesure de la RAM et du processeur du poste ; suspension, reprise et vidage de la mémoire de travail d'un arbre de processus (ctypes ; `/proc/meminfo` ailleurs). | INV-SIMULT-1, INV-TRAVAUX-2, INV-VIGIE-1 | `test_simultanes.py` (poste simulé), essai réel `scripts/essai_pause_ram.py` |
 | `src/orchestrateur/propositions.py` | Propositions d'agent : persistance et gestes d'acceptation (INV-EXEC-5). | INV-ARBRE-2, INV-EXEC-5, INV-INTERFACE-3, INV-JARD-2, INV-SCAN-1, INV-RENOMMER-2, INV-RATTACHER-1, INV-DEJAFAIT-1, INV-LIEN-2, INV-INTEG-2, INV-NATURE-1, INV-PLAFOND-1, INV-RAPPROCHEMENT-1, INV-PROP-1, INV-LIGNES-1 | `test_propositions.py`, `test_audit_cli.py`, `test_moteur.py`, `test_scan.py` |
 | `src/orchestrateur/annulation.py` | Annulation d'un geste de routine appliqué d'office : état antérieur, restauration. | INV-PROP-1, INV-VAULT-1 | `test_gestes_office.py` |
+| `src/orchestrateur/lot_statuts.py` | Changement en bloc (statut, échéance, parent) : plan validé avant écriture, tout ou rien, trace, annulation. | INV-LOT-1, INV-VERROU-1, INV-VAULT-4, INV-EXEC-11 | `test_lot_statuts.py` |
+| `src/orchestrateur/api_lots.py` | Routes `/api/lots` et `/api/lots/{id}/annuler` ; refus des requêtes d'agent. | INV-LOT-1, INV-DISTANT-7 | `test_lot_statuts.py` |
 | `src/orchestrateur/rattachement.py` | Garde-fous et geste « rattacher » un lot de tâches sous un parent. | INV-RATTACHER-1, INV-PLAFOND-1, INV-NATURE-1, INV-VERROU-1 | `test_rattachement.py` |
 | `src/orchestrateur/propagation.py` | Propagation `alimente` en fin de tour réussi (partie du moteur). | INV-LIEN-1, INV-MSG-1, INV-MSG-2 | `test_moteur.py`, `test_liens.py` |
 | `src/orchestrateur/regroupement.py` | Exécution par tâche ou regroupée sous la mère : réglage hérité, règle automatique, acheminement, fiche d'une sous-tâche, repère. | INV-REGROUPE-1, INV-REGROUPE-2, INV-REGROUPE-3, INV-CONTROLE-1, INV-EXEC-10, INV-EXEC-7, INV-SIMULT-1, INV-ORDO-2, INV-VAULT-1 | `test_regroupement.py`, `ui/scenario_execution.py` |
@@ -254,6 +256,7 @@ Les tests d'interface (`ui/`) se lancent à part : `python scripts/check_ui.py`.
 | `web/equipe.js` | page « Équipe » du volet droit — personas : liste, création, édition, désactivation, retrait. | — | chargement par `ui/scenario_fumee.py` seulement |
 | `web/favicon.svg` | Icône | — | chargement par `ui/scenario_fumee.py` seulement |
 | `web/filtres.css` | Pastille de statut, barre de filtres et en-têtes de groupe. Mêmes variables de thème que style.css. | INV-ROUTINE-5 | `ui/scenario_filtres.py` |
+| `web/lot.js` | Cases à cocher, Maj+clic, tout sélectionner, barre de changement en bloc, confirmation et annulation. | INV-LOT-1 | `ui/scenario_lot_statuts.py` |
 | `web/filtres.js` | barre de filtres combinables (statut, priorité, échéance, casquette/projet, harnais, IA, à moi), regroupement (statut, priorité, projet, échéance), tri priorité puis échéance, compteur, mémoire du navigateur. | INV-ROUTINE-5 | `ui/scenario_filtres.py` |
 | `web/statut.js` | choix du statut d'une tâche : liste unique (détail : `<select>` ; arbre et cascade : menu sur la pastille), écriture par la route du détail, refus en ligne, bandeau « Annuler ». | — | `ui/scenario_statut_ligne.py` |
 | `web/statut.css` | Pastille cliquable, menu des statuts, refus en ligne, bandeau d'annulation. | — | `ui/scenario_statut_ligne.py` |
@@ -425,6 +428,7 @@ Les tests d'interface (`ui/`) se lancent à part : `python scripts/check_ui.py`.
 | `tests/test_projet_par_note.py` | Un projet créé depuis les notes (sa fiche `contexte.md`) accepte des tâches tout de suite. | — | — |
 | `tests/test_propositions.py` | Propositions enrichies : motif, types lier / operation / tache / perimetre, échec d'acceptation. | — | — |
 | `tests/test_gestes_office.py` | Gestes de routine d'office, journal, annulation, reste à faire en ligne. | INV-PROP-1, INV-LIGNES-1 | — |
+| `tests/test_lot_statuts.py` | Lot : tout ou rien, exclusion des occupées, annulation, trace, aperçu, refus d'agent, geste distant. | INV-LOT-1 | — |
 | `tests/test_rattachement.py` | Proposition « rattacher » : lot, détachement, cycle, tâche occupée, autre projet, plafond, natures. | INV-RATTACHER-1, INV-PLAFOND-1, INV-NATURE-1 | — |
 | `tests/test_depot.py` | Dossier de travail : projet avec dépôt, sans dépôt, descendant, table, dépôt absent, tour du moteur. | INV-DEPOT-1 | — |
 | `tests/test_recherche.py` | Recherche : sans casse ni accents, tous les mots, titre / fiche / fil d'Ariane, ouvertes d'abord. | — | — |
@@ -474,6 +478,7 @@ Les tests d'interface (`ui/`) se lancent à part : `python scripts/check_ui.py`.
 | `tests/ui/conftest.py` | Fixtures des scénarios d'interface : vrai serveur sur vault temporaire (journal dans `serveur.log`, jamais un tuyau), navigateur Playwright. | — | `ui/scenario_porte.py` |
 | `tests/ui/harnais_factice.py` | Harnais factice des tests d'interface : joue un tour scénarisé (« [lent N] » : tour de N secondes ; « [echec] » ; « [bavard] » : 64 Ko sur la sortie d'erreur ; « [journaux] » : session sans transcript ; `<texte>…</texte>` : proposition du bouton « IA » des notes ; `GB_DEMO` : scènes de démonstration par message), ne lance jamais un vrai agent. | — | — |
 | `tests/ui/scenario_filtres.py` | Scénario des filtres : pastille de statut, filtres combinés et compteur, regroupement, tri, mémoire du navigateur, focus clavier | — | — |
+| `tests/ui/scenario_lot_statuts.py` | Scénario du filtre de statut partagé (adresse, volet et vue principale) et du changement en bloc (Maj+clic, confirmation, annulation). | INV-LOT-1 | — |
 | `tests/ui/scenario_guide.py` | Scénario du guide : « ? » de l'en-tête, sommaire, recherche, « ? » contextuel de Réglages, lien `#guide=<ancre>`. | INV-GUIDE-1 | — |
 | `tests/ui/scenario_langues.py` | Scénario des langues : en, de, es basculées par Réglages, écrans principaux parcourus, aucune valeur française de `fr.json` visible ; captures accueil et tâche dans les quatre langues (`GB_CAPTURES_LANGUES`, hors porte). | INV-LANGUE-1 | — |
 | `tests/ui/scenario_routines.py` | Scénario des routines : création depuis le bandeau, horloge dans l'arbre, « Exécuter maintenant » avec issue et historique, pause, filtre « Routines ». | INV-ROUTINE-5 | — |

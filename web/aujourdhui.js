@@ -6,9 +6,12 @@ import { api } from './api.js';
 import { ouvrir, erreur } from './store.js';
 import { libelleEcheance, celluleCle } from './temps.js';
 import { repereIA, surOccupees } from './verrou.js';
+import { STATUTS_COURTS, cleStatut, statutsActifs, passeStatut, basculerStatut, effacerStatuts } from './filtres.js';
+import { on } from './store.js';
 
 let racine = null, coque = null, version = 0, dernier = null, tgEtat = null;
 surOccupees(() => { if (coque?.isConnected && dernier) dessiner(dernier); });
+on('filtre', () => { if (coque?.isConnected && dernier) dessiner(dernier); });
 
 function ligne(x) {
   return h('li', null, h('button', { class: 'au-ligne', type: 'button', onclick: () => ouvrir(x.id) },
@@ -21,9 +24,19 @@ function ligne(x) {
 }
 
 function groupe(g) {
+  const l = g.taches.filter(passeStatut);
   return h('section', { class: `au-groupe au-${g.cle}`, 'aria-label': g.titre },
-    h('h3', null, g.titre, ' ', h('span', { class: 'n' }, g.taches.length)),
-    g.taches.length ? h('ul', { class: 'au-liste' }, g.taches.map(ligne)) : h('p', { class: 'vide' }, t('aujourdhui.rien')));
+    h('h3', null, g.titre, ' ', h('span', { class: 'n' }, l.length)),
+    l.length ? h('ul', { class: 'au-liste' }, l.map(ligne)) : h('p', { class: 'vide' }, t('aujourdhui.rien')));
+}
+// Filtre de statut partagé avec le volet et la vue principale (filtres.js).
+function pastilles(d) {
+  const c = {}, actifs = statutsActifs();
+  for (const g of d.groupes) for (const x of g.taches) c[cleStatut(x)] = (c[cleStatut(x)] || 0) + 1;
+  return h('div', { class: 'casc-chips', role: 'group', 'aria-label': t('cascade.filtre_statut_groupe') },
+    STATUTS_COURTS.filter(([k]) => c[k] || actifs.includes(k)).map(([k, l]) => h('button', { class: 'chip-st', type: 'button', 'data-statut': k, 'aria-pressed': String(actifs.includes(k)), onclick: () => basculerStatut(k) },
+      l, ' ', h('span', { class: 'n' }, c[k] || 0))),
+    actifs.length ? h('button', { class: 'btn-discret', type: 'button', onclick: effacerStatuts }, t('cascade.effacer_filtre')) : null);
 }
 
 // Invitation à connecter Telegram : tant qu'il n'a ni jeton ni activation ; fermable (mémorisé sur ce navigateur).
@@ -37,9 +50,9 @@ function encartTelegram() {
 
 function dessiner(d) {
   dernier = d;
-  const total = d.groupes.reduce((a, g) => a + g.taches.length, 0);
+  const total = d.groupes.reduce((a, g) => a + g.taches.filter(passeStatut).length, 0);
   const jour = new Date(`${d.date}T12:00:00`).toLocaleDateString(LOCALE, { weekday: 'long', day: 'numeric', month: 'long' });
-  remplacer(coque, h('h2', { class: 'casc-titre' }, t('aujourdhui.titre')), h('p', { class: 'au-date' }, tn('aujourdhui.date_total', total, { jour })), encartTelegram(),
+  remplacer(coque, h('h2', { class: 'casc-titre' }, t('aujourdhui.titre')), h('p', { class: 'au-date' }, tn('aujourdhui.date_total', total, { jour })), encartTelegram(), pastilles(d),
     total ? d.groupes.map(groupe) : h('p', { class: 'vide' }, t('aujourdhui.vide')));
 }
 

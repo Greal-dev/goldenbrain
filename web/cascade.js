@@ -5,6 +5,8 @@
 // et seule l'activité en direct est patchée sur place (un clic en cours ne se perd pas pendant un flux SSE).
 import { t, tn } from './langues.js';
 import { h, remplacer, libelleStatut, nomLisible, majCourt, depuis, groupeStatut, ORDRE_STATUTS } from './dom.js';
+import { STATUTS_COURTS, statutsActifs, passeStatut, basculerStatut, effacerStatuts, comptesStatut } from './filtres.js';
+import { barreLot, caseLigne, caseTout, majLot, basculerSel } from './lot.js';
 import { S, on, ouvrir, ouvrirVue, ouvrirNote, parcourir, chemin, fixerToutes, cleNoeud as cle } from './store.js';
 import { cheminContexte } from './ponts.js';
 import { carteProposition, enAttente } from './propositions.js';
@@ -25,7 +27,7 @@ let tri = { col: null, sens: 1 }; // tri des tâches sœurs par échéance ou pr
 let coque = null, ref = {}, visibles = new Map(), cleFocus = null, porteeAff, topSauve = 0, sigTours = null, propsOuvert = true;
 
 const sauver = () => localStorage.setItem(CLE, JSON.stringify(replis));
-const filtreActif = () => S.filtres.size > 0;
+const filtreActif = () => statutsActifs().length > 0;
 const estOuvert = (n) => filtreActif() || !replis[cle(n)];
 const point = (s) => h('span', { class: `pastille st-${s || 'inconnu'}`, 'aria-hidden': 'true' });
 const tourDe = (id) => S.etat.tours.find((x) => x.tache === id);
@@ -41,7 +43,7 @@ function filtrer(ns) {
   const r = [];
   for (const n of ns) {
     const enf = filtrer(n.enfants || []);
-    const ok = n.type === 'tache' && S.filtres.has(groupeStatut(n.statut));
+    const ok = n.type === 'tache' && passeStatut(n);
     if (ok || enf.length) r.push({ ...n, enfants: enf, ctx: n.type === 'tache' && !ok });
   }
   return r;
@@ -92,6 +94,7 @@ function compteursGroupe(n) {
 function ligne({ n, niveau }) {
   const k = cle(n), enf = n.enfants.length > 0, ouvert = enf && estOuvert(n), tache = n.type === 'tache';
   const titre = h('div', { class: 'c-titre', role: 'gridcell', style: `padding-left:${niveau * 16 + 4}px` },
+    tache && !n.ctx ? caseLigne(n) : null,
     h('span', { class: `chev${enf ? (ouvert ? ' ouvert' : '') : ' vide'}`, 'aria-hidden': 'true' }),
     n.type === 'conteneur' ? h('span', { class: 'ico-projet', role: 'img', 'aria-label': t('cascade.projet'), title: t('cascade.projet') }) : null,
     h('span', { class: 'c-t', title: nomLisible(n.titre) }, nomLisible(n.titre)), tache ? repereIA(n.id) : null, tache ? pastilleMoi(n) : null, compteIA(n));
@@ -141,12 +144,15 @@ function entete(c, racines) {
   majConversation(ref.chatBtn, ref.chat, cont);
   majReglageConteneur(ref.execution, cont); // INV-REGROUPE-1
   ref.total.textContent = tn(S.toutes ? 'cascade.total_toutes' : 'cascade.total_ouvertes', total);
-  const chip = (s) => h('button', { class: 'chip-st', type: 'button', 'aria-pressed': String(S.filtres.has(s)), title: t('cascade.filtrer_titre', { statut: libelleStatut(s) }),
-    onclick: () => { if (S.filtres.has(s)) S.filtres.delete(s); else S.filtres.add(s); majTout(); } },
-  point(s), libelleStatut(s), ' ', h('span', { class: 'n' }, compte[s] || 0));
-  remplacer(ref.chips, ORDRE_STATUTS.filter((s) => compte[s] || S.filtres.has(s)).map(chip),
-    filtreActif() ? h('button', { class: 'btn-discret', type: 'button', onclick: () => { S.filtres.clear(); majTout(); } }, t('cascade.effacer_filtre')) : null);
+  const cs = comptesStatut(racines), actifs = statutsActifs();
+  const chip = ([k, l]) => h('button', { class: 'chip-st', type: 'button', 'data-statut': k, 'aria-pressed': String(actifs.includes(k)), title: t('cascade.filtrer_titre', { statut: l }),
+    onclick: () => basculerStatut(k) },
+  point(k === 'a-moi' || k === 'a-valider' ? 'retour' : k), l, ' ', h('span', { class: 'n' }, cs[k] || 0));
+  remplacer(ref.chips, STATUTS_COURTS.filter(([k]) => cs[k] || actifs.includes(k)).map(chip),
+    filtreActif() ? h('button', { class: 'btn-discret', type: 'button', onclick: effacerStatuts }, t('cascade.effacer_filtre')) : null,
+    filtreActif() ? h('span', { class: 'casc-nsurn', role: 'status' }, t('filtres.n_sur_n', { n: compterFiltrees(racines), total })) : null);
 }
+const compterFiltrees = (racines) => [...parcourir(racines)].filter((x) => x.type === 'tache' && passeStatut(x)).length;
 
 function pastilleTour(x) {
   return h('button', { class: 'live-i', type: 'button', 'data-tour': x.tache, title: x.titre, onclick: () => ouvrir(x.tache) },
@@ -208,7 +214,7 @@ function majTout() {
   if (S.portee && !c && S.arbre.length) S.portee = null; // la portée a disparu de l'arbre
   const racines = (S.portee && c) ? c.at(-1).enfants : S.arbre;
   if (S.portee !== porteeAff) { porteeAff = S.portee; topSauve = 0; ref.defile.scrollTop = 0; }
-  entete(c, racines); majEnteteTri(); majLive(); majProps(); corps(racines);
+  entete(c, racines); majEnteteTri(); majLive(); majProps(); corps(racines); majLot();
 }
 
 function majActivite() {
@@ -257,6 +263,7 @@ function surTouche(e) {
       if (enf && estOuvert(n) && !filtreActif()) basculer(n);
       else for (let j = i - 1; j >= 0; j--) if (+rows[j].dataset.niveau < niv) { rows[j].focus(); break; }
       return;
+    case 'x': if (n.type === 'tache' && !n.ctx) { e.preventDefault(); basculerSel(n.id); } return; // sélection en bloc au clavier
     case 'Enter': e.preventDefault(); if (n.type === 'tache') ouvrir(n.id); else basculer(n); return;
     case ' ': e.preventDefault(); if (enf) basculer(n); else if (n.type === 'tache') ouvrir(n.id);
   }
@@ -268,7 +275,7 @@ function colonnes() {
     const b = h('button', { class: 'tri', type: 'button', 'data-tri': col, title: t(col === 'echeance' ? 'cascade.trier_echeance' : 'cascade.trier_priorite'), onclick: () => basculerTri(col) }, txt, h('span', { class: 'tri-sens', 'aria-hidden': 'true' }));
     return h('div', { role: 'columnheader', class: 'c-th', 'data-col': col, 'aria-sort': 'none' }, b);
   };
-  return h('div', { class: 'cl cl-tete', role: 'row' }, col0('', t('cascade.col_titre')), col0('', t('cascade.col_statut')), col0('', t('cascade.col_activite')), col0('', t('cascade.col_situation')), col0('', t('cascade.col_moteur')),
+  return h('div', { class: 'cl cl-tete', role: 'row' }, h('div', { role: 'columnheader', class: 'c-th-titre', title: t('cascade.col_titre') }, caseTout(() => [...ref.corps.querySelectorAll('.cl:not(.ctx) .c-sel')]), t('cascade.col_titre')), col0('', t('cascade.col_statut')), col0('', t('cascade.col_activite')), col0('', t('cascade.col_situation')), col0('', t('cascade.col_moteur')),
     triable('echeance', t('cascade.col_echeance')), triable('priorite', t('cascade.col_priorite')), col0('c-lien', t('cascade.col_liens')), col0('c-maj', t('cascade.col_maj')));
 }
 function basculerTri(col) {
@@ -290,6 +297,7 @@ function construire() {
   ref.titre = h('h2', { class: 'casc-titre' });
   ref.total = h('span', { class: 'casc-total' });
   ref.chips = h('div', { class: 'casc-chips', role: 'group', 'aria-label': t('cascade.filtre_statut_groupe') });
+  ref.lot = barreLot();
   ref.live = h('div', { class: 'casc-live', 'aria-label': t('cascade.seances_label'), hidden: true });
   ref.props = h('div', { class: 'casc-props', hidden: true });
   ref.corps = h('div', { role: 'rowgroup', class: 'casc-corps' });
@@ -308,7 +316,7 @@ function construire() {
   ref.defile.addEventListener('click', (e) => {
     const row = e.target.closest('.cl[data-cle]');
     const n = noeudDe(row);
-    if (!n || e.target.closest('.st-chg, .st-refus')) return;
+    if (!n || e.target.closest('.st-chg, .st-refus, .c-sel')) return;
     cleFocus = cle(n);
     if (e.target.classList.contains('chev')) basculer(n); else if (n.type === 'tache') ouvrir(n.id); else basculer(n);
   });
@@ -324,7 +332,7 @@ function construire() {
     h('button', { class: 'btn petit', type: 'button', onclick: () => toutBasculer(true) }, t('cascade.replier')),
     h('button', { class: 'btn petit', type: 'button', onclick: () => toutBasculer(false) }, t('cascade.deplier')), bascule);
   coque = h('div', { class: 'casc' },
-    h('div', { class: 'casc-tete' }, ref.fil, h('div', { class: 'casc-l1' }, ref.titre, ref.total, outils), ref.chips, ref.chat),
+    h('div', { class: 'casc-tete' }, ref.fil, h('div', { class: 'casc-l1' }, ref.titre, ref.total, outils), ref.chips, ref.lot, ref.chat),
     ref.live, ref.props, ref.defile);
   sigTours = null;
 }
@@ -348,6 +356,7 @@ export function etatCascade(racine) {
   majActivite();
 }
 export function initCascade() {
+  on('filtre', () => { if (coque?.isConnected) majTout(); });
   surOccupees(() => { if (coque?.isConnected) majTout(); });
   on('deplier', (k) => { if (replis[k]) { delete replis[k]; sauver(); if (coque?.isConnected) majTout(); } });
   on('deplace', ({ cle: k, depuis }) => {

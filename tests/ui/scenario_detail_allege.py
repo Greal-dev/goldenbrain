@@ -69,9 +69,13 @@ def test_ouverture_de_tache_le_fil_occupe_l_essentiel_de_l_ecran(navigateur, srv
 def test_details_a_un_clic_et_choix_memorise(navigateur, srv):
     p = ouvrir(navigateur, srv, 1366, 768)
     assert not p.is_visible('[data-id="details"]'), "les détails devraient être repliés par défaut"
-    p.click('[data-id="details-bascule"]')
+    for _ in range(5):  # un redessin de l'en-tête peut avaler le clic : cliquer tant que les détails restent repliés
+        p.click('[data-id="details-bascule"]')
+        if p.locator('[data-id="details"]').is_visible():
+            break
+        p.wait_for_timeout(400)
     for sel in ('.fiche', '.moteur select', '.d-rattache', '.d-actions', '.corps'):
-        assert p.is_visible(sel), f"{sel} inaccessible après « Détails »"
+        p.wait_for_selector(sel, state="visible", timeout=5000)  # la fiche se dessine après l'ouverture : attendre, ne pas sonder
     p.reload()
     p.wait_for_selector(".composer textarea")
     assert p.is_visible('[data-id="details"]'), "le choix « ouvert » n'est pas mémorisé"

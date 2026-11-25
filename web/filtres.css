@@ -43,3 +43,13 @@
 .chaine-bloc .ch-phases { margin: 6px 0; padding-left: 4px; list-style: none; } .chaine-bloc .ch-phase.ici { font-weight: 600; }
 .chaine-bloc .ch-phase.p-faite { color: var(--c-terminee); } .chaine-bloc .ch-phase.p-echec, .chaine-bloc .ch-erreur { color: var(--c-bloque); }
 .chaine-bloc .ch-phase.p-sautee { color: var(--texte-2); text-decoration: line-through; } .chaine-bloc .ch-actions { display: flex; gap: 6px; }
+/* Filtre de statut partagé (compteurs) et modification en bloc. */
+.f-st .n { font-variant-numeric: tabular-nums; opacity: .75; }
+.casc-nsurn { font-size: 12px; color: var(--texte-2); font-variant-numeric: tabular-nums; }
+.c-sel, .c-sel-tout { flex: none; width: 15px; height: 15px; margin: 0 6px 0 0; cursor: pointer; accent-color: var(--accent); }
+.c-th-titre { display: flex; align-items: center; }
+.lot-barre { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 8px; padding: 6px 8px; border: 1px solid var(--accent); border-radius: 6px; background: var(--accent-fond); font-size: 12.5px; }
+.lot-barre[hidden] { display: none; }
+.lot-n { font-weight: 600; }
+.lot-note { color: var(--texte-2); }
+@media (max-width: 700px) { .c-sel, .c-sel-tout { width: 22px; height: 22px; } .lot-barre select, .lot-barre input[type=date], .lot-barre .btn { min-height: 36px; } }
