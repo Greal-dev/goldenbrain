@@ -30,12 +30,12 @@ def test_prerequis_pose_attente_visible_puis_depart_et_rang_dans_la_file(page, s
 
         page.fill(".composer textarea", "[lent 20] travaille")
         page.press(".composer textarea", "Control+Enter")
-        expect(page.locator(".d-une .etat")).to_have_text("En attente de : Prérequis Ordo", timeout=5000)
+        expect(page.locator(".d-une [data-id=main-phrase]")).to_contain_text("Prérequis Ordo", timeout=5000)
         expect(page.locator("#file [data-id=or-b]")).to_contain_text("En attente de : Prérequis Ordo", timeout=5000)
 
         r = page.request.post(serveur.url + "/api/taches/or-a/statut", headers=H, data={"statut": "fait"})
         assert r.status == 200, r.text()
-        expect(page.locator(".d-une .etat")).to_have_text("Séance de travail en cours", timeout=10000)
+        expect(page.locator(".d-une .main")).to_have_attribute("data-main", "ia", timeout=10000)
 
         # Rang : un seul créneau, occupé ; la tâche suivante attend à son rang, motif affiché.
         page.request.post(serveur.url + "/api/taches/or-b/arret", headers=H)
@@ -45,7 +45,7 @@ def test_prerequis_pose_attente_visible_puis_depart_et_rang_dans_la_file(page, s
         ligne(page, "Suivante Ordo").click()
         page.fill(".composer textarea", "à ton tour")
         page.press(".composer textarea", "Control+Enter")
-        expect(page.locator(".d-une .etat")).to_have_text("En file — 1ᵉʳ — message d'un humain", timeout=5000)
+        expect(page.locator(".d-une .main")).to_have_attribute("data-main", "file", timeout=5000)
         expect(page.locator("#file [data-id=or-d]")).to_contain_text("1ᵉʳ — message d'un humain")
     finally:
         for t in ("or-b", "or-c", "or-d"):

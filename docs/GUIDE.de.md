@@ -1,6 +1,6 @@
 # GoldenBrain-Anleitung
 
-Aktualisiert am 2026-11-24.
+Aktualisiert am 2026-11-25.
 
 GoldenBrain ist ein Steuerpult: Sie übergeben Aufgaben an KI-Agenten (Claude Code, Codex, OpenCode, Copilot, Antigravity), und jede Aufgabe wird an ihrem Platz in Ihrem Vault (einem Ordner mit Markdown-Notizen) abgelegt. GoldenBrain organisiert und beaufsichtigt; der Agent arbeitet in seiner eigenen Unterhaltung, die Sie jederzeit wieder aufnehmen können.
 
@@ -188,6 +188,12 @@ Der Vault ist Ihr **zweites Gehirn**: gewöhnliche Notizen (Markdown-Dateien), d
 - **So geht es**: Schaltfläche „Entscheidungen“. Für jedes Element: „Bestätigen“, „Zurücksenden …“, dem Agenten antworten, verschieben (Datum), einen Vorschlag „Annehmen“ oder „Ablehnen“. Der KI-Gärtner (Kohärenzprüfung) und die Agenten schlagen hier auch vor, eine Aufgabe **umzubenennen**, deren Titel nicht sagt, worum es eigentlich geht („„Vereinsverkäufe“ in „API/MCP Vereinsverkäufe“ umbenennen“, mit Begründung): automatisch angewendet (Routineschritt), rückgängig unter „Automatisch angewendet“. Mehrere angekreuzte Aufgaben werden in einem Zug bestätigt. Routineschritte der Agenten (verknüpfen, unterordnen, verschieben, umbenennen, Frist, Aufgabe unter ihrer) warten nicht mehr auf Sie: Sie werden automatisch angewendet, in den „Traces“ der Aufgabe vermerkt und sieben Tage unter „Automatisch angewendet“ unten auf der Seite aufgeführt, jeweils mit „Rückgängig“. Was zu entscheiden bleibt (schließen, Projekt oder Vorhaben machen, Umfang ändern), wird nach sendender Aufgabe in einem eingeklappten Eintrag „Vorschläge von …“ gruppiert: „Alle annehmen“ oder „Alle ablehnen“, oder aufgeklappt eine Zeile je Vorschlag, Grund beim Überfahren oder Aufklappen.
 - **Gut zu wissen**: Die automatischen Abschlüsse der letzten 7 Tage stehen dort unter „Automatisch abgeschlossen“, jeweils mit „Wieder öffnen“. Das Etikett „vermeidbar?“ weist auf eine Frage oder Bestätigung hin, die der Agent allein hätte entscheiden können (reine Information, nichts wird verändert); Einstellungen → „Etikett „vermeidbar?““ schaltet es aus oder stellt seine Schwelle ein.
 
+### Wer am Zug ist: vier Zustände {#la-main}
+
+- **Wozu**: keine Aufgabe wartet stumm. Jede offene Aufgabe trägt eine einzige berechnete Markierung mit einem Satz, der den Grund nennt: „Die KI arbeitet“, „In der Warteschlange“ (der Grund wird genannt: Speicher, gleichzeitige Agenten, reservierter Arbeitsplatz, Quota oder Assistent nicht verfügbar, Routine, benannte Abhängigkeit, Pause; ebenso die Fortsetzung), „Menschliche Aktion nötig“ (was von Ihnen erwartet wird, in einem Satz, mit der Geste vor Ort) oder „Erledigt“.
+- **Vorgehen**: bei einer Aufgabe mit menschlicher Aktion oder nie gestarteter Aufgabe öffnet die Schaltfläche „An die KI übergeben“ (oder „An die KI zurückgeben“) eine optionale Anweisung und schickt die Aufgabe dann in die Warteschlange. Dieselbe Geste in den Listen, in Heute und, für mehrere Aufgaben, in der Leiste der Sammelbearbeitung (zuerst Vorschau).
+- **Gut zu wissen**: „Bei mir“ und der Zähler der oberen Leiste zählen genau die Aufgaben in „Menschliche Aktion nötig“. Ein Agent muss jeden Durchlauf abschließen (erledigt oder eine präzise Bitte): sonst schickt GoldenBrain ihn höchstens zweimal mit „schließe ab“ zurück, danach kommt die Aufgabe mit „der Agent hat nicht abgeschlossen“ zu Ihnen. Eine Lieferung, die auf ihre Zusammenführung wartet, heißt „Integration läuft“, kein Warten auf Sie. Nur Sie übergeben eine Aufgabe an die KI, ein Agent kann das nicht. Die Vault-Status bleiben die Grunddaten; nichts wird von selbst geändert. Auf dem Telefon löst das Antippen der Markierung in der Aufgabe dasselbe aus wie die Schaltfläche.
+
 ### Heute {#aujourd-hui}
 
 - **Wozu es dient**: wissen, was jetzt zu tun ist.
@@ -301,6 +307,8 @@ Zu lesen von jedem Agenten — Claude Code, Codex, OpenCode, Antigravity oder an
 - Andere Adresse (in `config.toml` eingestellter Port, Testserver): Variable `ORCH_URL`, zum Beispiel `export ORCH_URL=http://127.0.0.1:8301`; `orch.py` liest sie.
 - Ein von GoldenBrain gestarteter Agent erhält `ORCH_URL`, `ORCH_TACHE` (seine Aufgabe) und `ORCH_SAUTS`; `orch.py` nutzt sie, um seine Nachrichten zu signieren und die Weiterleitungen zu begrenzen.
 
+- Jeden Durchlauf abschließen: erledigt (`terminee`), oder eine präzise menschliche Bitte in `prochain_pas` (`en_attente`), oder ein benanntes Warten. Ein Blatt „reste: …“ ohne Adressaten ist eine Anomalie: GoldenBrain schickt höchstens zweimal „schließe ab“ zurück, danach steht die Aufgabe auf „Menschliche Aktion nötig“. Ein Agent übergibt nie eine Aufgabe an die KI (403).
+
 **2. `orch`-Befehle**
 
 | Befehl | Wirkung |
@@ -320,7 +328,7 @@ Zu lesen von jedem Agenten — Claude Code, Codex, OpenCode, Antigravity oder an
 | `proposer deplacer\|rattacher\|projet\|operation\|ticket\|tache\|lier\|perimetre\|echeance\|fermer\|renommer …` | eine Strukturänderung vorschlagen (`--motif`, Pflicht bei `renommer`) ; `rattacher <id> <parent|racine> [--aussi <id>…]` ordnet einen Stapel Aufgaben in EINEM Vorschlag unter einer Eltern-Aufgabe ein (oder löst sie zum Projekt hin), abgelehnt bei Zyklus, laufender Aufgabe, anderem Projekt, Obergrenze 10 oder gemischten Arbeitsarten; der Mensch nimmt mit einem Klick an. Im einfachen Modus werden Vorschläge ignoriert (Einstellungen > Vorschläge der Agenten); eine Geste, deren Wirkung schon besteht, wird nicht hinterlegt, und wird sie vor der Annahme erreicht, gilt sie ohne Fehler als „bereits erledigt“ Routineschritte (Einstellungen > Vorschläge) werden automatisch angewendet und sind unter Entscheidungen rückgängig zu machen; ein `tache`-Vorschlag eines Agenten wird eine Zeile seiner Aufgabe. |
 | `solliciter <persona> "<Frage>"` | Meinung eines Personas des Teams |
 | `telegram "<Text>"` | Nachricht an den Nutzer auf Telegram (`--validation`, `--choix`); setzt den konfigurierten Bot voraus |
-| `poste reserver "<Grund>"` / `poste liberer` | den Rechner während eines aufwendigen Tests reservieren; ist er belegt, auf die Reihe warten (`--attente <min>`, Standard 30) |
+| `poste reserver "<Grund>"` / `poste liberer` | den Rechner während eines aufwendigen Tests reservieren; ist er belegt, auf die Reihe warten (`--attente <min>`, Standard 30) ; ohne laufende Prüfung verfällt die Reservierung nach 20 Min.; nie mit `pgrep -f` auf ein Muster der eigenen Anweisung warten: Vordergrund oder PID |
 | `chaine plan\|sauter\|ajouter\|dedoubler\|consigne …` | den Ablauf der Aufgabe an den tatsächlichen Ordner anpassen: `plan` zeigt ihn; eine Phase überspringen, hinzufügen, verdoppeln oder ihre Anweisungen ändern (nur kommende Phasen), immer mit `--motif`: die Anpassung wird protokolliert und dem Nutzer angezeigt |
 | `feu-vert demander\|accorder\|refuser\|verifier <40-Zeichen-sha> [Text] [--a <Aufgabe des Prüfers>] …` | an eine Version gebundene Freigabe (vollständiger 40-Zeichen-Hash); braucht `ORCH_TACHE` |
 | `agents-cc [--relever]` | die Claude-Code-Agenten dieses Rechners bündeln und einer Aufgabe zuordnen |

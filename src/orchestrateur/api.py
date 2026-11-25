@@ -23,7 +23,7 @@ from . import (api_styles, api_compagnon, api_apprendre, api_accueil, api_lignes
                api_rapprochement, api_resultat, api_routines, api_simultanes, api_manager, api_telegram, api_temps, api_titre,
                api_reflexes, api_travaux, api_validation, api_vigie, api_chaines, api_lots)
 from .api_temps import CorpsTache
-from . import (appareils, codespace, conseil, console, decisions, depot, executant, geste, guide, langues, liens, recherche, regroupement,
+from . import (appareils, codespace, conseil, console, decisions, depot, etat_main, executant, geste, guide, langues, liens, recherche, regroupement,
                reprise, temps, transformations, version, vigie)
 from .alignement import Aligneur
 from .catalogue import Catalogue
@@ -201,7 +201,7 @@ def creer_app(config: Config, moteur: Moteur | None = None) -> FastAPI:
     def tache(ident: str) -> dict:
         d, origine = depot.dossier_de_travail(vault, ident)
         return {**vault.detail(ident), "etat_execution": moteur.etat_de(ident),
-                "reprise_auto": moteur.reprise_auto.attendue(ident),  # INV-REPRISE-1
+                "reprise_auto": moteur.reprise_auto.attendue(ident), "main": etat_main.lire(moteur, vault.tache(ident), profond=True),  # INV-REPRISE-1, INV-MAIN-1
                 "dossier_travail": d, "dossier_travail_origine": origine,
                 "attente_poste": moteur.attente_poste(ident), "rang_poste": moteur.poste.rang(ident),  # INV-POSTE-1
                 "pause_ram": moteur._sem.en_pause(ident), "pause": moteur.pause_de(ident),  # INV-SIMULT-1, INV-EXEC-10
@@ -463,7 +463,7 @@ def creer_app(config: Config, moteur: Moteur | None = None) -> FastAPI:
     app.state.index_notes = routeur_notes.index
     app.include_router(routeur_notes)
     routeur_arbre = api_arbre.routes(config, moteur, aligneur, routeur_notes.index)
-    for m in (api_temps, api_titre): app.include_router(m.routes(vault, moteur.publier, tache))  # api_titre : INV-RENOMMER-1
+    app.include_router(api_titre.routes(vault, moteur.publier, tache)); app.include_router(api_temps.routes(vault, moteur.publier, tache, lambda: etat_main.humain_par_id(moteur)))  # INV-RENOMMER-1, INV-MAIN-4
     app.include_router(api_rapprochement.routes(moteur))
     app.include_router(api_codespace.routes(vault, moteur, tache))
     app.include_router(api_feux.routes(api_feux.FeuxVerts(moteur)))  # INV-FEU-1

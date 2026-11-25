@@ -83,7 +83,7 @@ def test_sans_controle_declare_aucune_preuve_et_fin_retenue(config, vault, faux)
 def test_pas_de_controle_si_l_agent_ne_declare_pas_terminee(racine, config, vault, faux, depot_git):
     declarer(racine, depot_git)
     m = tour(config, vault, faux, rendu("en_cours"))
-    assert vault.tache("mere").statut == "en-cours"
+    assert vault.tache("mere").statut == "retour-humain"  # INV-MAIN-3 : en_cours sans attente, renvoyé 2 fois puis rendu à l'humain
     assert m.controle_vue("mere")["verdict"] is None  # requis, jamais lancé
 
 

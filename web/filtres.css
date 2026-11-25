@@ -53,3 +53,15 @@
 .lot-n { font-weight: 600; }
 .lot-note { color: var(--texte-2); }
 @media (max-width: 700px) { .c-sel, .c-sel-tout { width: 22px; height: 22px; } .lot-barre select, .lot-barre input[type=date], .lot-barre .btn { min-height: 36px; } }
+
+/* État « à qui la main » (INV-MAIN-1) : une pastille, quatre couleurs ; la phrase tient sur une ligne, le détail est en infobulle. */
+.main { display: inline-flex; align-items: center; font-size: 12px; font-weight: 600; white-space: nowrap; }
+.main-ia { color: var(--c-encours); } .main-file { color: var(--c-agent); } .main-termine { color: var(--c-terminee); }
+.main-humain { color: var(--sur-vif); background: var(--c-attente); border-radius: 10px; padding: 1px 8px; }
+.d-une .main-phrase { flex: 1 1 0; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; color: var(--texte-2); }
+.badge-st.bm-ia { --bs: var(--c-encours); } .badge-st.bm-file { --bs: var(--c-agent); } .badge-st.bm-termine { --bs: var(--c-terminee); }
+.badge-st[class*="bm-"] { padding: 0 3px; font-size: 10px; } /* assez étroite pour ne pas couvrir le centre de la ligne (clic = ouvrir la tâche) */
+.badge-st.bm-humain { background: var(--c-attente); color: var(--sur-vif); font-weight: 600; --bs: var(--c-attente); }
+.au-main { display: flex; align-items: center; gap: 8px; padding: 0 12px 4px 34px; font-size: 12px; color: var(--texte-2); }
+.au-main .main-phrase { flex: 1 1 0; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lot-barre .lot-ia-consigne { min-width: 140px; }

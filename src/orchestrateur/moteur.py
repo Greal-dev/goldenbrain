@@ -23,7 +23,7 @@ from collections import defaultdict, deque
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 
-from . import (apprendre, assistant_absent, instrumentation, agents_cc, langues, catalogue, codespace, decisions, depot, echecs, economie, executant, executeurs, fiches, incidents, liens, natif, ordonnancement, pilotage,
+from . import (apprendre, assistant_absent, attente_muette, etat_main, instrumentation, agents_cc, langues, catalogue, codespace, decisions, depot, echecs, economie, executant, executeurs, fiches, incidents, liens, natif, ordonnancement, pilotage,
                quota, regroupement, reprise, reprise_auto, reseau, retour, session_perdue, sessions, simultanes, temps, transformations)
 from .propagation import MixinPropagation
 from .config import RACINE_DEPOT, Config
@@ -41,7 +41,6 @@ from .vault import Conflit, ErreurOrch, Invalide, NonTrouve, Vault
 
 log = logging.getLogger(__name__)
 STATUT_DECLARE = ("en_cours", "en_attente", "terminee")  # `statut:` de <fiche> ; statut vault : Vault.statut_declare
-
 
 def session_valide(session: str) -> str:
     if not re.fullmatch(r"[A-Za-z0-9_-]{1,100}", session or ""):
@@ -90,7 +89,7 @@ class Moteur(retour.MixinRetour, MixinVerrou, MixinControle, MixinCompactage, Mi
         self.registre = registre if registre is not None else HARNAIS
         self.files: dict[str, deque[Envoi]] = defaultdict(deque)
         self.etats: dict[str, str] = {}; self.tours: dict[str, Tour] = {}; self.boucles: dict[str, asyncio.Task] = {}
-        self.a_deriver: dict[str, str] = {}; self.relance_fiche = RelanceFiche()  # INV-EXEC-12
+        self.a_deriver: dict[str, str] = {}; self.relance_fiche, self.attente_muette = RelanceFiche(), attente_muette.AttenteMuette(self)  # INV-EXEC-12, INV-MAIN-2
         self.envois: dict[str, Envoi] = {}  # message du tour en cours (conversation en direct)
         self.en_file_depuis: dict[str, str] = {}; self.abonnes: set[asyncio.Queue] = set()  # INV-VERROU-1 : « depuis » avant tout tour
         self._sem = simultanes.Creneaux(self)  # INV-SIMULT-1 : nombre fixe, optimisation ou plafond de RAM
@@ -151,7 +150,7 @@ class Moteur(retour.MixinRetour, MixinVerrou, MixinControle, MixinCompactage, Mi
                   mandat: bool = False, source: str = "", role: str = "", humain: bool = False,
                   direct: bool = False) -> str:  # direct : jamais acheminé vers la mère (reprise d'office)
         executant.exiger_ia(self.vault.tache(ident))  # INV-EXECUTANT-1 : rien ne part sur une tâche « Moi »
-        if humain: self.retenus.discard(ident)  # INV-EXEC-11 : un message humain débloque la file retenue
+        if humain: self.retenus.discard(ident); self.attente_muette.remettre(ident)  # INV-MAIN-2 ; INV-EXEC-11 : un message humain débloque la file retenue
         harnais = harnais if self.config.interface.actif("moteurs") else None  # INV-INTERFACE-1
         if not texte or not texte.strip():
             raise Invalide(langues.t("serveur.moteur.message_vide"))
@@ -399,6 +398,7 @@ class Moteur(retour.MixinRetour, MixinVerrou, MixinControle, MixinCompactage, Mi
             if self.config.liens.propagation and self.config.interface.actif("liens"):
                 self._propager(ident, fiche, sauts + 1, de)
         if verdict == "relancer": redemander(self, ident)  # INV-EXEC-12 : une seule relance
+        elif not (erreur or fiche_absente or (tour and tour.arrete)) and fiche: self.attente_muette.juger(ident, statut, fiche)  # INV-MAIN-2
         if terminee and not erreur and (self.config.interface.actif("equipe")  # INV-INTERFACE-1
                                         or self.validation_auto.applique(ident)):  # INV-VALID-2
             self.revues.declencher(ident)
@@ -492,7 +492,7 @@ class Moteur(retour.MixinRetour, MixinVerrou, MixinControle, MixinCompactage, Mi
                 **self.file_publique(),  # INV-ORDO-1, INV-ORDO-2 : rang, motif, prérequis attendus
                 "mandats_sans_tour": [i for i in self.mandats.sans_tour()
                                       if self.etat_de(i) not in ("en_cours", "en_file")],
-                "a_moi": sum(t.statut == self.vault.retour and not t.pilotage and not temps.reportee(t) for t in taches.values()),
+                "a_moi": etat_main.compter_humain(self),  # INV-MAIN-4
                 "en_retard": temps.nb_retard(self.vault),
                 "propositions": sum(p["etat"] == "en_attente" for p in self.propositions.liste),
                 "a_valider": sum(self.vault.a_valider(t) for t in taches.values()),

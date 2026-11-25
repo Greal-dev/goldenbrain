@@ -8,7 +8,7 @@ import { api } from './api.js';
 import { erreur, emit } from './store.js';
 
 const sel = new Set();
-let ancre = null, barre = null, tete = null, visibles = () => [], brouillon = { statut: '', echeance: '' }, recap = null, dernier = null;
+let ancre = null, barre = null, tete = null, visibles = () => [], brouillon = { statut: '', echeance: '' }, recap = null, dernier = null, recapIA = null, consigneIA = '';
 
 const ids = () => visibles().map((c) => c.dataset.id);
 function pousser() { majLot(); }
@@ -23,7 +23,7 @@ export function caseLigne(n) {
       for (const i of tous.slice(a, b + 1)) { if (c.checked) sel.add(i); else sel.delete(i); }
       for (const x of visibles()) x.checked = sel.has(x.dataset.id);
     } else if (c.checked) sel.add(n.id); else sel.delete(n.id);
-    ancre = n.id; recap = null;
+    ancre = n.id; recap = recapIA = null;
     pousser();
   });
   return c;
@@ -59,6 +59,20 @@ async function appliquer() {
   for (const c of visibles()) c.checked = false;
   emit('recharger-arbre'); majLot();
 }
+// « Confier / Renvoyer à l'IA » en bloc (INV-MAIN-5) : aperçu, puis envoi en file ; les tâches occupées ou sans attente de l'IA sont ignorées.
+async function apercuIA() {
+  try { recapIA = await api('/lots/ia', { methode: 'POST', corps: { taches: [...sel], apercu: true } }); } catch (e) { return erreur(e.message); }
+  majLot();
+}
+async function envoyerIA() {
+  try {
+    const r = await api('/lots/ia', { methode: 'POST', corps: { taches: [...sel], consigne: consigneIA } });
+    dernier = { lot: null, n: r.envoyees.length, exclues: r.exclues, annule: null, ia: true };
+  } catch (e) { return erreur(e.message); }
+  sel.clear(); recap = recapIA = null; consigneIA = ''; ancre = null;
+  for (const c of visibles()) c.checked = false;
+  emit('recharger-arbre'); majLot();
+}
 async function annuler() {
   const lot = dernier.lot;
   try {
@@ -73,11 +87,18 @@ function contenu() {
   if (!sel.size) {
     if (!dernier) return [];
     if (dernier.annule) return [h('span', { class: 'lot-etat' }, t('lot.annule')), dernier.annule.ignorees.length ? h('span', { class: 'lot-note' }, t('lot.ignorees', { liste: noms(dernier.annule.ignorees) })) : null, fermer()];
-    return [h('span', { class: 'lot-etat', role: 'status' }, tn('lot.fait', dernier.n)),
+    return [h('span', { class: 'lot-etat', role: 'status' }, tn(dernier.ia ? 'lot.ia_fait' : 'lot.fait', dernier.n)),
       dernier.exclues.length ? h('span', { class: 'lot-note' }, t('lot.exclues', { liste: noms(dernier.exclues) })) : null,
-      h('button', { type: 'button', class: 'btn petit', id: 'lot-annuler', onclick: annuler }, t('lot.annuler')), fermer()];
+      dernier.ia ? null : h('button', { type: 'button', class: 'btn petit', id: 'lot-annuler', onclick: annuler }, t('lot.annuler')), fermer()];
   }
   const compte = h('span', { class: 'lot-n', role: 'status', 'aria-live': 'polite' }, tn('lot.n_selection', sel.size));
+  if (recapIA) {
+    return [compte, h('span', { class: 'lot-recap', id: 'lot-ia-recap' }, tn('lot.ia_n', recapIA.envoyees.length)),
+      recapIA.exclues.length ? h('span', { class: 'lot-note' }, t('lot.exclues', { liste: noms(recapIA.exclues) })) : null,
+      h('input', { type: 'text', class: 'lot-ia-consigne', id: 'lot-ia-consigne', 'aria-label': t('main.consigne'), placeholder: t('main.consigne'), value: consigneIA, oninput: (e) => { consigneIA = e.target.value; } }),
+      recapIA.envoyees.length ? h('button', { type: 'button', class: 'btn primaire', id: 'lot-ia-confirmer', onclick: envoyerIA }, t('lot.ia_confirmer')) : null,
+      h('button', { type: 'button', class: 'btn petit', onclick: () => { recapIA = null; majLot(); } }, t('lot.retour'))];
+  }
   if (recap) {
     const vers = [brouillon.statut ? libelleStatut(brouillon.statut) : null, brouillon.echeance ? t('lot.vers_echeance', { date: brouillon.echeance }) : null].filter(Boolean).join(', ');
     const de = Object.entries(recap.de).map(([s, k]) => `${k} ${libelleStatut(s)}`).join(', ');
@@ -90,7 +111,8 @@ function contenu() {
     h('option', { value: '' }, t('lot.garder')), ORDRE_STATUTS.map((s) => h('option', { value: s, ...(s === brouillon.statut ? { selected: '' } : {}) }, libelleStatut(s))));
   const date = h('input', { type: 'date', id: 'lot-echeance', 'aria-label': t('lot.echeance'), value: brouillon.echeance, onchange: () => { brouillon.echeance = date.value; } });
   return [compte, choix, date, h('button', { type: 'button', class: 'btn primaire', id: 'lot-appliquer', onclick: apercu }, t('lot.appliquer')),
-    h('button', { type: 'button', class: 'btn petit', onclick: () => { sel.clear(); recap = null; for (const c of visibles()) c.checked = false; majLot(); } }, t('lot.vider'))];
+    h('button', { type: 'button', class: 'btn', id: 'lot-ia', title: t('lot.ia_titre'), onclick: apercuIA }, t('lot.ia')),
+    h('button', { type: 'button', class: 'btn petit', onclick: () => { sel.clear(); recap = recapIA = null; for (const c of visibles()) c.checked = false; majLot(); } }, t('lot.vider'))];
 }
 const fermer = () => h('button', { type: 'button', class: 'btn-discret', 'aria-label': t('lot.fermer'), onclick: () => { dernier = null; majLot(); } }, '×');
 
@@ -102,6 +124,7 @@ export function majLot() {
   for (const i of sel) if (!vis.has(i)) sel.delete(i);
   if (tete) { const k = vis.size ? [...vis].filter((i) => sel.has(i)).length : 0; tete.checked = k > 0 && k === vis.size; tete.indeterminate = k > 0 && k < vis.size; }
   if (recap && recap.retenues.length + recap.exclues.length !== sel.size) recap = null;
+  if (recapIA && recapIA.envoyees.length + recapIA.exclues.length !== sel.size) recapIA = null;
   const c = contenu();
   barre.hidden = !c.length;
   remplacer(barre, c);

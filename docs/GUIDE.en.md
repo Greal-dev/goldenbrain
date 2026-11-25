@@ -1,6 +1,6 @@
 # GoldenBrain guide
 
-Updated on 2026-11-24.
+Updated on 2026-11-25.
 
 GoldenBrain is a control station: you hand tasks to AI agents (Claude Code, Codex, OpenCode, Copilot, Antigravity), each filed in its proper place in your vault (a folder of Markdown notes). GoldenBrain organises and supervises; the agent works in its own conversation, which you can pick up again at any time.
 
@@ -188,6 +188,12 @@ The vault is your **second brain**: ordinary notes (Markdown files) that GoldenB
 - **How to do it**: “Decisions” button. For each item: “Approve”, “Send back…”, reply to the agent, postpone (date), “Accept” or “Decline” a suggestion. The AI gardener (consistency review) and the agents also suggest **renaming** a task whose title does not say what it is really about (“Rename “club sales” to “club sales API/MCP””, with its reason): applied automatically (routine step), it can be undone from “Applied automatically”. Several ticked tasks can be approved at once. Agents' routine steps (link, attach, move, rename, due date, task created under theirs) no longer wait for you: they are applied automatically, noted in the task's “Traces” and listed for seven days under “Applied automatically”, at the bottom of the page, each with “Undo”. What remains to decide (close, make a project or an operation, change a scope) is grouped by sending task into one folded entry “Proposals from …”: “Accept all” or “Decline all”, or, once unfolded, one line per proposal, reason on hover or unfold.
 - **Good to know**: the automatic closures of the last 7 days appear there under “Closed automatically”, each with “Reopen”. The “avoidable?” badge flags a question or an approval that the agent could have settled alone (information only, nothing is changed); Settings → “Avoidable?” badge switches it off or sets its threshold.
 
+### Who has the ball: four states {#la-main}
+
+- **What it is for**: no task waits silently. Every open task carries one computed badge, with a sentence saying why: "The AI is working", "Queued" (the reason is stated: memory, simultaneous agents, reserved workstation, quota or assistant unavailable, routine, named dependency, pause; and when it resumes), "Human action needed" (what is expected of you, in one sentence, with the gesture on the spot) or "Done".
+- **How**: on a task awaiting human action or never started, the "Hand to the AI" (or "Send back to the AI") button opens an optional instruction, then sends the task to the queue. Same gesture in lists, in Today and, for several tasks at once, in the bulk-edit bar ("Hand to the AI", preview first).
+- **Good to know**: "Mine" and the top-bar counter count exactly the tasks in "Human action needed". An agent must conclude every turn (done, or one precise request): otherwise GoldenBrain sends it back "conclude" at most twice, then the task returns to you with "the agent did not conclude". A delivery awaiting merge reads "integration under way", not a wait on you. Only you hand a task to the AI: an agent cannot. Vault statuses remain the underlying data; nothing is changed on its own. On a phone, tapping the badge in the task header does the same as the button.
+
 ### Today {#aujourd-hui}
 
 - **What it is for**: knowing what to do now.
@@ -301,6 +307,8 @@ To be read by any agent — Claude Code, Codex, OpenCode, Antigravity or other �
 - Another address (port set in `config.toml`, test server): `ORCH_URL` variable, for example `export ORCH_URL=http://127.0.0.1:8301`; `orch.py` reads it.
 - An agent launched by GoldenBrain receives `ORCH_URL`, `ORCH_TACHE` (its task) and `ORCH_SAUTS`; `orch.py` uses them to sign its messages and bound relays.
 
+- Conclude every turn: done (`terminee`), or one precise human request in `prochain_pas` (`en_attente`), or a named wait. A "reste: …" sheet with nobody asked is an anomaly: GoldenBrain sends "conclude" back at most twice, then the task moves to "Human action needed". An agent never hands a task to the AI (403).
+
 **2. `orch` commands**
 
 | Command | Effect |
@@ -320,7 +328,7 @@ To be read by any agent — Claude Code, Codex, OpenCode, Antigravity or other �
 | `proposer deplacer\|rattacher\|projet\|operation\|ticket\|tache\|lier\|perimetre\|echeance\|fermer\|renommer …` | suggest a structure change (`--motif`, required for `renommer`) ; `rattacher <id> <parent|racine> [--aussi <id>…]` files a batch of tasks under a parent task (or detaches them to their project) in ONE proposal, refused on a cycle, a running task, another project, the ceiling of 10 or mixed kinds of work; the human accepts with a click. In simple mode, suggestions are ignored (Settings > Suggestions); a gesture whose effect is already in place is not filed, and if it becomes so before acceptance it is concluded as “already done” without error Routine steps (Settings > Proposals) are applied automatically and can be undone from Decisions; a `tache` proposal from an agent becomes a line of its task. |
 | `solliciter <persona> "<question>"` | opinion of a team persona |
 | `telegram "<text>"` | message to the user on Telegram (`--validation`, `--choix`); requires the bot to be configured |
-| `poste reserver "<reason>"` / `poste liberer` | reserve the workstation during a heavy test; if it is taken, wait for your turn (`--attente <min>`, default 30) |
+| `poste reserver "<reason>"` / `poste liberer` | reserve the workstation during a heavy test; if it is taken, wait for your turn (`--attente <min>`, default 30) ; with no live gate for 20 min the reservation lapses on its own; never wait for a gate with `pgrep -f` on a pattern from your own instructions: foreground or PID |
 | `chaine plan\|sauter\|ajouter\|dedoubler\|consigne …` | adapt the task's chain to the real folder: `plan` shows it; skip, add, duplicate a phase or change its instructions (upcoming phases only), always with `--motif`: the adjustment is logged and shown to the user |
 | `feu-vert demander\|accorder\|refuser\|verifier <40-char sha> [text] [--a <controller task>] …` | green light tied to a version (full 40-character hash); needs `ORCH_TACHE` |
 | `agents-cc [--relever]` | group this machine's Claude Code agents and attach them to a task |

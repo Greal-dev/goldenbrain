@@ -9,10 +9,10 @@ d'`api.py`), INV-VAULT-1 (par `Vault`).
 
 from __future__ import annotations
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Request
 from pydantic import BaseModel
 
-from . import executant, notes_ia
+from . import api_main, executant, notes_ia
 
 
 class CorpsExecutant(BaseModel):
@@ -54,7 +54,10 @@ def routes(moteur, tache) -> APIRouter:
         return await notes_ia.proposer(moteur, ident, c.action, c.texte)
 
     @r.post("/confier", status_code=202)
-    async def confier(ident: str, c: CorpsConfier):
+    async def confier(ident: str, c: CorpsConfier, request: Request):
+        if refus := api_main.refus_agent(request):  # INV-MAIN-5
+            return refus
+        moteur.attente_muette.remettre(ident)
         return {"etat_execution": executant.confier(moteur, ident, c.consigne)}
 
     return r

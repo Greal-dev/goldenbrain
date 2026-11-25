@@ -1,0 +1,94 @@
+"""Pas d'attente muette (INV-MAIN-1 à INV-MAIN-5) : lecture d'état, renvoi borné, gestes humains seuls."""
+
+import asyncio
+
+import pytest
+from fastapi.testclient import TestClient
+
+from orchestrateur import api, etat_main
+from orchestrateur.moteur import Moteur
+from conftest import RENDU, scenario_ok
+
+EN_COURS = "<fiche>\nstatut: en_cours\nfait: un morceau\nreste: la suite\nprochain_pas:\n</fiche>"
+TERMINE = "<fiche>\nstatut: terminee\nfait: tout\nresultat: livré\nprochain_pas:\n</fiche>"
+QUESTION = "<fiche>\nstatut: en_attente\nfait: x\nprochain_pas: Choisis A ou B ?\n</fiche>"
+
+
+@pytest.fixture
+def client(config, vault, faux):
+    with TestClient(api.creer_app(config, Moteur(config, vault, {"faux": faux})), base_url="http://127.0.0.1:8399") as c:
+        yield c
+
+
+def moteur(config, vault, faux):
+    m = Moteur(config, vault, {"faux": faux})
+    m._q = m.abonner()
+    return m
+
+
+def jouer(config, vault, faux, rendu, ident="mere"):
+    faux.scenario = scenario_ok(rendu=rendu)
+
+    async def scenario():
+        m = moteur(config, vault, faux)
+        m.soumettre(ident, "go")
+        while any(not b.done() for b in m.boucles.values()):
+            await asyncio.gather(*m.boucles.values(), return_exceptions=True)
+        return m
+
+    return asyncio.run(scenario())
+
+
+def test_tour_en_cours_sans_agent_ni_attente_est_renvoye_deux_fois_puis_pose_a_l_humain(config, vault, faux):
+    m = jouer(config, vault, faux, EN_COURS)
+    messages = [x["message"] for x in faux.lances]
+    assert len(messages) == 3 and all(x.startswith("[GoldenBrain — conclus]") for x in messages[1:])  # 2 renvois, pas plus
+    assert vault.tache("mere").statut == vault.retour and m.attente_muette.epuise("mere")
+    lu = etat_main.lire(m, vault.tache("mere"))
+    assert lu["cle"] == "humain" and lu["motif"] == "epuise" and lu["muette"] and lu["geste"] == "renvoyer"
+
+
+def test_fin_de_tour_avec_demande_precise_n_est_jamais_renvoyee(config, vault, faux):
+    m = jouer(config, vault, faux, QUESTION)
+    assert len(faux.lances) == 1 and m.attente_muette.renvois("mere") == 0
+    lu = etat_main.lire(m, vault.tache("mere"))
+    assert lu["cle"] == "humain" and lu["geste"] == "repondre" and "A ou B" in lu["phrase"]
+
+
+def test_fin_de_tour_terminee_est_lue_terminee(config, vault, faux):
+    m = jouer(config, vault, faux, TERMINE)
+    assert len(faux.lances) == 1
+    assert etat_main.lire(m, vault.tache("mere"))["cle"] in ("humain", "termine")  # fait avec session : à valider
+
+
+def test_geste_humain_remet_le_compteur_de_renvois_a_zero(config, vault, faux):
+    m = jouer(config, vault, faux, EN_COURS)
+    assert m.attente_muette.epuise("mere")
+
+    async def geste():
+        m.soumettre("mere", "voici une consigne", humain=True)
+        remis = not m.attente_muette.epuise("mere") and m.attente_muette.renvois("mere") == 0  # avant que le tour ne rejuge
+        await asyncio.gather(*m.boucles.values(), return_exceptions=True)
+        return remis
+
+    assert asyncio.run(geste())
+
+
+def test_tache_jamais_lancee_se_lit_action_humaine_avec_le_geste_confier(config, vault, faux):
+    m = moteur(config, vault, faux)
+    lu = etat_main.lire(m, vault.tache("mere"))
+    assert lu["cle"] == "humain" and lu["geste"] == "confier" and not vault.tache("mere").fm.get("session")
+
+
+def test_compteur_a_moi_egale_les_taches_en_action_humaine(config, vault, faux):
+    m = moteur(config, vault, faux)
+    assert m.etat_global()["a_moi"] == len(etat_main.humain_par_id(m)) > 0
+
+
+def test_geste_confier_refuse_a_un_agent(client):
+    r = client.post("/api/taches/mere/ia", json={}, headers={"X-Orchestrateur": "1", "X-Orch-Tache": "autre"})
+    assert r.status_code == 403
+    r = client.post("/api/lots/ia", json={"taches": ["mere"]}, headers={"X-Orchestrateur": "1", "X-Orch-Tache": "autre"})
+    assert r.status_code == 403
+    r = client.post("/api/taches/mere/confier", json={}, headers={"X-Orchestrateur": "1", "X-Orch-Tache": "autre"})
+    assert r.status_code == 403

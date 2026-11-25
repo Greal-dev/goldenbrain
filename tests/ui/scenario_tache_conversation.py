@@ -105,7 +105,7 @@ def test_echec_de_tour_message_du_systeme_et_repere(page, serveur):
 def test_quota_epuise_tache_en_pause_reprendre_maintenant_puis_arreter(page, serveur):
     _ouvrir(page, serveur, "C1-PauseQuota", {"pq-un": ("Un PQ", "")}, "Un PQ")
     _envoyer(page, "[echec] travaille")
-    expect(page.locator(".d-une .etat.en_pause")).to_contain_text("En pause : quota faux, reprise à", timeout=10000)
+    expect(page.locator(".d-une [data-id=main-phrase]")).to_contain_text("En pause : quota faux, reprise à", timeout=10000)  # INV-MAIN-1 : la pastille dit « En file », la phrase le motif
     expect(ligne(page, "Un PQ").locator(".echec")).to_have_attribute("title", re.compile("En pause : quota faux"))
     page.get_by_role("button", name="Reprendre maintenant").click()  # relance aussitôt : échoue encore (factice)
     expect(page.locator(".msg.systeme")).to_have_count(2, timeout=10000)
@@ -121,9 +121,9 @@ def test_tour_interrompu_affiche_relancer_et_reprend_la_session(page, serveur):
     _ouvrir(page, serveur, "C1-ConvRelance", {"cr-un": ("Un CR", "")}, "Un CR")
     _envoyer(page, "[lent 60] travaille longtemps")
     page.get_by_role("button", name="Arrêter").click()
-    expect(page.locator(".d-une .etat.interrompu")).to_have_text("Séance de travail interrompue")
+    expect(page.locator(".d-une .etat.interrompu")).to_have_attribute("data-main", "humain")  # pastille « Action humaine nécessaire » (renvoyer)
     page.get_by_role("button", name="Relancer").click()
     page.wait_for_selector("text=en bonne voie", timeout=10000)  # le tour repris a rendu sa fiche
     expect(page.get_by_role("button", name="Relancer")).to_have_count(0)
-    expect(page.locator(".d-une .etat")).to_have_count(0)  # plus rien d'interrompu
+    expect(page.locator(".d-une .etat.interrompu")).to_have_count(0)  # plus rien d'interrompu
     assert not page.erreurs, page.erreurs

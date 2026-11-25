@@ -34,7 +34,7 @@ def test_tour_muet_signale_puis_attendre_puis_arreter(page, serveur):
 
         expect(silence).to_be_visible(timeout=10000)  # nouveau délai écoulé : l'alerte revient
         silence.locator("button", has_text="Arrêter la séance").click()
-        expect(page.locator(".d-une .etat")).to_have_text("Séance de travail interrompue", timeout=8000)
+        expect(page.locator(".d-une .main")).to_have_attribute("data-motif", "interrompu", timeout=8000)
         expect(alerte).to_be_hidden(timeout=5000)
     finally:
         page.request.post(serveur.url + "/api/taches/vi-muette/arret", headers=H)

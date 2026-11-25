@@ -331,3 +331,17 @@ def test_cli_poste_delai_depasse_quitte_la_file(monkeypatch, capsys):
     assert cli.main(["poste", "reserver", "--attente", "0"]) == 1
     assert appels == ["/poste/reserver", "/poste/annuler"]
     assert "poste toujours pris après 0 min" in capsys.readouterr().err
+
+
+def test_reservation_sans_porte_vivante_depuis_vingt_minutes_tombe_d_office(tmp_path):
+    h = Horloge()
+    vivante = [False]
+    p = Poste(tmp_path / "etat" / "poste.json", 7200, h, vivant=lambda: vivante[0])
+    p.reserver("a", "porte complète")
+    h.t += 600
+    assert p.actuelle() is not None  # moins de 20 min : on laisse la place à la porte qui démarre
+    h.t += 700
+    vivante[0] = True
+    assert p.actuelle() is not None  # une porte tourne : le poste reste tenu
+    vivante[0] = False
+    assert p.actuelle() is None  # symptôme : poste tenu 25 min par une porte morte pendant que la tâche du design attendait

@@ -8,6 +8,7 @@ import { libelleEcheance, celluleCle } from './temps.js';
 import { repereIA, surOccupees } from './verrou.js';
 import { STATUTS_COURTS, cleStatut, statutsActifs, passeStatut, basculerStatut, effacerStatuts } from './filtres.js';
 import { on } from './store.js';
+import { phraseMain, boutonIA } from './main.js';
 
 let racine = null, coque = null, version = 0, dernier = null, tgEtat = null;
 surOccupees(() => { if (coque?.isConnected && dernier) dessiner(dernier); });
@@ -20,7 +21,8 @@ function ligne(x) {
     h('span', { class: 'au-place', title: filLisible(x.fil_ariane).join(' › ') }, filLisible(x.fil_ariane).slice(-2).join(' › ')),
     x.a_valider ? h('span', { class: `au-res${x.resultat ? '' : ' manque'}`, title: t('aujourdhui.essai', { valeur: x.essai || t('aujourdhui.non_indique_agent') }) }, t('aujourdhui.resultat', { valeur: x.resultat || t('aujourdhui.non_indique') })) : null,
     h('span', { class: `au-ech${x.retard ? ' retard' : ''}`, title: x.echeance ? t('aujourdhui.echeance', { date: x.echeance }) : libelleStatut(x.statut) }, libelleEcheance(x.echeance, x.retard)),
-    h('span', null, celluleCle(x.priorite))));
+    h('span', null, celluleCle(x.priorite))),
+    x.main ? h('div', { class: 'au-main' }, phraseMain(x.main), boutonIA(x.id, x.main, () => dessinerAujourdhui(racine))) : null); // INV-MAIN-4
 }
 
 function groupe(g) {

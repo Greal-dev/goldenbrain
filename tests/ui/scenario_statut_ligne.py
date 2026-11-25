@@ -30,12 +30,12 @@ def test_changer_le_statut_depuis_l_arbre_annuler_et_clavier(page, serveur):
     expect(menu).to_be_visible()
     assert menu.locator(".ms-item").all_inner_texts()[0:3] == ["Non commencée", "En cours", "Abandonnée"]  # même ordre que le détail
     menu.get_by_role("menuitemradio", name="En cours").click()
-    expect(ligne(page, "Alpha Statut").locator(".badge-st")).to_have_text("en cours")
+    expect(ligne(page, "Alpha Statut").locator(".badge-st")).to_have_attribute("data-statut", "en-cours")  # INV-MAIN-1 : le libellé est l'état « à qui la main », le statut reste en attribut
     expect(page.locator("#arbre .ligne.sel")).to_have_count(0)
     # Bandeau d'annulation : retour à l'état précédent.
     expect(page.locator(".annul-statut")).to_contain_text("Statut changé")
     page.locator(".annul-statut").get_by_role("button", name="Annuler").click()
-    expect(ligne(page, "Alpha Statut").locator(".badge-st")).to_have_text("à faire")
+    expect(ligne(page, "Alpha Statut").locator(".badge-st")).to_have_attribute("data-statut", "a-faire")
     page.wait_for_timeout(1200)  # laisse passer les relectures différées de l arbre (sous charge, elles volent le focus)
     # Clavier : Entrée ouvre, flèche bas descend, Entrée choisit ; Échap ferme sans changer.
     beta = ligne(page, "Beta Statut").locator(".st-chg")
@@ -51,7 +51,7 @@ def test_changer_le_statut_depuis_l_arbre_annuler_et_clavier(page, serveur):
     page.keyboard.press("ArrowDown")
     expect(page.locator(".menu-statut .ms-item").nth(1)).to_be_focused()
     page.keyboard.press("Enter")
-    expect(ligne(page, "Beta Statut").locator(".badge-st")).to_have_text("en cours")
+    expect(ligne(page, "Beta Statut").locator(".badge-st")).to_have_attribute("data-statut", "en-cours")
 
 
 def test_statut_verrouille_inerte_et_refus_affiche_sur_la_ligne(page, serveur):
@@ -67,7 +67,7 @@ def test_statut_verrouille_inerte_et_refus_affiche_sur_la_ligne(page, serveur):
     ligne(page, "Alpha Statut").locator(".st-chg").click()
     page.locator(".menu-statut").get_by_role("menuitemradio", name="En cours").click()
     expect(ligne(page, "Alpha Statut").locator(".st-refus")).to_have_text("refus de test")
-    expect(ligne(page, "Alpha Statut").locator(".badge-st")).to_have_text("à faire")
+    expect(ligne(page, "Alpha Statut").locator(".badge-st")).to_have_attribute("data-statut", "a-faire")
 
 
 def test_changer_le_statut_depuis_la_cascade(page, serveur):

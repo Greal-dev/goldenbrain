@@ -98,7 +98,7 @@ def _cle_tri(t: dict) -> tuple:
     return (rang(t["priorite"]), t["echeance"] or "9999", t["titre"].casefold())
 
 
-def aujourdhui(vault: V.Vault) -> dict:
+def aujourdhui(vault: V.Vault, humain: dict | None = None) -> dict:
     """Groupes de « qu'est-ce que je fais aujourd'hui ? » : chaque tâche ouverte n'apparaît que
     dans le premier groupe qui la concerne ; chaque groupe est trié par priorité."""
     jour = V.aujourdhui()
@@ -116,12 +116,12 @@ def aujourdhui(vault: V.Vault) -> dict:
             cle = "aujourdhui"
         elif e and e <= limite:
             cle = "semaine"
-        elif t.statut == vault.retour or vault.a_valider(t):
+        elif (k in humain) if humain is not None else (t.statut == vault.retour or vault.a_valider(t)):  # INV-MAIN-4
             cle = "amoi"
         else:
             continue
         groupes[cle].append({"id": k, "titre": t.titre, "statut": t.statut,
-                             "a_valider": vault.a_valider(t),
+                             "a_valider": vault.a_valider(t), "main": (humain or {}).get(k),
                              "resultat": t.fiche.get("resultat") or "",
                              "essai": t.fiche.get("essai") or "", **vue(vault, t),
                              "fil_ariane": vault.fil_ariane(k, parents)})

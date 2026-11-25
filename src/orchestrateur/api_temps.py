@@ -39,12 +39,12 @@ class CorpsTemps(BaseModel):
     priorite: str | None = None
 
 
-def routes(vault: Vault, publier, tache) -> APIRouter:
+def routes(vault: Vault, publier, tache, humain=None) -> APIRouter:  # humain : ids en « Action humaine nécessaire » (INV-MAIN-4)
     r = APIRouter(prefix="/api")
 
     @r.get("/aujourdhui")
     async def aujourdhui():
-        return temps.aujourdhui(vault)
+        return temps.aujourdhui(vault, humain() if humain else None)
 
     @r.post("/taches/{ident}/temps")
     async def poser(ident: str, c: CorpsTemps):

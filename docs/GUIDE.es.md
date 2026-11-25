@@ -1,6 +1,6 @@
 # Guía de GoldenBrain
 
-Actualizado el 2026-11-24.
+Actualizado el 2026-11-25.
 
 GoldenBrain es un puesto de mando: usted confía tareas a agentes de IA (Claude Code, Codex, OpenCode, Copilot, Antigravity), cada una guardada en su lugar dentro de su vault (una carpeta de notas en Markdown). GoldenBrain organiza y supervisa; el agente trabaja en su propia conversación, que usted puede retomar en cualquier momento.
 
@@ -188,6 +188,12 @@ El vault es su **segundo cerebro**: notas corrientes (archivos Markdown) que Gol
 - **Cómo se hace**: botón «Decisiones». Para cada elemento: «Validar», «Devolver…», responder al agente, aplazar (fecha), «Aceptar» o «Rechazar» una propuesta. El jardinero de IA (revisión de coherencia) y los agentes también proponen aquí **renombrar** una tarea cuyo título no dice de qué trata realmente («Renombrar «ventas del club» como «API/MCP ventas del club»», con su motivo): se aplica de oficio (gesto de rutina) y se deshace desde «Aplicado de oficio». Varias tareas marcadas se aprueban de una vez. Los gestos de rutina de los agentes (enlazar, colgar, mover, renombrar, fecha límite, tarea creada bajo la suya) ya no le esperan: se aplican de oficio, se anotan en las «Traces» de la tarea y se listan siete días en «Aplicado de oficio», al pie de la página, cada uno con «Deshacer». Lo que queda por decidir (cerrar, hacer un proyecto o una operación, cambiar un alcance) se agrupa por tarea emisora en una entrada plegada «Propuestas de …»: «Aceptar todo» o «Rechazar todo», o, desplegada, una línea por propuesta, motivo al pasar el ratón o al desplegar.
 - **Conviene saber**: los cierres automáticos de los últimos 7 días figuran ahí bajo «Cerradas automáticamente», cada uno con «Reabrir». La etiqueta «¿evitable?» señala una pregunta o una aprobación que el agente habría podido resolver solo (mera información, no se modifica nada); Ajustes → Etiqueta «¿evitable?» la apaga o ajusta su umbral.
 
+### Quién tiene la mano: cuatro estados {#la-main}
+
+- **Para qué sirve**: ninguna tarea espera en silencio. Cada tarea abierta lleva una sola insignia calculada, con una frase que dice por qué: «La IA trabaja», «En cola» (se dice el motivo: memoria, agentes simultáneos, equipo reservado, cuota o asistente no disponible, rutina, dependencia nombrada, pausa; y la reanudación), «Acción humana necesaria» (lo que se espera de usted, en una frase, con el gesto en el sitio) o «Terminada».
+- **Cómo se hace**: en una tarea con acción humana o nunca lanzada, el botón «Confiar a la IA» (o «Devolver a la IA») abre una consigna opcional y envía la tarea a la cola. Mismo gesto en las listas, en Hoy y, para varias tareas a la vez, en la barra de edición en bloque (vista previa primero).
+- **Conviene saber**: «Para mí» y el contador de la barra superior cuentan exactamente las tareas en «Acción humana necesaria». Un agente debe concluir cada turno (terminado, o una petición precisa): si no, GoldenBrain le devuelve «concluye» como máximo dos veces y la tarea vuelve a usted con «el agente no concluyó». Una entrega que espera su fusión se lee «integración en curso», no una espera suya. Solo usted confía una tarea a la IA: un agente no puede. Los estados del vault siguen siendo el dato de fondo; nada se modifica por sí solo. En el teléfono, tocar la insignia de la tarea hace lo mismo que el botón.
+
 ### Hoy {#aujourd-hui}
 
 - **Para qué sirve**: saber qué hacer ahora.
@@ -301,6 +307,8 @@ Para leer por todo agente —Claude Code, Codex, OpenCode, Antigravity u otro—
 - Otra dirección (puerto fijado en `config.toml`, servidor de prueba): variable `ORCH_URL`, por ejemplo `export ORCH_URL=http://127.0.0.1:8301`; `orch.py` la lee.
 - Un agente lanzado por GoldenBrain recibe `ORCH_URL`, `ORCH_TACHE` (su tarea) y `ORCH_SAUTS`; `orch.py` los usa para firmar sus mensajes y acotar los relevos.
 
+- Concluir cada turno: terminado (`terminee`), o una petición humana precisa en `prochain_pas` (`en_attente`), o una espera con nombre. Una ficha «reste: …» sin destinatario es una anomalía: GoldenBrain devuelve «concluye» como máximo dos veces y luego la tarea pasa a «Acción humana necesaria». Un agente nunca confía una tarea a la IA (403).
+
 **2. Comandos `orch`**
 
 | Comando | Efecto |
@@ -320,7 +328,7 @@ Para leer por todo agente —Claude Code, Codex, OpenCode, Antigravity u otro—
 | `proposer deplacer\|rattacher\|projet\|operation\|ticket\|tache\|lier\|perimetre\|echeance\|fermer\|renommer …` | proponer un cambio de estructura (`--motif`, obligatorio para `renommer`) ; `rattacher <id> <parent|racine> [--aussi <id>…]` ordena un lote de tareas bajo una tarea madre (o las desvincula hacia su proyecto) en UNA propuesta, rechazada si hay ciclo, tarea en curso, otro proyecto, tope de 10 o naturalezas mezcladas; la persona acepta con un clic. En modo simple, las propuestas se ignoran (Ajustes > Propuestas); un gesto cuyo efecto ya existe no se deposita, y si lo logra antes de aceptarlo se concluye como «ya hecho» sin error Los gestos de rutina (Ajustes > Propuestas) se aplican de oficio y se pueden deshacer desde Decisiones; una propuesta `tache` de un agente se convierte en una línea de su tarea. |
 | `solliciter <persona> "<pregunta>"` | opinión de un persona del equipo |
 | `telegram "<texto>"` | mensaje al usuario en Telegram (`--validation`, `--choix`); exige el bot configurado |
-| `poste reserver "<motivo>"` / `poste liberer` | reservar el puesto durante una prueba pesada; si está ocupado, esperar turno (`--attente <min>`, por defecto 30) |
+| `poste reserver "<motivo>"` / `poste liberer` | reservar el puesto durante una prueba pesada; si está ocupado, esperar turno (`--attente <min>`, por defecto 30) ; sin puerta viva durante 20 min la reserva caduca sola; nunca esperar una puerta con `pgrep -f` sobre un patrón de la propia consigna: primer plano o PID |
 | `chaine plan\|sauter\|ajouter\|dedoubler\|consigne …` | adaptar la cadena de la tarea a la carpeta real: `plan` la muestra; omitir, añadir, duplicar una fase o cambiar su instrucción (solo fases pendientes), siempre con `--motif`: el ajuste se registra y se muestra al usuario |
 | `feu-vert demander\|accorder\|refuser\|verifier <sha de 40 car.> [texto] [--a <tarea del controlador>] …` | luz verde ligada a una versión (huella completa de 40 caracteres); requiere `ORCH_TACHE` |
 | `agents-cc [--relever]` | agrupar los agentes de Claude Code de este equipo y vincularlos a una tarea |

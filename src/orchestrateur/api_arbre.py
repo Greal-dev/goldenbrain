@@ -21,7 +21,7 @@ from fastapi import APIRouter
 from pydantic import BaseModel
 
 from . import arbre as gestes
-from . import api_integration, geste, integration, langues, liens
+from . import api_integration, api_main, etat_main, geste, integration, langues, liens
 from .vault import Invalide
 
 
@@ -61,6 +61,7 @@ def routes(config, moteur, aligneur, index_notes) -> APIRouter:
     r, vault = APIRouter(), moteur.vault
     suivi = integration.Suivi(integration.charger(config.chemin))
     r.include_router(api_integration.routes(config, suivi))  # INV-INTEG-1
+    r.include_router(api_main.routes(moteur))  # INV-MAIN-5
 
     def reprise_auto(ns: list[dict]) -> None:  # INV-REPRISE-1 : l'écran dit « reprise automatique dans la file »
         for n in ns:
@@ -72,6 +73,7 @@ def routes(config, moteur, aligneur, index_notes) -> APIRouter:
         taches = vault.index()[0]
         noeuds = liens.annoter(vault.arbre(bool(toutes), moteur.etat_de), taches)
         reprise_auto(noeuds)
+        etat_main.annoter(moteur, noeuds)  # INV-MAIN-1 : une seule lecture d'état par nœud
         suivi.annoter(noeuds, taches)  # cache seul : ne bloque jamais l'arbre
         return {"noeuds": moteur.routines.annoter(noeuds) if hasattr(moteur, "routines") else noeuds}  # INV-ROUTINE-5
 

@@ -52,7 +52,7 @@ def test_arbre_conteneurs_etat(client):
             "operation": "Operation-X"} in conts
     etat = client.get("/api/etat").json()
     assert etat.pop("version")["a_jour"] is True
-    assert etat == {"pauses": {}, "tours": [], "en_file": 0, "file": [], "a_moi": 0, "en_retard": 0, "propositions": 0,
+    assert etat == {"pauses": {}, "tours": [], "en_file": 0, "file": [], "a_moi": 6, "en_retard": 0, "propositions": 0,
                     "decisions": 0, "a_valider": 0, "mandats_sans_tour": [], "occupees": {}, "poste": None, "alertes_vigie": [],
                     "fiches_absentes": {"absentes": 0, "relancees": 0, "bloquees": 0},
                     "reseau": {"actif": True, "perdu_depuis": None, "hors": {}, "en_attente": 0, "taches": []},
@@ -67,7 +67,7 @@ def test_tache_forme_et_404(client):
                       "statut", "genre", "genre_pose",
                       "statut_verrouille", "harnais", "session", "etat_execution", "reprise_auto", "attente_poste", "rang_poste", "pause_ram", "pause",
                       "controle", "attente_prerequis", "rang_file", "execution", "executant", "notes", "signe", "raison_attente", "incident", "fiche",
-                      "corps", "enfants", "parent", "liens", "revues", "renvois", "echeance", "priorite",
+                      "corps", "main", "enfants", "parent", "liens", "revues", "renvois", "echeance", "priorite",
                       "retard", "dossier_travail", "dossier_travail_origine"}
     assert t["parent"] == "mere" and t["enfants"] == ["petit"]
     r = client.get("/api/taches/inconnue")

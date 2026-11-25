@@ -81,7 +81,7 @@ def lances(faux, cle):
 
 
 @pytest.mark.parametrize("declaree, statut", [
-    ("en_cours", "en-cours"), ("en_attente", "retour-humain"), ("terminee", "fait"),
+    ("en_cours", "retour-humain"), ("en_attente", "retour-humain"), ("terminee", "fait"),
     ("terminée", "fait"), ("n'importe", "retour-humain"), (None, "retour-humain")])
 def test_declaration_de_la_fiche_donne_le_statut(config, vault, faux, declaree, statut):
     texte = "Fait.\n<fiche>\nfait: x\n</fiche>" if declaree is None else rendu(declaree)

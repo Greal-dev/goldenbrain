@@ -123,7 +123,7 @@ def test_valider_renvoyer_liberer(client, racine, faux):
 
 
 def test_solliciter_route(client, faux):
-    multi(faux, {"": evs("s-1", rendu("en_attente")), "rssi": evs("p-1", OK)})
+    multi(faux, {"": evs("s-1", rendu("en_attente").replace("</fiche>", "prochain_pas: Choisis A ou B ?\n</fiche>")), "rssi": evs("p-1", OK)})
     client.put("/api/equipe/rssi", headers=H, json={"nom": "RSSI", "focus": "f"})
     r = client.post("/api/taches/mere/solliciter", headers=H, json={"persona": "rssi"})
     assert r.status_code == 202

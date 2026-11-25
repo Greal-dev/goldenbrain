@@ -45,7 +45,8 @@ def test_nom_declare_reconnu_partout(ancien):
     assert v.ouverte(v.tache("declare"))
     genres = {d["tache"]: d["genre"] for d in decisions.rassembler(ancien)["decisions"]}
     assert genres.get("declare") == "reponse"
-    assert ancien.etat_global()["a_moi"] == 1
+    from orchestrateur import etat_main
+    assert "declare" in etat_main.humain_par_id(ancien)  # INV-MAIN-4 : À moi = états « action humaine »
     v.poser_statut("mere", "retour-alice")
     assert v.tache("mere").statut == "retour-alice"
 

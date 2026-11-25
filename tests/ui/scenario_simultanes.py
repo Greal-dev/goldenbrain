@@ -26,11 +26,17 @@ def test_reglages_agents_simultanes_trois_modes_et_plafond_en_go(page, serveur):
             page.select_option("[data-id=sim-unite]", "go")
         # La réponse précède le redessin : saisir avant lui enverrait la valeur du champ recréé.
         page.wait_for_selector("[data-id=sim-plafond-valeur]:not([data-ancien])")
-        # Attendre la réponse du serveur avant le texte du seuil : sous charge, le redessin tardait.
-        with page.expect_response(lambda r: r.url.endswith("/api/simultanes") and r.request.method == "PUT"):
-            page.fill("[data-id=sim-plafond-valeur]", "6")
-            page.locator("[data-id=sim-plafond-valeur]").dispatch_event("change")
-        page.wait_for_selector("[data-id=sim-etat] >> text=seuil 6 Go", timeout=60000)
+        # Sous charge, un redessin tardif peut avaler la saisie : on la refait (3 essais) plutôt que d'attendre 60 s en vain.
+        for essai in range(3):
+            with page.expect_response(lambda r: r.url.endswith("/api/simultanes") and r.request.method == "PUT"):
+                page.fill("[data-id=sim-plafond-valeur]", "6")
+                page.locator("[data-id=sim-plafond-valeur]").dispatch_event("change")
+            try:
+                page.wait_for_selector("[data-id=sim-etat] >> text=seuil 6 Go", timeout=20000)
+                break
+            except Exception:
+                if essai == 2:
+                    raise
 
         page.check("[data-id=sim-optimiser]")
         page.wait_for_selector("[data-id=sim-marge]")

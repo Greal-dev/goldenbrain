@@ -44,7 +44,7 @@ export const nomLisible = (s) => (s === 'Assistant Telegram' ? t('interface.assi
 export const filLisible = (fil) => (fil || []).filter((s) => s !== '?').map(nomLisible);
 // Audit L4 (A6) : une tâche terminée qui attend la validation porte le même mot partout.
 // « À moi » = en attente + terminée à valider.
-export const pourMoi = (n) => n.statut === RETOUR || !!n.a_valider;
+export const pourMoi = (n) => (n.main ? n.main.cle === 'humain' : n.statut === RETOUR || !!n.a_valider); // INV-MAIN-4 : « À moi » = Action humaine nécessaire
 // Classe CSS générique `st-retour`, quel que soit le nom réglé.
 export const pastille = (s) => h('span', { class: `pastille st-${s === RETOUR ? 'retour' : s || 'inconnu'}`, title: libelleStatut(s), role: 'img', 'aria-label': libelleStatut(s) });
 

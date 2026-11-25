@@ -26,13 +26,40 @@ from .vault import Conflit, NonTrouve
 log = logging.getLogger(__name__)
 
 
+def porte_vivante() -> bool:
+    """Vrai si une porte d'interface tourne (verrou `scripts/verrou.py`, nom « check_ui », tenu par un autre processus)."""
+    import sys
+    import tempfile
+    from pathlib import Path
+    chemin = Path(tempfile.gettempdir()) / "goldenbrain-check_ui.verrou"
+    if not chemin.exists():
+        return False
+    try:
+        with open(chemin, "a+", encoding="utf-8") as f:
+            try:
+                if sys.platform == "win32":
+                    import msvcrt
+                    msvcrt.locking(f.fileno(), msvcrt.LK_NBLCK, 1)
+                    msvcrt.locking(f.fileno(), msvcrt.LK_UNLCK, 1)
+                else:
+                    import fcntl
+                    fcntl.flock(f, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                    fcntl.flock(f, fcntl.LOCK_UN)
+            except OSError:
+                return True  # tenu par un autre processus
+    except OSError:
+        return True  # illisible : dans le doute, on ne retire rien
+    return False
+
+
 class Poste:
     """Réservation unique, persistée dans `<donnees>/etat/poste.json` (une entrée ou aucune)."""
 
     FILE_TTL_S = 15.0  # un attendant qui ne redemande plus (CLI tuée, tour fini) quitte la file
+    ABANDON_S = 1200.0  # INV-POSTE-1 : sans porte vivante ni redemande depuis 20 min, la réservation tombe
 
-    def __init__(self, fichier, delai_s: float, horloge=time.time):
-        self.fichier, self.delai_s, self.horloge = fichier, delai_s, horloge
+    def __init__(self, fichier, delai_s: float, horloge=time.time, vivant=None):
+        self.fichier, self.delai_s, self.horloge, self.vivant = fichier, delai_s, horloge, vivant
         self._file: list[dict] = []  # INV-POSTE-1 : {tache, motif, depuis, vu}, premier arrivé en tête
         brut = lire_liste(fichier)  # `lire_liste` tolère un fichier absent ou illisible
         self._res: dict | None = brut[0] if brut and isinstance(brut[0], dict) else None
@@ -46,7 +73,9 @@ class Poste:
 
     def actuelle(self) -> dict | None:
         """Réservation en cours ; une réservation expirée est retirée ici (INV-POSTE-1)."""
-        if self._res and float(self._res.get("expire") or 0) <= self.horloge():
+        abandon = bool(self._res and self.vivant and self.horloge() - float(self._res.get("renouvele") or 0) > self.ABANDON_S
+                       and not self.vivant())  # une porte oubliée ne tient pas le poste jusqu'au délai complet
+        if self._res and (abandon or float(self._res.get("expire") or 0) <= self.horloge()):
             self._res = None
             self._ecrire()
         return dict(self._res) if self._res else None
@@ -93,7 +122,7 @@ class Poste:
             return None
         self.retirer(tache)
         self._res = {"tache": tache, "motif": (motif or "").strip()[:200], "depuis": maintenant(),
-                     "expire": self.horloge() + self.delai_s}  # redemander renouvelle le délai
+                     "expire": self.horloge() + self.delai_s, "renouvele": self.horloge()}  # redemander renouvelle le délai
         self._ecrire()
         return dict(self._res)
 
@@ -135,7 +164,7 @@ class MixinPoste:
     @cached_property
     def poste(self) -> Poste:
         return Poste(self.config.donnees / "etat" / "poste.json",
-                     max(1, self.config.moteur.poste_delai_min) * 60)
+                     max(1, self.config.moteur.poste_delai_min) * 60, vivant=porte_vivante)
 
     def _fm(self, ident: str) -> dict:
         try:

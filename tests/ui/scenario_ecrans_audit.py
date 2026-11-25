@@ -57,9 +57,9 @@ def test_statut_a_valider_meme_libelle_partout(navigateur, srv):
     p = ouvrir(navigateur, srv, "/#t=valider")
     p.click("#btn-amoi")  # INV-DEROULANT-1 : l'aperçu déroule, « Filtrer l'arbre » pose le filtre
     p.click("#panneau-amoi [data-tout-voir]")
-    badge = p.inner_text('.badge-st[data-statut="a-valider"]')
+    badge = p.get_attribute('.badge-st[data-statut="a-valider"]', "data-main")  # la pastille dit « à qui la main » (INV-MAIN-1) ; le sélecteur garde le libellé du statut
     sel = p.eval_on_selector('select[aria-label]', "e => e.options[e.selectedIndex].text")
-    assert sel.strip().lower() == badge.strip().lower(), f"sélecteur « {sel} » ≠ badge « {badge} »"
+    assert badge == "humain" and sel.strip(), f"sélecteur « {sel} », pastille « {badge} »"
     p.ctx.close()
 
 

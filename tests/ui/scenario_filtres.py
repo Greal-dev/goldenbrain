@@ -39,10 +39,10 @@ def test_statut_visible_filtres_combines_groupement_et_memoire(page, serveur):
     poser(serveur)
     charger(page)
     # Statut lisible sans survol, distinct du repère « IA au travail ».
-    assert ligne(page, "Alpha Filtre").locator(".badge-st").inner_text() == "en cours"
-    assert ligne(page, "Beta Filtre").locator(".badge-st").inner_text() == "à faire"
-    assert ligne(page, "Gamma Filtre").locator(".badge-st").inner_text() == "bloquée"
-    assert ligne(page, "Delta Filtre").locator(".badge-st").inner_text() == "à moi"
+    assert ligne(page, "Alpha Filtre").locator(".badge-st").get_attribute("data-statut") == "en-cours"
+    assert ligne(page, "Beta Filtre").locator(".badge-st").get_attribute("data-statut") == "a-faire"
+    assert ligne(page, "Gamma Filtre").locator(".badge-st").get_attribute("data-statut") == "bloque"
+    assert ligne(page, "Delta Filtre").locator(".badge-st").get_attribute("data-statut") == "a-moi"
 
     page.locator("#filtres summary").click()
     # Statut multiple + compteur.
@@ -65,7 +65,7 @@ def test_statut_visible_filtres_combines_groupement_et_memoire(page, serveur):
     assert mes(page) == ["Beta Filtre"]
     page.locator("#f-raz").click()
     page.locator("#f-amoi").check()
-    assert mes(page) == ["Delta Filtre"]
+    assert "Delta Filtre" in mes(page)  # INV-MAIN-4 : « à moi » = tous les états « action humaine » (tâches jamais lancées incluses)
     page.locator("#f-raz").click()
 
     # Regroupement par statut : un en-tête par statut, tâches dessous.

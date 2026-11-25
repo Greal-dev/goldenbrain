@@ -52,7 +52,7 @@ def test_arbre_clavier(page, serveur):
 def test_arbre_ouvre_la_tache_et_fil_d_ariane(page, serveur):
     _projet_arbre(serveur)
     charger(page)
-    ligne(page, "Petite AC").locator(".titre").click()  # le centre de la ligne tombe sur la pastille de statut (menu)
+    ligne(page, "Petite AC").locator(".titre").click(position={"x": 4, "y": 4})  # le centre tombe sous les actions de survol
     expect(page.locator(".d-titre")).to_have_text("Petite AC")
     expect(ligne(page, "Petite AC")).to_have_attribute("aria-selected", "true")
     expect(page.locator(".d-tete nav.fil")).to_contain_text("Fille AC")

@@ -63,7 +63,8 @@ def test_survol_delai_d_intention_et_aucun_saut(navigateur, srv):
     delai = p.evaluate("() => window.__t.ouvert - window.__t.entree")
     assert delai >= 140, f"ouvert {delai:.0f} ms après l'entrée : pas de délai d'intention"
     assert p.evaluate("() => JSON.stringify(document.querySelector('#corps').getBoundingClientRect())") == avant, "le déroulant pousse le contenu"
-    expect(p.locator(f"{PANNEAU} .apercu-liste li")).to_have_count(1, timeout=5000)
+    expect(p.locator(f"{PANNEAU} .apercu-liste li").first).to_contain_text("Urgente du jour", timeout=5000)  # INV-MAIN-4 : les tâches « À moi » rejoignent l'aperçu ; en retard d'abord
+    assert p.locator(f"{PANNEAU} .apercu-liste li").count() <= 5
     p.mouse.move(700, 700)
     expect(p.locator(PANNEAU)).to_be_hidden(timeout=3000)
     assert not p.erreurs, p.erreurs

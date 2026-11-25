@@ -94,6 +94,7 @@
   .d-une > .btn, .d-une > select, .d-une .a-valider .btn { min-height: 40px; }
   /* Pendant un tour : état, Résultat et Arrêter tiennent sur la 2e rangée (le texte complet reste en infobulle). */
   .d-une .etat { display: block; flex: 0 1 auto; max-width: 84px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .d-une .main-phrase, .d-une > .main-ia-btn { display: none; } .d-une .main-clic { text-decoration: underline; }  /* la phrase d'état prend une ligne : sur téléphone, la pastille seule (phrase en survol) garde la hauteur du fil */
   .d-une .etat .tourne { display: inline-block; vertical-align: middle; margin-right: 4px; }
   .d-details { max-height: 60dvh; padding: 8px 12px 10px; }
 }
