@@ -1,0 +1,16 @@
+/* Rôle : pile des bandeaux (INV-REACTIVITE-1, voir bandeaux.js) — un seul bandeau d'une ligne tronquée à la fois, les autres derrière « +N ».
+   Frontières : n'agit que dans #bandeaux ; les couleurs et marges propres à chaque bandeau restent celles de leurs feuilles. */
+#bandeaux { position: relative; flex: none; }
+#bandeaux > .bandeau-masque { display: none !important; }
+#bandeaux > :not(#bandeaux-plus) { min-height: 0; white-space: nowrap; overflow: hidden; padding-top: 4px; padding-bottom: 4px; padding-right: 54px; box-sizing: border-box; }
+#bandeaux > :not(#bandeaux-plus).deploye { white-space: normal; overflow: visible; }
+#bandeaux > :not(#bandeaux-plus) :is(.maj-t, span, b) { min-width: 0; }
+#bandeaux > :not(#bandeaux-plus):not(.deploye) .maj-t { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#bandeaux > #maj-dispo:not(.deploye) .maj-neuf, #bandeaux > #vigie-alertes:not(.deploye) .vie-ligne:nth-child(n+2) { display: none; }
+#bandeaux > #vigie-alertes { flex-direction: row; }
+#bandeaux > .bulle-discussion span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#bandeaux > .bulle-discussion.deploye span { white-space: normal; }
+#bandeaux-plus { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); z-index: 31; min-width: 36px; padding: 0 8px; border-radius: 999px; font-weight: 600; }
+#bandeaux-plus[hidden] { display: none; }
+/* Au téléphone, cibles tactiles de 32 px dans le bandeau (44 px partout ailleurs) : une ligne de 40 px au plus. */
+@media (max-width: 480px) { #bandeaux > :not(#bandeaux-plus) { padding-right: 56px; padding-top: 2px; padding-bottom: 2px; } #bandeaux .btn, #bandeaux-plus { min-height: 32px; padding-top: 0; padding-bottom: 0; } }

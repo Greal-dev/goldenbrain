@@ -165,7 +165,7 @@ function dessinerTete() {
       h('span', { class: 'd-alerte-t' }, alertes[0]), alertes.length > 1 ? h('span', { class: 'd-alerte-n' }, t('detail.alertes_plus', { n: alertes.length - 1 })) : null) : null,
     aValider(tk) ? h('span', { class: 'a-valider', role: 'status', title: t('detail.a_valider') }, b(t('detail.valider'), valider, { cls: 'primaire' }), b(t('detail.renvoyer_btn'), renvoyer)) : null,
     pastilleLivrables(tk), // INV-LIVRABLES-1 : une pastille ; le volet porte le reste
-    b(t('resultat.bouton'), () => voirResultat(tk.id), { cls: aValider(tk) ? '' : 'primaire', titre: t('resultat.aide') }),
+    b(t('resultat.bouton'), () => voirResultat(tk.id), { cls: `${aValider(tk) ? '' : 'primaire'} d-resultat`, titre: t('resultat.aide') }), // au téléphone : dans « Détails » (INV-REACTIVITE-1)
     tk.pause_ram ? b(t('detail.reprendre_maintenant'), reprendreRam, { cls: 'primaire', titre: t('detail.reprendre_ram_titre') }) : null,
     tk.etat_execution === 'en_pause' ? b(t('detail.reprendre_maintenant'), reprendreMaintenant, { cls: 'primaire', titre: t('detail.reprendre_quota_titre') }) : null,
     actif(tk) || tk.etat_execution === 'en_pause' ? b(t('detail.arreter'), arreter, { cls: 'danger' }) : null,
@@ -173,6 +173,7 @@ function dessinerTete() {
     h('button', { class: 'btn petit d-bascule', type: 'button', 'data-id': 'details-bascule', 'aria-expanded': String(detOuvert), 'aria-controls': 'details', title: t('detail.details_titre'), onclick: basculerDetails }, t('detail.details')));
   remplacer(r.detMeta,
     h('nav', { class: 'fil', 'aria-label': t('detail.fil') }, segmentsFil(tk)),
+    h('div', { class: 'd-resultat-det' }, b(t('resultat.bouton'), () => voirResultat(tk.id), { cls: 'primaire', titre: t('resultat.aide') })),
     curseur(tk, (x) => (x ? appliquer(x) : rafraichir()), erreur), // INV-EXECUTANT-1
     rattachement(tk, b),
     routine ? blocRoutine(tk.id, () => { emit('recharger'); rafraichir(); }) : null, // INV-ROUTINE-5

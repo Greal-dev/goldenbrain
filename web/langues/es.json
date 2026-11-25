@@ -237,6 +237,7 @@
  "bandeau.silencieux": "En silencio desde hace {duree}",
  "bandeau.titre": "Título",
  "bandeau.tres_proche": " · muy parecida",
+ "bandeaux.plus_titre": "{n} aviso(s) más: toca para leerlos uno a uno",
  "cascade.a_valider": "por validar",
  "cascade.affichage": "Visualización",
  "cascade.aucune": "Ninguna tarea.",

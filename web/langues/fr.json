@@ -237,6 +237,7 @@
  "bandeau.silencieux": "Silencieux depuis {duree}",
  "bandeau.titre": "Titre",
  "bandeau.tres_proche": " · très proche",
+ "bandeaux.plus_titre": "{n} autre(s) bandeau(x) : toucher pour les lire un à un",
  "cascade.a_valider": "à valider",
  "cascade.affichage": "Affichage",
  "cascade.aucune": "Aucune tâche.",

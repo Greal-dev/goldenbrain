@@ -97,3 +97,12 @@
   .d-une .etat .tourne { display: inline-block; vertical-align: middle; margin-right: 4px; }
   .d-details { max-height: 60dvh; padding: 8px 12px 10px; }
 }
+@media (max-width: 480px) {
+  /* INV-REACTIVITE-1 : l'en-tête tient sur une rangée ; « Voir le résultat » passe dans « Détails » (un seul bouton à la fois). */
+  .d-une > .d-resultat { display: none; }
+  .d-resultat-det { display: block; padding: 0 0 6px; }
+  /* Notes repliées : une barre d'un toucher (titre, nombre, « Déplier ») sous la saisie ; dépliées, elles partagent l'écran. */
+  .volet-t-notes.replie > .p-tete { min-height: 40px; padding-top: 0; padding-bottom: 0; cursor: pointer; }
+  .volet-t-notes.replie .p-replier { min-height: 36px; }
+  .volet-t-notes.replie .p-titre { flex: 1; margin: 0; font-size: 14px; }
+}

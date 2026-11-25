@@ -29,8 +29,12 @@ def test_vault_vide_recoit_un_classement_de_depart(navigateur, poste, tmp_path):
         # Vault vide : les premiers pas se proposeraient avant l'accueil ; ce scénario porte sur l'accueil seul.
         page.request.post(poste.url + "/api/accueil/premiers-pas/fait", headers={"X-Orchestrateur": "1"}, data={})
         page.goto(poste.url + "/#reglages/accueil")
-        page.click('[data-id="relancer-accueil"]')
-        page.wait_for_selector('[data-id="accueil-vide"]')
+        # Vault vide : l'accueil se propose seul, juste après le premier affichage ; sinon on le relance depuis les Réglages.
+        try:
+            page.wait_for_selector('[data-id="accueil-vide"]', timeout=4000)
+        except Exception:
+            page.click('[data-id="relancer-accueil"]')
+            page.wait_for_selector('[data-id="accueil-vide"]')
         assert page.locator('[data-id="actif-questions"]').is_checked()
         assert page.locator('[data-id="accueil-guide"]').get_attribute("href").endswith(
             "#guide=organiser-votre-second-cerveau")

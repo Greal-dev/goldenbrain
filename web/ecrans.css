@@ -65,3 +65,5 @@
 .conv-tete { top: -6px; margin-top: 0; padding-top: 3px; padding-bottom: 3px; }
 .p-tete { padding-top: 1px; padding-bottom: 1px; }
 .conv-tete { padding-top: 2px; padding-bottom: 2px; }
+
+.d-resultat-det { display: none; }

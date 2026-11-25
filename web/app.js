@@ -6,45 +6,27 @@ import { $ } from './dom.js';
 traduireDom();  // INV-LANGUE-1 : textes du HTML statique (data-t*) avant tout rendu
 import { api, ouvrirFlux, MSG_PERIME, MSG_ANNULE } from './api.js';
 import { S, on, emit, erreur, ouvrir, ouvrirVue, ouvrirNote, ouvrirRecherche, ouvrirGraphe, fixerOnglet } from './store.js';
-import { dessinerGraphe } from './graphe.js';
 import { initArbre, dessiner as dessinerArbre } from './arbre.js';
 import { initBandeau, chargerRevue } from './bandeau.js';
 import { initIncidents } from './incidents.js';
-import { initDetail, ouvrirDetail, rafraichir, evtDetail, tacheOuverte } from './detail.js';
 import { dessinerCascade, etatCascade, initCascade } from './cascade.js';
-import { dessinerEquipe } from './equipe.js';
-import { dessinerReglages, etatReglages, fixerAncreReglages, hashReglages } from './reglages.js';
 import { chargerInterface, ouvert, simple } from './interface.js';
-import { dessinerAujourdhui } from './aujourdhui.js';
-import { dessinerCompagnon } from './compagnon.js';
-import { dessinerTravail } from './travail.js';
-import { dessinerTravaux, actualiserTravaux } from './travaux.js';
-import { dessinerDecisions } from './decisions.js';
-import { dessinerGuide, hashGuide, fixerAncre } from './guide.js';
 import { initNotes, evtNote as evtNoteArbre, actualiser as actualiserNotes } from './notes.js';
-import { initNoteVue, dessinerNote, evtNote as evtNoteVue } from './note-vue.js';
-import { dessinerResultats } from './resultats.js';
-import { fixerTerme } from './recherche.js';
-import { initPonts } from './ponts.js';
-import { creerDepuisLien } from './note-gestes.js';
 import { initAlignement, rafraichirEcarts } from './alignement.js';
-import { initVersion } from './version.js';
-import { initMajAuto } from './maj-auto.js';
-import { initMaj } from './maj.js';
-import { initEtoile } from './etoile.js';
 import { evtTransfo } from './transfo.js';
-import { recharger as rechargerSimultanes } from './simultanes.js';
-import { recharger as rechargerCompactage } from './compactage.js';
-import { recharger as rechargerExecuteurs } from './executeurs.js';
-import { initAccueil } from './accueil.js';
-import { initPremiersPas } from './premiers-pas.js';
-import { initCerveau } from './cerveau.js';
-import { initEconomie, recharger as rechargerEconomie } from './economie.js';
 import { initTelephone } from './telephone.js';
 import { initDiscussion } from './discussion.js';
-import { initManager, rechargerManager, evtManager, evtTourManager } from './manager.js';
+import { initBandeaux } from './bandeaux.js';
+import { charger, pret, sur, surCharge } from './paresseux.js';
 
 const droit = () => $('#volet-droit');
+// INV-REACTIVITE-1 : ces modules ne sont pas chargés au premier affichage ; tant qu'ils ne sont pas prêts, leurs événements n'ont rien à mettre à jour.
+const rafraichir = sur('detail', 'rafraichir'), evtDetail = sur('detail', 'evtDetail'), tacheOuverte = () => pret('detail')?.tacheOuverte() ?? null;
+const rechargerManager = sur('manager', 'rechargerManager'), evtManager = sur('manager', 'evtManager'), evtTourManager = sur('manager', 'evtTourManager');
+const rechargerSimultanes = surCharge('simultanes', 'recharger'), rechargerCompactage = surCharge('compactage', 'recharger'), rechargerExecuteurs = surCharge('executeurs', 'recharger');
+const rechargerEconomie = surCharge('economie', 'recharger'), actualiserTravaux = sur('travaux', 'actualiserTravaux'), evtNoteVue = sur('note-vue', 'evtNote');
+const managerPret = () => charger('manager', (m) => m.initManager());
+const detailPret = () => charger('detail', (m) => m.initDetail(droit()));
 const rapporter = (fn) => async () => { try { await fn(); } catch (e) { erreur(e.message); } };
 
 const chargerArbre = rapporter(async () => {
@@ -142,27 +124,36 @@ function bannière() {
 // L'URL reflète le volet droit : #t=<tâche> · #n=<note> · #q=<recherche> · #g[=<centre>] (graphe) · #equipe. Chaque navigation ajoute une entrée d'historique.
 const enc = encodeURIComponent;
 const dec = (s) => { try { return decodeURIComponent(s); } catch { return s; } };
-const hashCourant = () => (S.selection ? `#t=${enc(S.selection)}` : S.vue === 'equipe' ? '#equipe' : S.vue === 'reglages' ? hashReglages() : S.vue === 'aujourdhui' ? '#aujourdhui' : S.vue === 'compagnon' ? '#compagnon' : S.vue === 'travail' ? (S.portee ? `#travail=${enc(S.portee)}` : '#travail') : S.vue === 'travaux' ? '#en-cours' : S.vue === 'decisions' ? '#decisions' : S.vue === 'guide' ? hashGuide() : S.vue === 'note' && S.note ? `#n=${enc(S.note)}`
+const hashCourant = () => (S.selection ? `#t=${enc(S.selection)}` : S.vue === 'equipe' ? '#equipe' : S.vue === 'reglages' ? (pret('reglages')?.hashReglages() ?? location.hash) : S.vue === 'aujourdhui' ? '#aujourdhui' : S.vue === 'compagnon' ? '#compagnon' : S.vue === 'travail' ? (S.portee ? `#travail=${enc(S.portee)}` : '#travail') : S.vue === 'travaux' ? '#en-cours' : S.vue === 'decisions' ? '#decisions' : S.vue === 'guide' ? (pret('guide')?.hashGuide() ?? location.hash) : S.vue === 'note' && S.note ? `#n=${enc(S.note)}`
   : S.vue === 'recherche' && S.requete ? `#q=${enc(S.requete)}` : S.vue === 'graphe' ? (S.centre ? `#g=${enc(S.centre)}` : '#g') : '');
 function pousserUrl(initial) {
   const hs = hashCourant();
   if (dec(location.hash) === dec(hs)) return;
   history[initial ? 'replaceState' : 'pushState'](null, '', hs || location.pathname + location.search);
 }
-let premier = true;
+let premier = true, tourEcran = 0, ancreInitiale = null; // ancreInitiale : section de réglages de l'adresse d'arrivée, appliquée avant le premier dessin
+// Un écran se charge à la demande ; si l'utilisateur est parti ailleurs entretemps (tourEcran a changé), il n'est pas dessiné.
+function ecran(nom, dessiner, init = null) {
+  const mon = tourEcran;
+  charger(nom, init).then((m) => { if (mon === tourEcran) { dessiner(m); pousserUrl(false); } }, (e) => erreur(e.message));
+}
 function majVoletDroit() {
-  if (S.selection) ouvrirDetail(S.selection);
-  else if (S.vue === 'equipe') dessinerEquipe(droit());
-  else if (S.vue === 'reglages') dessinerReglages(droit());
-  else if (S.vue === 'aujourdhui') dessinerAujourdhui(droit());
-  else if (S.vue === 'compagnon') dessinerCompagnon(droit()); // INV-COMPAGNON-1
-  else if (S.vue === 'travail') dessinerTravail(droit(), S.portee); // INV-COMPAGNON-2
-  else if (S.vue === 'travaux') dessinerTravaux(droit());
-  else if (S.vue === 'decisions') dessinerDecisions(droit());
-  else if (S.vue === 'guide') dessinerGuide(droit()); // INV-GUIDE-1
-  else if (S.vue === 'note' && S.note) dessinerNote(droit(), S.note);
-  else if (S.vue === 'graphe') dessinerGraphe(droit(), S.centre);
-  else if (S.vue === 'recherche') { fixerTerme(S.requete); dessinerResultats(droit(), S.requete); }
+  tourEcran += 1;
+  if (S.selection) { const mon = tourEcran; detailPret().then((m) => { if (mon === tourEcran) m.ouvrirDetail(S.selection); }, (e) => erreur(e.message)); }
+  else if (S.vue === 'equipe') ecran('equipe', (m) => m.dessinerEquipe(droit()));
+  else if (S.vue === 'reglages') ecran('reglages', (m) => { if (ancreInitiale !== null) { m.fixerAncreReglages(ancreInitiale); ancreInitiale = null; } m.dessinerReglages(droit()); });
+  else if (S.vue === 'aujourdhui') ecran('aujourdhui', (m) => m.dessinerAujourdhui(droit()));
+  else if (S.vue === 'compagnon') ecran('compagnon', (m) => m.dessinerCompagnon(droit())); // INV-COMPAGNON-1
+  else if (S.vue === 'travail') ecran('travail', (m) => m.dessinerTravail(droit(), S.portee)); // INV-COMPAGNON-2
+  else if (S.vue === 'travaux') ecran('travaux', (m) => m.dessinerTravaux(droit()));
+  else if (S.vue === 'decisions') ecran('decisions', (m) => m.dessinerDecisions(droit()));
+  else if (S.vue === 'guide') ecran('guide', (m) => m.dessinerGuide(droit())); // INV-GUIDE-1
+  else if (S.vue === 'note' && S.note) ecran('note-vue', (m) => m.dessinerNote(droit(), S.note), (m) => m.initNoteVue());
+  else if (S.vue === 'graphe') ecran('graphe', (m) => m.dessinerGraphe(droit(), S.centre));
+  else if (S.vue === 'recherche') {
+    const terme = S.requete;
+    Promise.all([charger('recherche'), charger('resultats')]).then(([r, m]) => { if (terme === S.requete && S.vue === 'recherche' && !S.selection) { r.fixerTerme(terme); m.dessinerResultats(droit(), terme); pousserUrl(false); } }, (e) => erreur(e.message));
+  }
   else dessinerCascade(droit());
   pousserUrl(premier); premier = false;
   dessinerArbre();
@@ -194,17 +185,38 @@ function depuisUrl() {
   else if (g && ouvert('notes')) ok = ouvrirGraphe(g[1] ? dec(g[1]) : null);
   else if (location.hash === '#equipe' && ouvert('equipe')) { if (S.vue !== 'equipe' || S.selection) ok = ouvrirVue('equipe'); }
   else if ((rg = /^#reglages(?:\/(.+))?$/.exec(location.hash))) { // #reglages/<section> ouvre la section (reglages.js)
-    fixerAncreReglages(rg[1] && dec(rg[1]));
-    if (S.vue !== 'reglages' || S.selection) ok = ouvrirVue('reglages'); else dessinerReglages(droit());
+    const section = rg[1] && dec(rg[1]);
+    charger('reglages').then((m) => {
+      m.fixerAncreReglages(section);
+      if (S.vue !== 'reglages' || S.selection) { if (!ouvrirVue('reglages')) history.pushState(null, '', hashCourant() || location.pathname + location.search); } else { tourEcran += 1; ecran('reglages', (x) => x.dessinerReglages(droit())); } // un seul dessin : un second défairait l'ouverture de la section visée
+    }, (e) => erreur(e.message));
   }
   else if (location.hash === '#decisions') { if (S.vue !== 'decisions' || S.selection) ok = ouvrirVue('decisions'); }
-  else if ((gd = /^#guide(?:=(.*))?$/.exec(location.hash))) { fixerAncre(dec(gd[1] || '')); ok = ouvrirVue('guide'); }
+  else if ((gd = /^#guide(?:=(.*))?$/.exec(location.hash))) {
+    const ancre = dec(gd[1] || '');
+    charger('guide').then((m) => { m.fixerAncre(ancre); if (!ouvrirVue('guide')) history.pushState(null, '', hashCourant() || location.pathname + location.search); }, (e) => erreur(e.message));
+  }
   else if (location.hash === '#aujourdhui') { if (S.vue !== 'aujourdhui' || S.selection) ok = ouvrirVue('aujourdhui'); }
   else if (location.hash === '#compagnon') { if (S.vue !== 'compagnon' || S.selection) ok = ouvrirVue('compagnon'); }
   else if ((tv = /^#travail(?:=(.+))?$/.exec(location.hash))) { const id = tv[1] ? dec(tv[1]) : null; if (S.vue !== 'travail' || S.portee !== id || S.selection) ok = ouvrirVue('travail', id); }
   else if (location.hash === '#en-cours') { if (S.vue !== 'travaux' || S.selection) ok = ouvrirVue('travaux'); }
   else if (S.selection || S.vue !== 'cascade') ok = ouvrir(null);
   if (!ok) history.pushState(null, '', hashCourant() || location.pathname + location.search); // navigation refusée (note modifiée) : l'URL reste fidèle à l'écran
+}
+
+// Services de fond et fiche de tâche : chargés juste après le premier affichage, jamais avant (INV-REACTIVITE-1). Un échec se signale, sans bloquer le reste.
+function differes() {
+  const sûr = (p) => p.catch((e) => erreur(e.message));
+  sûr(detailPret());
+  sûr(charger('version', (m) => m.initVersion()));
+  sûr(charger('maj-auto', (m) => m.initMajAuto()));
+  sûr(charger('maj', (m) => m.initMaj()));
+  sûr(charger('etoile', (m) => m.initEtoile()));
+  sûr(charger('economie', (m) => m.initEconomie()));
+  sûr(managerPret());
+  sûr(Promise.all([charger('note-gestes'), charger('ponts')]).then(([g, p]) => p.initPonts(g.creerDepuisLien)));
+  // Second cerveau d'abord (INV-CERVEAU-1), puis assistant IA, puis l'accueil s'il se propose.
+  sûr(Promise.all([charger('cerveau'), charger('premiers-pas'), charger('accueil')]).then(([c, pp, ac]) => c.initCerveau(() => pp.initPremiersPas(ac.initAccueil))));
 }
 
 async function demarrer() {
@@ -219,37 +231,30 @@ async function demarrer() {
   else if (h0) { S.vue = 'recherche'; S.requete = dec(h0[2]); }
   else if (/^#g(=|$)/.test(location.hash) && !sansNotes) { S.vue = 'graphe'; S.centre = location.hash.length > 3 ? dec(location.hash.slice(3)) : null; }
   else if (location.hash === '#equipe' && ouvert('equipe')) S.vue = 'equipe';
-  else if (/^#reglages(\/|$)/.test(location.hash)) { S.vue = 'reglages'; fixerAncreReglages(dec(location.hash.slice(10))); }
+  else if (/^#reglages(\/|$)/.test(location.hash)) { S.vue = 'reglages'; ancreInitiale = dec(location.hash.slice(10)); }
   else if (location.hash === '#aujourdhui') S.vue = 'aujourdhui';
   else if (location.hash === '#compagnon') S.vue = 'compagnon';
   else if (tv0) { S.vue = 'travail'; S.portee = tv0[1] ? dec(tv0[1]) : null; }
   else if (location.hash === '#en-cours') S.vue = 'travaux';
   else if (location.hash === '#decisions') S.vue = 'decisions';
-  else if (/^#guide(=|$)/.test(location.hash)) { S.vue = 'guide'; fixerAncre(dec(location.hash.slice(7))); }
-  initDetail(droit());
+  else if (/^#guide(=|$)/.test(location.hash)) { S.vue = 'guide'; const ancre = dec(location.hash.slice(7)); charger('guide').then((m) => m.fixerAncre(ancre)); }
   initArbre();
   initNotes();
   initBandeau();
   initIncidents();
   initTelephone();
+  initBandeaux();
   initDiscussion();
   initCascade();
-  initNoteVue();
-  initPonts(creerDepuisLien);
   initAlignement();
-  initVersion();
-  initMajAuto();
-  initCerveau(() => initPremiersPas(initAccueil)); // second cerveau d'abord (INV-CERVEAU-1), puis assistant IA, puis l'accueil s'il se propose
-  initMaj();
-  initEtoile();
-  initEconomie();
-  initManager();
   on('selection', majVoletDroit);
   on('etat', actualiserTravaux); // INV-TRAVAUX-1 : relu sur événement serveur, jamais par minuteur
   $('#btn-travaux').addEventListener('click', () => ouvrirVue('travaux'));
-  on('etat', () => { if (cascadeVisible()) etatCascade(droit()); if (S.vue === 'reglages' && !S.selection) etatReglages(droit()); });
-  on('arbre', () => { if (!S.selection && S.vue === 'aujourdhui') dessinerAujourdhui(droit()); });
-  for (const nom of ['arbre', 'props']) on(nom, () => { if (!S.selection && S.vue === 'decisions') dessinerDecisions(droit()); });
+  // Un clic sur « Manager » avant que son module soit prêt le charge, puis rejoue le clic.
+  $('#btn-manager').addEventListener('click', (e) => { if (pret('manager')) return; e.stopImmediatePropagation(); managerPret().then(() => $('#btn-manager').click(), (x) => erreur(x.message)); });
+  on('etat', () => { if (cascadeVisible()) etatCascade(droit()); if (S.vue === 'reglages' && !S.selection) pret('reglages')?.etatReglages(droit()); });
+  on('arbre', () => { if (!S.selection && S.vue === 'aujourdhui') pret('aujourdhui')?.dessinerAujourdhui(droit()); });
+  for (const nom of ['arbre', 'props']) on(nom, () => { if (!S.selection && S.vue === 'decisions') pret('decisions')?.dessinerDecisions(droit()); });
   for (const nom of ['arbre', 'props', 'toutes']) on(nom, () => { if (cascadeVisible()) dessinerCascade(droit()); });
   on('recharger', planifier);
   on('recharger-arbre', chargerArbre);
@@ -258,6 +263,8 @@ async function demarrer() {
   on('interface', surInterface);
   window.addEventListener('hashchange', depuisUrl);
   window.addEventListener('popstate', depuisUrl);
+  let lance = false;
+  on('arbre', () => { if (!lance) { lance = true; setTimeout(differes, 0); } }); // une fois l'arbre peint, pas avant
   majVoletDroit();
   toutRecharger();
   let deja = false;

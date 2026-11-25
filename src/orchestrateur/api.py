@@ -18,7 +18,7 @@ from fastapi.responses import JSONResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
-from . import (api_compagnon, api_apprendre, api_accueil, api_lignes, api_livrables, modeles, api_appareils, api_arbre, api_codespace, api_executeurs, api_installation, api_retour, api_compactage, api_decisions,
+from . import (api_styles, api_compagnon, api_apprendre, api_accueil, api_lignes, api_livrables, modeles, api_appareils, api_arbre, api_codespace, api_executeurs, api_installation, api_retour, api_compactage, api_decisions,
                api_economie, api_etoile, api_executant, api_execution, api_feux, api_interface, api_maj, api_notes, api_pilotage, api_poste,
                api_rapprochement, api_resultat, api_routines, api_simultanes, api_manager, api_telegram, api_temps, api_titre,
                api_reflexes, api_travaux, api_validation, api_vigie, api_chaines)
@@ -494,7 +494,7 @@ def creer_app(config: Config, moteur: Moteur | None = None) -> FastAPI:
     app.include_router(api_manager.routes(connecteur))  # INV-MANAGER-1
     for m in (guide, modeles): app.include_router(m.routes())  # INV-GUIDE-1, INV-MODELES-1
     app.include_router(api_reflexes.routes_traces(vault, moteur.publier, tache))  # INV-TRACE-1
-    app.include_router(api_executant.routes(moteur, tache))  # INV-EXECUTANT-1
+    for r in (api_executant.routes(moteur, tache), api_styles.routes(WEB)): app.include_router(r)  # INV-EXECUTANT-1, INV-REACTIVITE-1 (styles avant le montage des fichiers)
     if WEB.is_dir():
         app.mount("/", StaticFiles(directory=WEB, html=True), name="web")
     return app

@@ -10,23 +10,7 @@
   <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
   <meta name="theme-color" content="#1a1d23" media="(prefers-color-scheme: dark)">
   <script src="theme.js"></script>
-  <link rel="stylesheet" href="style.css">
-  <link rel="stylesheet" href="notes.css">
-  <link rel="stylesheet" href="lot7.css">
-  <link rel="stylesheet" href="temps.css">
-  <link rel="stylesheet" href="decisions.css">
-  <link rel="stylesheet" href="filtres.css">
-  <link rel="stylesheet" href="statut.css">
-  <link rel="stylesheet" href="reglages.css">
-  <link rel="stylesheet" href="ecrans.css">
-  <link rel="stylesheet" href="telephone.css">
-  <link rel="stylesheet" href="compagnon.css">
-  <link rel="stylesheet" href="accueil.css">
-  <link rel="stylesheet" href="apprendre.css">
-  <link rel="stylesheet" href="lignes.css">
-  <link rel="stylesheet" href="livrables.css">
-  <link rel="stylesheet" href="manager.css">
-  <link rel="stylesheet" href="discussion.css">
+  <link rel="stylesheet" href="style-tout.css">
   <script type="module" src="app.js"></script>
 </head>
 <body>
@@ -75,14 +59,16 @@
       <div id="file" class="tours" role="list" aria-label="Tours en file" data-t-aria-label="index.tours_en_file"></div>
     </div>
   </header>
-  <div id="banniere" role="alert" hidden></div>
-  <div id="maj-serveur" role="status" hidden></div>
-  <div id="redemarrage-differe" role="status" hidden></div>
-  <div id="maj-auto" role="status" hidden></div>
-  <div id="maj-dispo" role="status" hidden></div>
-  <div id="poste-reserve" role="status" hidden></div>
-  <div id="vigie-alertes" role="alert" hidden></div>
-  <div id="reseau-perdu" role="status" hidden></div>
+  <div id="bandeaux">
+    <div id="banniere" role="alert" hidden></div>
+    <div id="maj-serveur" role="status" hidden></div>
+    <div id="redemarrage-differe" role="status" hidden></div>
+    <div id="maj-auto" role="status" hidden></div>
+    <div id="maj-dispo" role="status" hidden></div>
+    <div id="poste-reserve" role="status" hidden></div>
+    <div id="vigie-alertes" role="alert" hidden></div>
+    <div id="reseau-perdu" role="status" hidden></div>
+  </div>
   <main id="corps">
     <nav id="volet-gauche" aria-label="Arbre des tâches" data-t-aria-label="index.arbre_des_taches">
       <button id="rail-arbre" class="intercalaire" type="button" aria-expanded="false" aria-controls="volet-gauche-corps" title="Arbre des tâches : survol pour un aperçu, clic pour l’épingler (Alt+T)" data-t-title="index.rail_arbre_titre"><span class="inter-fleche" aria-hidden="true">▸</span><span class="inter-texte" data-t="index.taches">Tâches</span></button>

@@ -17,7 +17,7 @@ const replis = () => { try { return JSON.parse(localStorage.getItem(CLE)) || {};
 // Panneau réductible d'un clic ; replié, il se réduit à une bande portant son titre (en mode discussion : un intercalaire vertical
 // à droite, avec le nombre de notes). Les notes sont repliées tant que l'utilisateur ne les a pas ouvertes (INV-DISCUSSION-1).
 export function panneau(nom, titre, ...contenu) {
-  const bouton = h('button', { type: 'button', class: 'btn petit p-replier' });
+  const bouton = h('button', { type: 'button', class: 'btn petit p-replier', id: nom === 'notes' ? 'intercalaire-notes' : null }); // identifiant stable : l'intercalaire des notes (INV-REACTIVITE-1)
   const compte = h('span', { class: 'p-n n', hidden: true });
   const el = h('section', { class: `volet-t volet-t-${nom}`, 'data-panneau': nom },
     h('header', { class: 'p-tete' }, h('h3', { class: 'p-titre' }, titre), compte, bouton), h('div', { class: 'p-corps' }, ...contenu));

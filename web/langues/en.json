@@ -237,6 +237,7 @@
  "bandeau.silencieux": "Silent for {duree}",
  "bandeau.titre": "Title",
  "bandeau.tres_proche": " · very close",
+ "bandeaux.plus_titre": "{n} more banner(s): tap to read them one by one",
  "cascade.a_valider": "to approve",
  "cascade.affichage": "Display",
  "cascade.aucune": "No tasks.",

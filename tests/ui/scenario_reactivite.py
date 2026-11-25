@@ -55,9 +55,13 @@ def contexte(navigateur, ecran):
 def nouvelle(ctx):
     p = ctx.new_page()
     p.erreurs = []
+    p.add_init_script("""new MutationObserver((_, o) => { if (document.querySelector('#volet-gauche .ligne')) { window.__premiere_ligne = performance.now(); o.disconnect(); } })
+      .observe(document, { childList: true, subtree: true });""")
     p.on("console", lambda m: p.erreurs.append(m.text) if m.type in ("error", "warning") else None)
     p.on("pageerror", lambda e: p.erreurs.append(str(e)))
     p.requetes = []
+    p.toutes = []
+    p.on("request", lambda r: p.toutes.append((r.method, r.url, time.perf_counter())) if not r.url.startswith("data:") else None)
     p.on("response", lambda r: p.requetes.append((r.request.method, r.url, int(r.headers.get("content-length") or 0) or None, r)) if "/api/" in r.url and "/api/evenements" not in r.url else None)  # le flux SSE ne se termine jamais
     return p
 
@@ -91,12 +95,24 @@ def test_premier_affichage_utile_et_poids_du_chargement(navigateur, srv, ecran):
         except Exception:
             pass
     doubles = sorted({u for _, u, _ in api if sum(1 for _, v, _ in api if v == u) > 1})
+    # « Avant le premier affichage » : ressources dont le départ précède l'apparition de la première ligne de l'arbre (mesurée dans la page) ;
+    # le reste (services de fond, fiche d'une tâche) vient ensuite, sans retarder l'écran.
+    res = p.evaluate("""() => { const t = window.__premiere_ligne || Infinity;
+      return performance.getEntriesByType('resource').filter((r) => r.startTime <= t && !r.name.includes('/api/evenements')).map((r) => r.name.replace(location.origin, '')); }""")
+    tout = [u for _, u, _ in p.toutes if "/api/evenements" not in u]
+    api_avant = sorted(u.split("/api/", 1)[1].split("?")[0] for u in res if u.startswith("/api/"))
+    noter(ecran, "requetes_avant_premier_affichage", len(res))
+    noter(ecran, "requetes_api_avant_premier_affichage", len(api_avant))
+    noter(ecran, "requetes_api_avant_premier_affichage_detail", api_avant)
+    noter(ecran, "requetes_totales_apres_chargement", len(tout))
     noter(ecran, "premier_affichage_ms", util)
     noter(ecran, "requetes_api_chargement", len(api))
     noter(ecran, "octets_api_chargement", octets)
     noter(ecran, "appels_en_double", doubles)
     ctx.close()
     assert util <= 1500 * MARGE, f"premier affichage utile {util:.0f} ms"
+    assert len(res) <= 60, f"{len(res)} requêtes avant le premier affichage (budget 60)"
+    assert len(api_avant) <= 10, f"{len(api_avant)} appels /api avant le premier affichage : {api_avant}"
     assert not doubles, f"appels en double au chargement : {doubles}"
     assert not p.erreurs, p.erreurs
 
@@ -150,7 +166,7 @@ def test_intercalaires_ouvrent_leur_volet_en_150_ms_sans_saut(navigateur, srv):
     ctx, p = ouvrir_fil(navigateur, srv)
     cas = {
         "menu": ("document.querySelector('#btn-menu').click()", "document.querySelector('#b-menu').offsetHeight > 0"),
-        "notes": ("document.querySelector('.volet-t-notes .p-replier').click()", "!document.querySelector('.volet-t-notes').classList.contains('replie')"),
+        "notes": ("document.querySelector('#intercalaire-notes').click()", "!document.querySelector('.volet-t-notes').classList.contains('replie')"),
     }
     for nom, (action, cond) in cas.items():
         r = decalage(p, action, cond)
@@ -217,4 +233,83 @@ def test_captures_du_fil_long_en_mode_discussion(navigateur, srv, ecran):
     ctx, p = ouvrir_fil(navigateur, srv, ecran)
     p.mouse.move(w := ECRANS[ecran][0] - 1, ECRANS[ecran][1] - 1)
     p.screenshot(path=os.path.join(os.environ["GB_CAPTURES"], f"fil-long-{ecran}.png"))
+    ctx.close()
+
+
+BANDEAUX = "#banniere, #maj-serveur, #redemarrage-differe, #maj-auto, #maj-dispo, #poste-reserve, #vigie-alertes, #reseau-perdu, .bulle-discussion"
+JS_MESURE_ECRAN = """() => {
+  const vus = [...document.querySelectorAll(BANDEAUX)].filter((e) => e.offsetHeight > 0);
+  const h = (s) => document.querySelector(s)?.offsetHeight || 0;
+  return { bandeaux_visibles: vus.length, bandeaux_px: vus.reduce((n, e) => n + e.offsetHeight, 0),
+    entete_px: h('.d-une'), fil_px: h('.d-defile'), compositeur_px: h('.composer'), notes_px: h('.volet-t-notes'),
+    part_fil_compositeur: Math.round(1000 * (h('.d-defile') + h('.composer')) / innerHeight) / 1000, hauteur: innerHeight,
+    plus: document.querySelector('#bandeaux-plus')?.offsetHeight ? document.querySelector('#bandeaux-plus').textContent.trim() : null }; }""".replace("BANDEAUX", json.dumps(BANDEAUX))
+
+
+def poste_reserve(p, srv, motif="Porte d'interface complète : épreuves lourdes en cours, les autres tâches attendent la libération du poste"):
+    p.evaluate("([u, c]) => fetch(u, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Orchestrateur': '1' }, body: c })",
+               ["/api/poste/reserver", json.dumps({"tache": "charge-5", "motif": motif})])
+    for _ in range(50):
+        if p.evaluate("!!document.querySelector('#poste-reserve') && !document.querySelector('#poste-reserve').hidden"):
+            return
+        p.wait_for_timeout(100)
+    raise AssertionError("le bandeau « Poste réservé » n'apparaît pas")
+
+
+@pytest.mark.parametrize("ecran", ECRANS)
+def test_bandeaux_et_notes_laissent_le_fil_a_l_ecran(navigateur, srv, ecran):
+    """Symptôme (pilote, 25/11) : au téléphone le fil ne tenait que sur 30 % de l'écran (bandeau « Poste réservé » sur 4 lignes, en-tête sur deux
+    rangées, Notes déplié) ; au bureau les bandeaux s'empilaient au-dessus de la fiche."""
+    ctx = contexte(navigateur, ecran)
+    p = nouvelle(ctx)
+    p.goto(srv.url + "/")
+    p.wait_for_selector("#volet-gauche .ligne", timeout=60000)
+    silence(p)
+    try:
+        poste_reserve(p, srv)
+        p.evaluate("location.hash = '#t=" + charge.FIL_LONG + "'")
+        for _ in range(100):
+            if p.evaluate("[...document.querySelectorAll('.conv .msg')].some((x) => x.textContent.includes('Message 199'))"):
+                break
+            p.wait_for_timeout(100)
+        silence(p)
+        m = p.evaluate(JS_MESURE_ECRAN)
+        for cle, val in m.items():
+            noter(ecran, f"ecran_{cle}", val)
+    finally:
+        p.evaluate("fetch('/api/poste/liberer', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Orchestrateur': '1' }, body: '{}' })")
+        ctx.close()
+    assert m["bandeaux_visibles"] <= 1, f"{m['bandeaux_visibles']} bandeaux empilés ({m['bandeaux_px']} px)"
+    assert m["bandeaux_px"] <= 40, f"bandeaux : {m['bandeaux_px']} px"
+    if ecran == "telephone":
+        assert m["part_fil_compositeur"] >= 0.70, f"fil + compositeur : {m['part_fil_compositeur']:.0%} de la hauteur"
+        assert m["entete_px"] <= 100, f"en-tête : {m['entete_px']} px (une rangée)"
+
+
+def test_intercalaires_a_identifiant_stable_visibles_au_clavier_et_au_clic(navigateur, srv):
+    """Symptôme (pilote, 25/11) : #onglet-taches / #onglet-notes, introuvables à l'écran en mode discussion, laissaient croire que les
+    intercalaires manquaient. Contrat : un seul élément par intercalaire (#rail-arbre pour les tâches, #intercalaire-notes pour les notes), visible,
+    atteignable à la touche Tab, ouvrant son volet au clic (≤ 150 ms) comme à Entrée ; les onglets #onglet-* n'existent qu'à l'intérieur de l'arbre ouvert."""
+    ctx, p = ouvrir_fil(navigateur, srv)
+    for ident in ("#rail-arbre", "#intercalaire-notes"):
+        assert p.locator(ident).count() == 1, f"{ident} : un seul élément attendu"
+        assert p.locator(ident).is_visible(), f"{ident} invisible"
+        p.locator(ident).focus()
+        assert p.evaluate("document.activeElement.id") == ident[1:], f"{ident} ne prend pas le foyer"
+    # Entrée au clavier, puis clic à la souris : même résultat, dans le budget.
+    p.locator("#intercalaire-notes").focus()
+    p.keyboard.press("Enter")
+    assert p.evaluate("!document.querySelector('.volet-t-notes').classList.contains('replie')"), "Entrée n'ouvre pas les notes"
+    p.keyboard.press("Enter")
+    assert p.evaluate("document.querySelector('.volet-t-notes').classList.contains('replie')")
+    for ident, ouvert in (("#intercalaire-notes", "!document.querySelector('.volet-t-notes').classList.contains('replie')"),
+                          ("#rail-arbre", "document.body.classList.contains('arbre-epingle') && document.querySelector('#volet-gauche-corps').offsetWidth > 200")):
+        r = decalage(p, f"document.querySelector('{ident}').click()", ouvert)
+        noter("bureau", f"clic_{ident[1:]}_ms", r["ms"])
+        assert 0 < r["ms"] <= 150 * MARGE, f"{ident} : {r['ms']:.0f} ms"
+    # L'arbre épinglé montre ses onglets Tâches / Notes du vault : visibles, au clavier, identifiants inchangés.
+    for ident in ("#onglet-taches", "#onglet-notes"):
+        assert p.locator(ident).count() == 1 and p.locator(ident).is_visible(), f"{ident} invisible arbre ouvert"
+    p.locator("#onglet-notes").click()
+    assert p.evaluate("document.querySelector('#pan-notes').hidden === false")
     ctx.close()

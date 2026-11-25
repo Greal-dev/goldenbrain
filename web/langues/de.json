@@ -237,6 +237,7 @@
  "bandeau.silencieux": "Still seit {duree}",
  "bandeau.titre": "Titel",
  "bandeau.tres_proche": " · sehr ähnlich",
+ "bandeaux.plus_titre": "{n} weitere Hinweis(e): antippen, um sie nacheinander zu lesen",
  "cascade.a_valider": "zu prüfen",
  "cascade.affichage": "Anzeige",
  "cascade.aucune": "Keine Aufgaben.",

@@ -52,20 +52,28 @@ function changer(partie) {
 }
 const epingler = (v = !D.arbre) => { changer({ arbre: v }); $('#volet-gauche').classList.remove('apercu'); };
 const toutAfficher = () => changer({ tout: !D.tout });
-// Les notes sont repliées par défaut tant que la disposition n'est pas « tout afficher » (lu par notes_tache.js).
-export const notesRepliees = () => !D.tout && !etroit.matches;
+// Les notes sont repliées par défaut tant que la disposition n'est pas « tout afficher » (lu par notes_tache.js) ; au téléphone elles le
+// sont toujours par défaut : le fil et la saisie gardent l'écran, les notes s'ouvrent d'un toucher (INV-REACTIVITE-1).
+export const notesRepliees = () => etroit.matches || !D.tout;
 
-// Premier usage : un bandeau dit où sont passés l'arbre, les notes et les autres boutons. Il prend sa place dans la page, avant le corps,
-// donc ne recouvre ni le titre ni le fil ; il ne s'affiche qu'une fois (marqué vu dès l'apparition).
+// Premier usage : un bandeau dit où sont passés l'arbre, les notes et les autres boutons. Il prend sa place dans la pile des bandeaux
+// (bandeaux.js : un seul à la fois, avant le corps), donc ne recouvre ni le titre ni le fil ; il ne s'affiche qu'une fois (marqué vu dès
+// l'apparition) et se referme seul à la première interaction (clic, touche) ou après 20 s.
 function bulle() {
   let vu = true;
   try { vu = localStorage.getItem(VU) === '1'; } catch { /* stockage indisponible : pas de bandeau */ }
   if (vu || document.querySelector('[data-id="bulle-discussion"]')) return;
-  const fermer = () => document.querySelector('[data-id="bulle-discussion"]')?.remove();
+  const ecoute = (e) => { if (!e.target.closest?.('.bulle-discussion')) fermer(); };
+  const fermer = () => {
+    document.querySelector('[data-id="bulle-discussion"]')?.remove();
+    for (const ev of ['pointerdown', 'keydown']) document.removeEventListener(ev, ecoute, true);
+  };
   try { localStorage.setItem(VU, '1'); } catch { /* sans effet */ }
-  $('#corps').before(h('div', { class: 'bulle-discussion', role: 'status', 'data-id': 'bulle-discussion' },
+  $('#bandeaux').append(h('div', { class: 'bulle-discussion', role: 'status', 'data-id': 'bulle-discussion' },
     h('b', null, t('discussion.bulle_titre')), h('span', null, t('discussion.bulle_texte')),
     h('button', { type: 'button', class: 'btn petit primaire', 'data-id': 'bulle-compris', onclick: fermer }, t('discussion.compris'))));
+  // L'interaction qui a ouvert la tâche est déjà passée : l'écoute commence après elle. Un clic sur le bandeau lui-même le déplie (bandeaux.js).
+  setTimeout(() => { for (const ev of ['pointerdown', 'keydown']) document.addEventListener(ev, ecoute, true); }, 300);
   setTimeout(fermer, 20000);
 }
 

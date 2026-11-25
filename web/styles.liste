@@ -1,0 +1,19 @@
+# Feuilles de style de l'interface, dans l'ordre de la cascade ; servies d'un seul tenant par /style-tout.css (INV-REACTIVITE-1).
+style.css
+notes.css
+lot7.css
+temps.css
+decisions.css
+filtres.css
+statut.css
+reglages.css
+ecrans.css
+telephone.css
+compagnon.css
+accueil.css
+apprendre.css
+lignes.css
+livrables.css
+manager.css
+discussion.css
+bandeaux.css

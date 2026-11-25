@@ -1,6 +1,6 @@
 # Guide de GoldenBrain
 
-Mis à jour le 2026-11-24.
+Mis à jour le 2026-11-25.
 
 GoldenBrain est un poste de pilotage : vous confiez des tâches à des agents IA (Claude Code, Codex, OpenCode, Copilot, Antigravity), chacune rangée à sa place dans votre vault (un dossier de notes Markdown). GoldenBrain organise et supervise ; l'agent travaille dans sa propre conversation, que vous pouvez reprendre à tout moment.
 
@@ -184,7 +184,7 @@ Le vault est votre **second cerveau** : des notes ordinaires (fichiers Markdown)
 ### Mode discussion {#mode-discussion}
 
 - **À quoi ça sert** : dès qu'une tâche est ouverte, la conversation occupe l'essentiel de l'écran (plus de 70 % d'un écran 1366×768). Rien n'est supprimé : tout reste à un geste.
-- **Comment faire** : la barre du haut tient sur une rangée (logo, compteurs, recherche, « En cours », « Nouvelle tâche », « Menu »). « Menu » (survol ou clic, Alt+M) déroule Équipe, Revue de cohérence, Routine, Chaînes, Réglages, Manager et le guide. L'arbre des tâches se replie en un rail à gauche : le survol en montre un aperçu, un clic l'épingle (Alt+T). Les notes se replient en un intercalaire à droite portant leur nombre : un clic les déplie (Alt+N). « Tout afficher » (dans « Menu », Alt+D) rétablit la disposition complète ; « Mode discussion » y revient. Chaque choix est mémorisé par poste ; un bandeau, placé au-dessus du corps de la page et donc sans rien recouvrir, le rappelle une seule fois, au premier usage. Au téléphone, rien ne change.
+- **Comment faire** : la barre du haut tient sur une rangée (logo, compteurs, recherche, « En cours », « Nouvelle tâche », « Menu »). « Menu » (survol ou clic, Alt+M) déroule Équipe, Revue de cohérence, Routine, Chaînes, Réglages, Manager et le guide. L'arbre des tâches se replie en un rail à gauche : le survol en montre un aperçu, un clic l'épingle (Alt+T). Les notes se replient en un intercalaire à droite portant leur nombre : un clic les déplie (Alt+N). « Tout afficher » (dans « Menu », Alt+D) rétablit la disposition complète ; « Mode discussion » y revient. Chaque choix est mémorisé par poste ; un bandeau, placé au-dessus du corps de la page et donc sans rien recouvrir, le rappelle une seule fois, au premier usage. Les bandeaux d'information (poste réservé, mise à jour, réseau…) ne s'affichent que un à la fois, sur une ligne : « +2 » dit qu'il en reste deux, un toucher sur le « + » passe au suivant, un toucher sur le texte le déplie ; le bandeau du mode discussion se referme dès votre premier geste. Au téléphone, la disposition complète n'existe pas, mais la conversation garde l'écran : un seul bandeau d'une ligne, l'en-tête sur une rangée (« Voir le résultat » se trouve dans « Détails ») et les notes repliées derrière leur barre, qu'un toucher déplie.
 - **À savoir** : à l'ouverture, les derniers échanges s'affichent d'abord, le début de l'historique ensuite. Le rappel « Votre second cerveau n'est pas encore configuré » n'apparaît plus quand le vault contient déjà des notes.
 
 ### Décisions

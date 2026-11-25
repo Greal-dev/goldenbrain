@@ -120,7 +120,8 @@ def test_mise_a_jour_refusee_affiche_le_motif(page):
     assert "1 modification de retard" in bandeau.inner_text()
     bandeau.locator("button:has-text('Mettre à jour')").click()
     page.wait_for_selector("#banniere >> text=mettre à jour après")
-    assert bandeau.is_visible() and page.locator("#voile-redemarrage").is_hidden()
+    # La bannière d'erreur passe devant (un seul bandeau à la fois) : « mettre à jour » reste disponible, simplement replié.
+    assert not bandeau.evaluate("e => e.hidden") and page.locator("#voile-redemarrage").is_hidden()
 
 
 def test_redemarrage_differe_bandeau_annuler_puis_voile(page):
