@@ -266,8 +266,6 @@ code, pre { font-family: var(--mono); font-size: 12px; }
 .live-i b { white-space: nowrap; max-width: 170px; overflow: hidden; text-overflow: ellipsis; }
 .live-act { color: var(--texte-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
 .live-t { flex: none; white-space: nowrap; color: var(--texte-2); font-size: 11px; font-variant-numeric: tabular-nums; }
-.casc-props { border-bottom: 1px solid var(--bord); flex: none; background: var(--panneau-2); }
-.casc-props-d summary { cursor: pointer; padding: 4px 16px; font-size: 12px; font-weight: 600; color: var(--texte-2); }
 .props.compact { max-height: 40vh; overflow: auto; border-radius: 0; border-width: 1px 0 0; }
 .casc-defile { flex: 1; min-height: 0; overflow: auto; background: var(--panneau); }
 .cl { display: grid; grid-template-columns: minmax(220px, 2.4fr) 146px minmax(100px, 1fr) minmax(130px, 1.4fr) 104px 82px 76px 40px 82px; column-gap: 10px; align-items: center; min-height: 28px; padding: 0 14px 0 8px; border-bottom: 1px solid var(--bord); border-left: 3px solid transparent; }

@@ -18,9 +18,10 @@ async function regler(corps) {
   try { remplir(await api('/economie', { methode: 'PUT', corps })); } catch (e) { erreur(e.message); recharger(); }
 }
 
+// conso.NOMS envoie « hebdomadaire » tel quel : seul mot de la fenêtre à traduire (INV-LANGUE-1).
 function quotas(s) {
   const lignes = Object.entries(s.quotas).flatMap(([hn, fs]) => fs.map((f) => h('li', null,
-    t('economie.quota', { assistant: hn, nom: f.nom, part: pct(f.part), date: new Date(f.renouvellement * 1000).toLocaleString(LOCALE) }),
+    t('economie.quota', { assistant: hn, nom: f.nom === 'hebdomadaire' ? t('bandeau.rythme_hebdo') : f.nom, part: pct(f.part), date: new Date(f.renouvellement * 1000).toLocaleString(LOCALE) }),
     f.rythme != null ? t('economie.rythme', { v: f.rythme.toFixed(2) }) : t('economie.rythme_nul'))));
   return lignes.length ? h('ul', { class: 'note', 'data-id': 'eco-quotas' }, lignes)
     : h('p', { class: 'note', 'data-id': 'eco-quotas' }, t('economie.aucun_quota'));

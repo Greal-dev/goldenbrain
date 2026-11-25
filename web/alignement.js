@@ -6,8 +6,9 @@ import { on } from './store.js';
 import { ouvert } from './interface.js';
 import { api } from './api.js';
 import { voirPlan } from './alignement-plan.js';
+import { deroulant } from './deroulant.js';
 
-let ecarts = [], choisis = new Set(), minuteur = 0, indisponible = false;
+let ecarts = [], choisis = new Set(), minuteur = 0, indisponible = false, der = null, corps = null;
 
 export async function rafraichirEcarts() {
   if (!ouvert('alignement')) { ecarts = []; dessiner(); return ecarts; } // INV-INTERFACE-1 : la route répondrait 409
@@ -23,7 +24,7 @@ function dessiner() {
   b.hidden = !ecarts.length;
   $('#n-align').textContent = ecarts.length;
   $('#lib-align').textContent = tn('alignement.libelle', ecarts.length);
-  if (!$('#panneau-align').hidden) panneau();
+  der?.redessiner();
 }
 
 function panneau() {
@@ -36,24 +37,16 @@ function panneau() {
       onchange: (ev) => { if (ev.target.checked) choisis.add(e.conteneur); else choisis.delete(e.conteneur); panneau(); } }), h('b', null, e.titre)),
     h('div', { class: 'al-chemins' }, h('code', null, e.de), ' → ', h('code', null, e.vers)),
     e.conflit ? h('div', { class: 'al-conflit' }, t('alignement.conflit', { motif: e.conflit })) : null);
-  remplacer($('#panneau-align'),
+  remplacer(corps,
     h('p', { class: 'dlg-texte' }, t('alignement.explication')),
     h('label', { class: 'case al-tout' }, tout, t('alignement.tout_cocher_texte')),
     h('ul', { class: 'al-liste' }, ecarts.map(ligne)),
     h('div', { class: 'dlg-actions' },
       h('button', { type: 'button', class: 'btn primaire', disabled: choisis.size ? null : true,
-        onclick: () => { ouvrirPanneau(false); voirPlan([...choisis]); } }, t('alignement.voir_plan', { n: choisis.size }))));
+        onclick: () => { der.fermer(); voirPlan([...choisis]); } }, t('alignement.voir_plan', { n: choisis.size }))));
 }
-function ouvrirPanneau(o) {
-  $('#panneau-align').hidden = !o;
-  $('#btn-align').setAttribute('aria-expanded', String(o));
-  if (o) panneau();
-}
-
 export function initAlignement() {
-  $('#btn-align').addEventListener('click', () => ouvrirPanneau($('#panneau-align').hidden));
-  document.addEventListener('click', (e) => { if (!e.target.closest('.rel-align')) ouvrirPanneau(false); });
-  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !$('#panneau-align').hidden) ouvrirPanneau(false); });
+  der = deroulant({ bouton: $('#btn-align'), panneau: $('#panneau-align'), remplir: (c) => { corps = c; panneau(); } }); // INV-DEROULANT-1
   // Après chaque geste d'arbre (ou changement signalé par le serveur) ; regroupé pour ne pas multiplier les appels.
   on('arbre', () => { clearTimeout(minuteur); minuteur = setTimeout(rafraichirEcarts, 600); }); // le premier chargement de l'arbre déclenche la première lecture
 }

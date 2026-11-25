@@ -1,5 +1,5 @@
 """Propositions compactes (INV-PROP-2) : six propositions en attente venues de deux tâches tiennent, repliées, en deux lignes de groupe
-(≤ 2 × 32 px) et, dépliées, une ligne de ≤ 32 px chacune, dans le panneau « Propositions », l'accueil et la page Décisions.
+(≤ 2 × 32 px) et, dépliées, une ligne de ≤ 32 px chacune, dans le panneau déroulant « Propositions » (l'accueil n'en a plus, INV-DEROULANT-1) et la page Décisions.
 Accepter ou refuser se fait d'un clic d'icône, ou pour tout le groupe ; le motif se lit au dépli ou au survol.
 Les hauteurs s'impriment ; `GB_PLANCHE=<dossier>` y dépose les captures, `GB_AVANT=1` mesure sans exiger le budget (état antérieur).
 Vault temporaire, harnais factice.
@@ -98,14 +98,9 @@ def test_panneau_des_propositions(navigateur, srv):
 def test_accueil_et_decisions(navigateur, srv):
     c, p = ctx(navigateur)
     p.goto(srv.url + "/")
-    expect(p.locator(".casc-props")).to_be_visible(timeout=20000)
-    p.evaluate("() => { const d = document.querySelector('.casc-props-d'); if (d) d.open = true }")
-    p.wait_for_timeout(300)
-    replie = hauteur(p, ".casc-props .props")
-    cliche(p, "accueil")
-    p.evaluate("() => document.querySelectorAll('.casc-props details.prop-groupe').forEach((d) => { d.open = true })")
-    p.wait_for_timeout(200)
-    verifier("accueil", replie, lignes(p, ".casc-props .prop"))
+    expect(p.locator("#n-props")).not_to_have_text("0")  # le test du panneau en a refusé une
+    if not AVANT:  # INV-DEROULANT-1 : plus de zone permanente des propositions sur l'accueil, la pastille seule
+        expect(p.locator(".casc-props")).to_have_count(0)
     p.goto(srv.url + "/#decisions")
     expect(p.locator(".dc-proposition").first).to_be_visible(timeout=20000)
     p.wait_for_timeout(300)

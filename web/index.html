@@ -17,9 +17,18 @@
   <header id="bandeau">
     <div class="b-haut">
       <button id="marque" class="marque" type="button" title="Vue d’ensemble" data-t-title="index.vue_d_ensemble"><img class="logo" src="favicon.svg" alt="" width="20" height="20">GoldenBrain</button>
-      <button id="btn-aujourdhui" class="btn-compte" type="button" aria-pressed="false" title="Qu’est-ce que je fais aujourd’hui ? En retard, dues aujourd’hui, dues cette semaine, à moi" data-t-title="index.qu_est_ce_que_je"><span data-t="index.aujourd_hui">Aujourd’hui</span> <span class="n" id="n-retard" title="Tâches en retard" data-t-title="index.taches_en_retard">0</span></button>
-      <button id="btn-decisions" class="btn-compte" type="button" aria-pressed="false" title="Tout ce qui attend votre décision, tranché sur place" data-t-title="index.tout_ce_qui_attend_votre"><span data-t="index.decisions">Décisions</span> <span class="n" id="n-decisions">0</span></button>
-      <button id="btn-amoi" class="btn-compte" type="button" aria-pressed="false" title="Filtrer l’arbre sur les tâches en attente ou terminées à valider" data-t-title="index.filtrer_l_arbre_sur_les"><span data-t="index.a_moi">À moi</span> <span class="n" id="n-amoi">0</span></button>
+      <div class="rel">
+        <button id="btn-aujourdhui" class="btn-compte" type="button" aria-pressed="false" title="Qu’est-ce que je fais aujourd’hui ? En retard, dues aujourd’hui, dues cette semaine, à moi" data-t-title="index.qu_est_ce_que_je"><span data-t="index.aujourd_hui">Aujourd’hui</span> <span class="n" id="n-retard" title="Tâches en retard" data-t-title="index.taches_en_retard">0</span></button>
+        <div id="panneau-aujourdhui" class="panneau apercu" hidden></div>
+      </div>
+      <div class="rel">
+        <button id="btn-decisions" class="btn-compte" type="button" aria-pressed="false" title="Tout ce qui attend votre décision, tranché sur place" data-t-title="index.tout_ce_qui_attend_votre"><span data-t="index.decisions">Décisions</span> <span class="n" id="n-decisions">0</span></button>
+        <div id="panneau-decisions" class="panneau apercu" hidden></div>
+      </div>
+      <div class="rel">
+        <button id="btn-amoi" class="btn-compte" type="button" aria-pressed="false" title="Filtrer l’arbre sur les tâches en attente ou terminées à valider" data-t-title="index.filtrer_l_arbre_sur_les"><span data-t="index.a_moi">À moi</span> <span class="n" id="n-amoi">0</span></button>
+        <div id="panneau-amoi" class="panneau apercu" hidden></div>
+      </div>
       <div class="rel prop-zone">
         <button id="btn-props" class="btn-compte" type="button" aria-expanded="false" aria-controls="panneau-props"><span data-t="index.propositions">Propositions</span> <span class="n" id="n-props">0</span></button>
         <div id="panneau-props" class="panneau" hidden></div>
@@ -31,6 +40,17 @@
       <div class="rel-align rel f-alignement">
         <button id="btn-align" class="btn-compte alerte" type="button" aria-expanded="false" aria-controls="panneau-align" hidden title="Les dossiers du vault ne suivent pas l’arbre" data-t-title="index.les_dossiers_du_vault_ne"><span class="n" id="n-align">0</span> <span id="lib-align"><span data-t="index.dossiers_a_aligner">dossiers à aligner</span></span></button>
         <div id="panneau-align" class="panneau panneau-align" hidden></div>
+      </div>
+      <div class="rel etat-zone">
+        <button id="btn-etat" class="btn-compte" type="button" hidden title="Informations : poste réservé, mise à jour, réseau" data-t-title="index.etat_titre"><span data-t="index.etat">Infos</span> <span class="n" id="n-etat">0</span></button>
+        <div id="panneau-etat" class="panneau" hidden>
+          <div id="maj-serveur" role="status" hidden></div>
+          <div id="redemarrage-differe" role="status" hidden></div>
+          <div id="maj-auto" role="status" hidden></div>
+          <div id="maj-dispo" role="status" hidden></div>
+          <div id="poste-reserve" role="status" hidden></div>
+          <div id="reseau-perdu" role="status" hidden></div>
+        </div>
       </div>
       <div class="rech-zone rel">
         <input id="recherche" type="search" placeholder="Rechercher tâches et notes  ( / )" data-t-placeholder="index.rechercher_taches_et_notes" aria-label="Rechercher une tâche ou une note" data-t-aria-label="index.rechercher_une_tache_ou_une" autocomplete="off" role="combobox" aria-expanded="false" aria-controls="rech-liste" aria-autocomplete="list">
@@ -53,7 +73,10 @@
       </div>
     </div>
     <div class="b-bas">
-      <button id="btn-travaux" class="b-lib b-lien" type="button" title="Voir ce que font les assistants IA : aides lancées, avancement, file d’attente, routines, incidents" data-t-title="index.voir_travaux"><span data-t="index.en_cours">En cours</span> (<span id="n-tours">0</span>)</button>
+      <div class="rel travaux-zone">
+        <button id="btn-travaux" class="b-lib b-lien" type="button" title="Voir ce que font les assistants IA : aides lancées, avancement, file d’attente, routines, incidents" data-t-title="index.voir_travaux"><span data-t="index.en_cours">En cours</span> (<span id="n-tours">0</span>)</button>
+        <div id="panneau-travaux" class="panneau apercu" hidden></div>
+      </div>
       <div id="tours" class="tours" role="list" aria-label="Tours en cours" data-t-aria-label="index.tours_en_cours"></div>
       <span class="b-lib" id="lib-file" hidden><span data-t="index.en_file">En file</span> (<span id="n-file">0</span>)</span>
       <div id="file" class="tours" role="list" aria-label="Tours en file" data-t-aria-label="index.tours_en_file"></div>
@@ -61,13 +84,7 @@
   </header>
   <div id="bandeaux">
     <div id="banniere" role="alert" hidden></div>
-    <div id="maj-serveur" role="status" hidden></div>
-    <div id="redemarrage-differe" role="status" hidden></div>
-    <div id="maj-auto" role="status" hidden></div>
-    <div id="maj-dispo" role="status" hidden></div>
-    <div id="poste-reserve" role="status" hidden></div>
     <div id="vigie-alertes" role="alert" hidden></div>
-    <div id="reseau-perdu" role="status" hidden></div>
   </div>
   <main id="corps">
     <nav id="volet-gauche" aria-label="Arbre des tâches" data-t-aria-label="index.arbre_des_taches">

@@ -14,7 +14,7 @@
   body { height: 100vh; height: 100dvh; min-height: 0; overflow: hidden; }
   /* Bandeau : logo, recherche, nouvelle tâche ; le reste passe par la barre basse ou la page Décisions. */
   .b-haut { flex-wrap: nowrap; padding: 6px 8px; }
-  .b-haut > :not(#marque, .rech-zone, #btn-nouvelle, .b-menu-zone, #conn) { display: none; }
+  .b-haut > :not(#marque, .rech-zone, #btn-nouvelle, .b-menu-zone, #conn, .etat-zone) { display: none; } /* INV-DEROULANT-1 : « Infos » reste joignable */
   .b-menu > :not(#btn-manager) { display: none; } /* INV-DISCUSSION-1 : le menu n'existe pas au téléphone, le Manager garde sa place */
   #marque { font-size: 0; min-width: 44px; justify-content: center; }
   .rech-zone { order: 0; flex: 1 1 auto; min-width: 0; }

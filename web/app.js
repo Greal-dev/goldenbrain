@@ -17,6 +17,7 @@ import { evtTransfo } from './transfo.js';
 import { initTelephone } from './telephone.js';
 import { initDiscussion } from './discussion.js';
 import { initBandeaux } from './bandeaux.js';
+import { initApercus } from './apercus.js';
 import { charger, pret, sur, surCharge } from './paresseux.js';
 
 const droit = () => $('#volet-droit');
@@ -241,6 +242,7 @@ async function demarrer() {
   initArbre();
   initNotes();
   initBandeau();
+  initApercus();
   initIncidents();
   initTelephone();
   initBandeaux();
@@ -249,7 +251,6 @@ async function demarrer() {
   initAlignement();
   on('selection', majVoletDroit);
   on('etat', actualiserTravaux); // INV-TRAVAUX-1 : relu sur événement serveur, jamais par minuteur
-  $('#btn-travaux').addEventListener('click', () => ouvrirVue('travaux'));
   // Un clic sur « Manager » avant que son module soit prêt le charge, puis rejoue le clic.
   $('#btn-manager').addEventListener('click', (e) => { if (pret('manager')) return; e.stopImmediatePropagation(); managerPret().then(() => $('#btn-manager').click(), (x) => erreur(x.message)); });
   on('etat', () => { if (cascadeVisible()) etatCascade(droit()); if (S.vue === 'reglages' && !S.selection) pret('reglages')?.etatReglages(droit()); });

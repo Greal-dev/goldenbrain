@@ -52,6 +52,10 @@ body.discussion .volet-t-notes.replie .p-titre { flex: none; writing-mode: verti
 body.discussion .volet-t-notes.replie .p-n { order: -1; }
 body.discussion .volet-t-notes.replie .p-replier { position: absolute; inset: 0; width: 100%; padding: 0; opacity: 0; cursor: pointer; }
 body.discussion .volet-t-notes.replie > .p-tete:hover { background: var(--survol); }
+/* Aperçu au survol (INV-DEROULANT-1) : les notes flottent sur la conversation, sans la pousser. */
+body.discussion .volet-t-notes.replie.apercu { position: relative; }
+body.discussion .volet-t-notes.replie.apercu > .p-corps { display: block; position: absolute; right: 30px; top: 0; bottom: 0; width: clamp(300px, 28vw, 420px);
+  overflow: auto; z-index: 12; background: var(--panneau); border-left: 1px solid var(--bord-fort); box-shadow: var(--ombre); }
 @media (max-width: 900px) {
   body.discussion .volet-t-notes:not(.replie) { flex: 1 1 0; }
   body.discussion .volet-t-notes.replie { flex: 0 0 auto; border-left: 0; }

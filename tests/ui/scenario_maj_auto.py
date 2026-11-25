@@ -2,6 +2,8 @@
 (préparation, « Mis à jour vers … », incident). Le serveur de test est partagé : le réglage est rendu tel que trouvé ;
 les bandeaux viennent d'un `/api/etat` altéré par `page.route` (aucune vraie mise à jour n'est tentée)."""
 
+from conftest import deplier_infos
+
 H = {"X-Orchestrateur": "1"}
 
 
@@ -53,6 +55,7 @@ def test_bandeau_apres_mise_a_jour_puis_fermer(page, serveur):
     fermetures = []
     page.route("**/api/maj-auto/bandeau", lambda r: (fermetures.append(r.request.method), r.fulfill(status=200, json={})))
     page.goto(page.url_serveur + "/")
+    deplier_infos(page)
     bandeau = page.locator("#maj-auto")
     bandeau.wait_for()
     assert "Mis à jour vers abc1234 à 03:12 ; 2 tâches reprises." in bandeau.inner_text()
@@ -64,12 +67,14 @@ def test_bandeau_apres_mise_a_jour_puis_fermer(page, serveur):
 def test_bandeau_preparation_et_incident_avec_geste(page, serveur):
     _etat_avec(page, {**BASE, "phase": "gel", "gel": True, "attendus": 1})
     page.goto(page.url_serveur + "/")
+    deplier_infos(page)
     page.wait_for_selector("#maj-auto >> text=Mise à jour en préparation")
     assert "aucune nouvelle séance de travail ne démarre" in page.locator("#maj-auto").inner_text()
     page.unroute("**/api/etat")
     _etat_avec(page, {**BASE, "incident": {"cause": "la nouvelle version ne se charge pas", "geste": "attendre une version corrigée",
                                             "version": "abc", "a": "03:12"}})
     page.reload()
+    deplier_infos(page)
     page.wait_for_selector("#maj-auto >> text=abandonnée")
     texte = page.locator("#maj-auto").inner_text()
     assert "la nouvelle version ne se charge pas" in texte and "Que faire : attendre une version corrigée" in texte

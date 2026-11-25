@@ -8,7 +8,7 @@ H = {"X-Orchestrateur": "1"}
 
 def ouvrir(page):
     page.goto(page.url_serveur + "/#reglages/installation")
-    page.wait_for_selector("[data-id=installation] [data-id=inst-liste]")
+    page.wait_for_selector("[data-id=installation] [data-id=inst-liste]", timeout=90000)  # le sondage des outils du poste est lent sous charge
 
 
 def test_refuser_le_dialogue_ne_lance_rien(page, serveur):

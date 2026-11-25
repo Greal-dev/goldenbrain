@@ -110,7 +110,8 @@ def test_captures_et_video(navigateur, demo, tmp_path):
         _pause(page, 2)
         _cliche(page, sortie / f"tache-{code}.png")
 
-        page.click("#btn-travaux")
+        page.click("#btn-travaux")  # INV-DEROULANT-1 : l'aperçu déroule, « Tout voir » mène à la page
+        page.click("#panneau-travaux [data-tout-voir]")
         carte = page.locator("[data-id=travaux] [data-id=tr-tour][data-tache=csv]")
         expect(carte.locator("[data-id=tr-sous-agent]")).to_have_count(2, timeout=10000)
         _pause(page, 3)

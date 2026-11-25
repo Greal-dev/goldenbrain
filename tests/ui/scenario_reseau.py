@@ -7,6 +7,7 @@ import socket
 import univers
 from aides_arbre import nettoyer_vault  # noqa: F401  (fixture autouse)
 from aides_arbre import charger, ligne, projet
+from conftest import deplier_infos
 from playwright.sync_api import expect
 
 
@@ -20,7 +21,8 @@ def test_coupure_reseau_gele_l_agent_puis_il_reprend_au_retour(page, serveur):
         page.fill(".composer textarea", "[reseau] travaille")
         page.press(".composer textarea", "Control+Enter")
         bandeau = page.locator("#reseau-perdu")
-        expect(bandeau).to_be_visible(timeout=40000)
+        deplier_infos(page, timeout=40000)
+        expect(bandeau).to_be_visible()
         expect(bandeau).to_contain_text("Réseau perdu depuis")
         expect(bandeau).to_contain_text("1 agent en attente")
         expect(page.locator(".d-une .etat")).to_have_text("En attente du réseau")

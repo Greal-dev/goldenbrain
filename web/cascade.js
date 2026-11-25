@@ -1,5 +1,5 @@
 // Rôle : vue en cascade du volet droit — sous-arbre des tâches en tableau indenté repliable,
-// compteurs-filtres par statut, activité en direct, propositions et tours en compact.
+// compteurs-filtres par statut, activité en direct, tours en compact (les propositions vivent dans leur déroulant, INV-DEROULANT-1).
 // Frontières : lit S (arbre, état, filtres) ; replis et portée sont de l'affichage ; ouvrir une tâche passe par store.ouvrir.
 // Performance : le squelette est construit une fois (défilement conservé) ; les lignes sont refaites d'un bloc (~120)
 // et seule l'activité en direct est patchée sur place (un clic en cours ne se perd pas pendant un flux SSE).
@@ -9,7 +9,6 @@ import { STATUTS_COURTS, statutsActifs, passeStatut, basculerStatut, effacerStat
 import { barreLot, caseLigne, caseTout, majLot, basculerSel } from './lot.js';
 import { S, on, ouvrir, ouvrirVue, ouvrirNote, parcourir, chemin, fixerToutes, cleNoeud as cle } from './store.js';
 import { cheminContexte } from './ponts.js';
-import { listePropositions, enAttente } from './propositions.js';
 import { majBascule } from './arbre.js';
 import { brancher, actionsLigne } from './glisser.js';
 import { reduire } from './transfo.js';
@@ -24,7 +23,7 @@ import { ouvrirAccueil } from './accueil.js';
 const CLE = 'orch.cascade.replis';
 let replis = (() => { try { return JSON.parse(localStorage.getItem(CLE) || '{}'); } catch { return {}; } })(); // {cle: true} = replié
 let tri = { col: null, sens: 1 }; // tri des tâches sœurs par échéance ou priorité (un clic : croissant, deux : décroissant, trois : arbre d'origine)
-let coque = null, ref = {}, visibles = new Map(), cleFocus = null, porteeAff, topSauve = 0, sigTours = null, propsOuvert = true;
+let coque = null, ref = {}, visibles = new Map(), cleFocus = null, porteeAff, topSauve = 0, sigTours = null;
 
 const sauver = () => localStorage.setItem(CLE, JSON.stringify(replis));
 const filtreActif = () => statutsActifs().length > 0;
@@ -174,13 +173,6 @@ function majLive() {
   ref.live.hidden = !tours.length;
   remplacer(ref.live, tours.length ? [h('span', { class: 'b-lib' }, t('cascade.en_direct')), ...tours.map(pastilleTour)] : null);
 }
-function majProps() {
-  const l = enAttente();
-  ref.props.hidden = !l.length;
-  remplacer(ref.props, l.length ? h('details', { class: 'casc-props-d', open: propsOuvert ? true : null, ontoggle: (e) => { propsOuvert = e.target.open; } },
-    h('summary', null, t('cascade.propositions'), h('span', { class: 'n' }, l.length)),
-    listePropositions(l, 'props compact')) : null);
-}
 
 // Vault vide (premier lancement après « Plus tard ») : trois gestes plutôt qu'un « Chargement… » sans fin (audit L3, A1).
 function videGuide() {
@@ -214,7 +206,7 @@ function majTout() {
   if (S.portee && !c && S.arbre.length) S.portee = null; // la portée a disparu de l'arbre
   const racines = (S.portee && c) ? c.at(-1).enfants : S.arbre;
   if (S.portee !== porteeAff) { porteeAff = S.portee; topSauve = 0; ref.defile.scrollTop = 0; }
-  entete(c, racines); majEnteteTri(); majLive(); majProps(); corps(racines); majLot();
+  entete(c, racines); majEnteteTri(); majLive(); corps(racines); // INV-DEROULANT-1 : les propositions se lisent dans le déroulant de la barre, plus en zone permanente majLot();
 }
 
 function majActivite() {
@@ -299,7 +291,6 @@ function construire() {
   ref.chips = h('div', { class: 'casc-chips', role: 'group', 'aria-label': t('cascade.filtre_statut_groupe') });
   ref.lot = barreLot();
   ref.live = h('div', { class: 'casc-live', 'aria-label': t('cascade.seances_label'), hidden: true });
-  ref.props = h('div', { class: 'casc-props', hidden: true });
   ref.corps = h('div', { role: 'rowgroup', class: 'casc-corps' });
   ref.vide = h('p', { class: 'vide', 'aria-live': 'polite' });
   ref.defile = h('div', { class: 'casc-defile', role: 'treegrid', 'aria-label': t('cascade.grille') }, colonnes(), ref.corps, ref.vide);
@@ -333,7 +324,7 @@ function construire() {
     h('button', { class: 'btn petit', type: 'button', onclick: () => toutBasculer(false) }, t('cascade.deplier')), bascule);
   coque = h('div', { class: 'casc' },
     h('div', { class: 'casc-tete' }, ref.fil, h('div', { class: 'casc-l1' }, ref.titre, ref.total, outils), ref.chips, ref.lot, ref.chat),
-    ref.live, ref.props, ref.defile);
+    ref.live, ref.defile);
   sigTours = null;
 }
 

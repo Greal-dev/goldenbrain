@@ -8,6 +8,8 @@ qui s'arrêterait). Tout le reste — bandeaux, boutons, dialogues, voile d'atte
 
 import json
 
+from conftest import deplier_infos
+
 MAJ_RIEN = {"depot": True, "retard": 0, "distant": "origin", "branche": "main", "dernier_controle": None}
 
 
@@ -50,6 +52,7 @@ def test_code_perime_bandeau_et_redemarrage_refuse_puis_annule(page):
         route.fulfill(status=409, json={"detail": "un tour tourne ou attend en file : redémarrer après, ou forcer"})
     page.route("**/api/redemarrer", redemarrer)
     _charger(page)
+    deplier_infos(page)
     bandeau = page.locator("#maj-serveur")
     bandeau.wait_for()
     assert "GoldenBrain a été mis à jour" in bandeau.inner_text()
@@ -78,6 +81,7 @@ def test_redemarrer_quand_meme_force_et_affiche_le_voile(page):
             route.fulfill(status=409, json={"detail": "un tour tourne ou attend en file"})
     page.route("**/api/redemarrer", redemarrer)
     _charger(page)
+    deplier_infos(page)
     page.locator("#maj-serveur button:has-text('Redémarrer')").click()
     dlg = page.locator("dialog[aria-label='Redémarrer quand même ?']")
     dlg.wait_for()
@@ -92,6 +96,7 @@ def test_redemarrer_quand_meme_force_et_affiche_le_voile(page):
 def test_mise_a_jour_disponible_bandeau_et_pluriel(page):
     _maj(page, {**MAJ_RIEN, "retard": 2})
     _charger(page)
+    deplier_infos(page)
     bandeau = page.locator("#maj-dispo")
     bandeau.wait_for()
     assert "Une mise à jour est disponible : 2 modifications de retard sur origin/main." in bandeau.inner_text()
@@ -115,6 +120,7 @@ def test_mise_a_jour_refusee_affiche_le_motif(page):
         status=409, json={"detail": "un tour tourne ou attend en file : mettre à jour après"})
         if route.request.method == "POST" else route.fulfill(json={**MAJ_RIEN, "retard": 1}))
     _charger(page)
+    deplier_infos(page)
     bandeau = page.locator("#maj-dispo")
     bandeau.wait_for()
     assert "1 modification de retard" in bandeau.inner_text()
@@ -149,6 +155,7 @@ def test_redemarrage_differe_bandeau_annuler_puis_voile(page):
         route.fulfill(status=202, json={"differe": etat["differe"]})
     page.route("**/api/redemarrer-differe", differe)
     _charger(page)
+    deplier_infos(page)
     page.locator("#maj-serveur button:has-text('Redémarrer')").click()
     dlg = page.locator("dialog[aria-label='Redémarrer quand même ?']")
     dlg.wait_for()

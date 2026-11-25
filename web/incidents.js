@@ -5,6 +5,7 @@ import { h, $, heure, remplacer } from './dom.js';
 import { on, ouvrir, erreur } from './store.js';
 import { api } from './api.js';
 import { t, LOCALE } from './langues.js';
+import { deroulant } from './deroulant.js';
 
 const enc = encodeURIComponent;
 const quand = (iso) => { const d = new Date(iso); return `${d.toLocaleDateString(LOCALE)} ${heure(iso)}`; };
@@ -29,10 +30,12 @@ function jauge(eco, epuises) {
   }));
 }
 
-async function dessinerPanneau() {
+let der = null;
+async function dessinerPanneau(corps) {
   try {
     const [d, eco] = await Promise.all([api('/incidents?limite=50'), api('/economie')]);
-    remplacer($('#panneau-incidents'), h('h4', null, t('incidents.comptes')), jauge(eco, d.epuises || {}),
+    if (!der.ouvert()) return;
+    remplacer(corps, h('h4', null, t('incidents.comptes')), jauge(eco, d.epuises || {}),
       h('h4', null, t('incidents.derniers')),
       d.incidents.length ? h('ul', { class: 'inc-liste', 'data-id': 'inc-liste' }, d.incidents.map((i) => h('li', { class: i.clos ? 'clos' : '', title: i.motif },
         h('span', { class: 'note' }, (i.role !== 'tache' ? t('incidents.ligne_role', { date: quand(i.date), assistant: i.harnais, role: i.role }) : t('incidents.ligne', { date: quand(i.date), assistant: i.harnais }))),
@@ -52,15 +55,8 @@ async function compter() {
   } catch { /* le compteur attendra le prochain incident */ }
 }
 
-function panneau(ouvert) {
-  $('#panneau-incidents').hidden = !ouvert;
-  $('#btn-incidents').setAttribute('aria-expanded', String(ouvert));
-  if (ouvert) dessinerPanneau();
-}
-
 export function initIncidents() {
-  $('#btn-incidents').addEventListener('click', () => panneau($('#panneau-incidents').hidden));
-  document.addEventListener('click', (e) => { if (!e.target.closest('#btn-incidents, #panneau-incidents')) panneau(false); });
-  on('incident', () => { compter(); if (!$('#panneau-incidents').hidden) dessinerPanneau(); });
+  der = deroulant({ bouton: $('#btn-incidents'), panneau: $('#panneau-incidents'), remplir: dessinerPanneau }); // INV-DEROULANT-1
+  on('incident', () => { compter(); der.redessiner(); });
   compter();
 }

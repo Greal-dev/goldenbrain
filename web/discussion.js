@@ -7,6 +7,7 @@
 import { S, on } from './store.js';
 import { $, h } from './dom.js';
 import { t } from './langues.js';
+import { intention } from './deroulant.js';
 
 const CLE = 'gb.disposition', VU = 'gb.disposition-vu';
 const lire = () => { try { return { tout: false, arbre: false, ...JSON.parse(localStorage.getItem(CLE)) }; } catch { return { tout: false, arbre: false }; } };
@@ -15,9 +16,6 @@ export const disposition = () => D;
 const ecrire = () => { try { localStorage.setItem(CLE, JSON.stringify(D)); } catch { /* stockage indisponible : le choix vaut pour la séance */ } };
 const etroit = matchMedia('(max-width: 480px)');
 const actif = () => !!S.selection && !D.tout && !etroit.matches;
-let minuteurs = {};
-const apres = (nom, ms, f) => { clearTimeout(minuteurs[nom]); minuteurs[nom] = setTimeout(f, ms); };
-const souris = (e) => e.pointerType === 'mouse';
 
 function menu(ouvert) {
   $('#b-menu').classList.toggle('ouvert', ouvert);
@@ -33,8 +31,8 @@ function appliquer() {
   if (!on_ || D.arbre) nav.classList.remove('apercu');
   $('#rail-arbre').setAttribute('aria-expanded', String(!on_ || D.arbre || nav.classList.contains('apercu')));
   // « En cours » devient une pastille de la rangée haute ; hors discussion, il retrouve sa rangée.
-  const travaux = $('#btn-travaux');
-  if (on_) $('#btn-nouvelle').before(travaux); else if (travaux.parentElement.classList.contains('b-haut')) document.querySelector('.b-bas').prepend(travaux);
+  const travaux = $('#btn-travaux'), zone = travaux.parentElement; // la pastille voyage avec son déroulant (INV-DEROULANT-1)
+  if (on_) $('#btn-nouvelle').before(zone); else if (zone.parentElement.classList.contains('b-haut')) document.querySelector('.b-bas').prepend(zone);
   travaux.classList.toggle('btn-compte', on_);
   const bascule = $('#btn-disposition');
   bascule.setAttribute('aria-pressed', String(D.tout));
@@ -80,14 +78,12 @@ function bulle() {
 export function initDiscussion() {
   const nav = $('#volet-gauche'), zone = document.querySelector('.b-menu-zone');
   $('#btn-menu').addEventListener('click', () => menu(!$('#b-menu').classList.contains('ouvert')));
-  zone.addEventListener('pointerenter', (e) => { if (souris(e) && actif()) apres('menu', 120, () => menu(true)); });
-  zone.addEventListener('pointerleave', (e) => { if (souris(e)) apres('menu', 350, () => menu(false)); });
+  intention([zone], () => menu(true), () => menu(false), actif); // INV-DEROULANT-1 : mêmes délais que tout déroulant
   $('#b-menu').addEventListener('click', (e) => { if (e.target.closest('button') && e.target.id !== 'btn-menu') menu(false); });
   document.addEventListener('click', (e) => { if (!e.target.closest('.b-menu-zone')) menu(false); });
   $('#btn-disposition').addEventListener('click', toutAfficher);
   $('#rail-arbre').addEventListener('click', () => { if (actif()) epingler(); });
-  nav.addEventListener('pointerenter', (e) => { if (souris(e) && nav.classList.contains('rail')) apres('arbre', 150, () => nav.classList.add('apercu')); });
-  nav.addEventListener('pointerleave', (e) => { if (souris(e)) apres('arbre', 350, () => nav.classList.remove('apercu')); });
+  intention([nav], () => nav.classList.add('apercu'), () => nav.classList.remove('apercu'), () => nav.classList.contains('rail'));
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') { menu(false); nav.classList.remove('apercu'); }
     if (!e.altKey || e.ctrlKey || e.metaKey || etroit.matches) return;

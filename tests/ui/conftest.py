@@ -104,3 +104,15 @@ def page(navigateur, serveur):
     p.url_serveur = serveur.url
     yield p
     ctx.close()
+
+
+def deplier_infos(page, timeout: float = 5000) -> None:
+    """INV-DEROULANT-1 : les bandeaux d'information vivent dans la pastille « Infos » ; la déplier et l'épingler avant de les viser
+    (épinglée, elle survit aux clics ailleurs ; elle se referme d'elle-même quand plus rien n'est à dire)."""
+    b = page.locator("#btn-etat")
+    b.wait_for(state="visible", timeout=timeout)
+    if b.get_attribute("aria-expanded") != "true":
+        b.click()
+    pin = page.locator("#panneau-etat .der-epingle")
+    if pin.get_attribute("aria-pressed") != "true":
+        pin.click()

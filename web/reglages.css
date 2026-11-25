@@ -1,7 +1,7 @@
 /* Mode simple / avancé : une famille débrayée masque ses éléments (classes posées sur <body> par interface.js). */
 .sans-equipe .f-equipe, .sans-liens .f-liens, .sans-alignement .f-alignement, .sans-jardinage .f-jardinage, .sans-moteurs .f-moteurs,
 .sans-notes .f-notes, .sans-transformations .f-transformations, .sans-conseil .f-conseil,
-.sans-notes #onglets, .sans-propositions .prop-zone, .sans-propositions .casc-props { display: none !important; }
+.sans-notes #onglets, .sans-propositions .prop-zone { display: none !important; }
 /* Colonne « Liens » de la cascade : retirer la piste de la grille, sinon masquer la seule cellule décalerait les colonnes. */
 .sans-liens .cl { grid-template-columns: minmax(220px, 2.4fr) 146px minmax(100px, 1fr) minmax(130px, 1.4fr) 104px 82px 76px 82px; }
 .sans-liens .c-lien { display: none; }

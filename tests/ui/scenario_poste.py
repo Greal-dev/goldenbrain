@@ -3,6 +3,7 @@ lourdes « En attente du poste », puis démarrage dès que le poste est rendu (
 
 from aides_arbre import nettoyer_vault  # noqa: F401  (fixture autouse)
 from aides_arbre import charger, ligne, projet
+from conftest import deplier_infos
 from playwright.sync_api import expect
 
 H = {"X-Orchestrateur": "1"}
@@ -20,6 +21,7 @@ def test_poste_reserve_met_en_attente_une_tache_lourde_puis_la_laisse_partir(pag
                               data={"tache": "po-titulaire", "motif": "porte complète"})
         assert r.status == 200, r.text()
         bandeau = page.locator("#poste-reserve")
+        deplier_infos(page)
         expect(bandeau).to_be_visible(timeout=5000)
         expect(bandeau).to_contain_text("Poste réservé par po-titulaire : porte complète")
 
@@ -52,6 +54,7 @@ def test_file_du_poste_rang_affiche_sur_la_tache_puis_le_suivant_obtient_le_post
         r = post("reserver", {"tache": "pf-suivante", "attendre": True}).json()
         assert r["poste"] is None and r["rang"] == 1
         expect(page.locator("#poste-reserve")).to_contain_text("File : 1. pf-suivante", timeout=5000)
+        deplier_infos(page)
         ligne(page, "Seconde tâche").click()
         expect(page.locator(".d-une .etat")).to_have_text("En attente du poste (rang 1)", timeout=5000)
 

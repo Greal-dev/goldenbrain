@@ -1,4 +1,4 @@
-// Rôle : pile des bandeaux d'information (INV-REACTIVITE-1) — un seul bandeau fin à la fois, les autres derrière un compteur « +N » ;
+// Rôle : pile des bandeaux restants (INV-REACTIVITE-1) — alertes, erreur, bandeau du mode discussion ; les bandeaux d'information vivent dans la pastille « Infos » (INV-DEROULANT-1). Un seul bandeau fin à la fois, les autres derrière un compteur « +N » ;
 // le bandeau tronqué se lit en entier au clic ou au toucher. Sans cela, quatre bandeaux empilés mangeaient 100 à 120 px de fil.
 // Frontières : DOM seulement ; les bandeaux restent dessinés par leurs modules (bandeau.js, version.js, maj-auto.js, app.js,
 // discussion.js) qui posent `hidden` ; ce module ne masque que par la classe `bandeau-masque` (jamais par `hidden`).

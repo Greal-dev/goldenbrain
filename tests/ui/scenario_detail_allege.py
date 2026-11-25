@@ -76,6 +76,7 @@ def test_details_a_un_clic_et_choix_memorise(navigateur, srv):
         p.wait_for_timeout(400)
     for sel in ('.fiche', '.moteur select', '.d-rattache', '.d-actions', '.corps'):
         p.wait_for_selector(sel, state="visible", timeout=5000)  # la fiche se dessine après l'ouverture : attendre, ne pas sonder
+    p.locator('[data-id="details"] .der-epingle').click()  # INV-DEROULANT-1 : épingler = garder ouvert, choix mémorisé
     p.reload()
     p.wait_for_selector(".composer textarea")
     assert p.is_visible('[data-id="details"]'), "le choix « ouvert » n'est pas mémorisé"

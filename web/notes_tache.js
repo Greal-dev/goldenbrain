@@ -9,6 +9,7 @@ import { rendreMd } from './md.js';
 import { creerIA } from './notes_ia.js';
 import { t } from './langues.js';
 import { notesRepliees } from './discussion.js';
+import { intention } from './deroulant.js';
 
 const enc = encodeURIComponent;
 const CLE = 'gb.panneaux-tache';
@@ -34,6 +35,10 @@ export function panneau(nom, titre, ...contenu) {
     poser(e[nom]);
   });
   el.querySelector('.p-tete').addEventListener('click', (e) => { if (el.classList.contains('replie') && !e.target.closest('button')) bouton.click(); });
+  // INV-DEROULANT-1 : replié en mode discussion, l'intercalaire montre les notes au survol, flottantes ; le clic les épingle.
+  if (nom === 'notes') intention([el], () => el.classList.add('apercu'), () => el.classList.remove('apercu'),
+    () => el.classList.contains('replie') && document.body.classList.contains('discussion'));
+  bouton.addEventListener('click', () => el.classList.remove('apercu'));
   // « Tout afficher » déplie les notes ; le retour au mode discussion les replie (retour au défaut).
   const suivre = (e) => {
     if (!el.isConnected) { document.removeEventListener('gb-disposition', suivre); return; }

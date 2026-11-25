@@ -19,7 +19,8 @@ def test_en_cours_montre_aides_avancement_et_permet_pause_et_arret(page, serveur
     expect(page.locator("#n-tours")).not_to_have_text("0", timeout=10000)
 
     try:
-        page.click("#btn-travaux")
+        page.click("#btn-travaux")  # INV-DEROULANT-1 : l'aperçu déroule, « Tout voir » mène à la page
+        page.click("#panneau-travaux [data-tout-voir]")
         ecran = page.locator("[data-id=travaux]")
         carte = ecran.locator("[data-id=tr-tour][data-tache=tr-agent]")
         expect(carte).to_be_visible(timeout=10000)

@@ -30,6 +30,7 @@ import { blocRoutine, convertirEnRoutine } from './routines.js';
 import { blocChaine } from './chaines.js';
 import { groupesStatut, ecrireStatut, INFO_VERROU } from './statut.js';
 import { curseur, humain } from './executant.js';
+import { deroulant } from './deroulant.js';
 import { panneau, creerNotes } from './notes_tache.js';
 import { t } from './langues.js';
 import { voirResultat } from './resultat.js';
@@ -42,12 +43,12 @@ let r = {}; // références DOM de la tâche ouverte
 const enc = encodeURIComponent;
 const CLE_DETAILS = 'gb.detail-ouvert';
 let detOuvert = (() => { try { return localStorage.getItem(CLE_DETAILS) === '1'; } catch { return false; } })();
-function basculerDetails() {
-  detOuvert = !detOuvert;
-  try { localStorage.setItem(CLE_DETAILS, detOuvert ? '1' : '0'); } catch { /* stockage indisponible : le choix vaut pour la séance */ }
-  r.details.hidden = !detOuvert;
-  r.une.querySelector('[data-id="details-bascule"]')?.setAttribute('aria-expanded', String(detOuvert));
+// INV-DEROULANT-1 : « Détails » est un déroulant ; épinglé, il reste ouvert dans le flux et ce choix est mémorisé.
+function epinglerDetails(v) {
+  detOuvert = v;
+  try { localStorage.setItem(CLE_DETAILS, v ? '1' : '0'); } catch { /* stockage indisponible : le choix vaut pour la séance */ }
 }
+const montrerDetails = () => r.der.ouvrir();
 const actif = (tk) => tk && (tk.etat_execution === 'en_cours' || tk.etat_execution === 'en_file');
 
 function squelette() {
@@ -69,7 +70,9 @@ function squelette() {
     title: t('detail.etapes_titre') }, h('span', { class: 'sw', 'aria-hidden': 'true' }), t('detail.etapes'));
   // INV-DETAIL-1 : une seule ligne d'en-tête ; tout le reste vit dans « Détails », replié par défaut, choix mémorisé.
   r.detMeta = h('div', { class: 'd-det-meta' });
-  r.details = h('div', { class: 'd-details', 'data-id': 'details', hidden: !detOuvert }, r.detMeta, r.vie, r.fiche, r.lignes, r.liens, r.revues, r.corps);
+  r.details = h('div', { class: 'd-details', 'data-id': 'details', id: 'details', hidden: true }, r.detMeta, r.vie, r.fiche, r.lignes, r.liens, r.revues, r.corps);
+  r.bascule = h('button', { class: 'btn petit d-bascule', type: 'button', 'data-id': 'details-bascule', title: t('detail.details_titre') }, t('detail.details'));
+  r.der = deroulant({ bouton: r.bascule, panneau: r.details, garder: true, epingle: detOuvert, surEpingle: epinglerDetails });
   r.tete = h('div', { class: 'd-tete' }, r.une, r.details);
   r.defile = h('div', { class: 'd-defile' }, h('div', { class: 'conv-tete' }, (r.convTitre = h('h3', { class: 'conv-titre' }, t('detail.echanges'))), r.etapes), r.conv);
   r.defile.addEventListener('scroll', () => { colle = r.defile.scrollHeight - r.defile.scrollTop - r.defile.clientHeight < 48; r.bas.hidden = colle; });
@@ -77,7 +80,7 @@ function squelette() {
   r.ta = h('textarea', { rows: 2, 'aria-label': t('detail.message_agent'), placeholder: t('detail.message_placeholder') });
   r.note = h('span', { class: 'note' });
   r.envoyer = h('button', { class: 'btn primaire', type: 'submit' }, t('detail.envoyer'));
-  r.rappel = h('button', { class: 'rappel', type: 'button', onclick: () => { if (!detOuvert) basculerDetails(); r.tete.querySelector('.moteur select')?.focus(); } });
+  r.rappel = h('button', { class: 'rappel', type: 'button', onclick: () => { montrerDetails(); r.tete.querySelector('.moteur select')?.focus(); } });
   const form = h('form', { class: 'composer' }, h('div', { class: 'c-ligne' }, r.ta, h('div', { class: 'c-col' }, r.rappel, r.envoyer)), r.note);
   form.addEventListener('submit', (e) => { e.preventDefault(); envoyer(); });
   r.ta.addEventListener('keydown', (e) => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); envoyer(); } });
@@ -161,7 +164,7 @@ function dessinerTete() {
     titreEditable(tk, appliquer, repereIA(tk.id)), // INV-RENOMMER-1
     ...(routine ? [] : [pastille(tk.statut), selecteurStatut(tk)]), // INV-ROUTINE-5 : état au lieu du statut
     etat && !tk.pause_ram ? h('span', { class: `etat ${tk.etat_execution}`, title: etat }, tk.etat_execution === 'en_cours' ? h('span', { class: 'tourne' }) : null, etat) : null,
-    alertes.length ? h('button', { class: 'd-alerte', type: 'button', 'data-id': 'alerte', title: alertes.join('\n'), onclick: () => { if (!detOuvert) basculerDetails(); } },
+    alertes.length ? h('button', { class: 'd-alerte', type: 'button', 'data-id': 'alerte', title: alertes.join('\n'), onclick: montrerDetails },
       h('span', { class: 'd-alerte-t' }, alertes[0]), alertes.length > 1 ? h('span', { class: 'd-alerte-n' }, t('detail.alertes_plus', { n: alertes.length - 1 })) : null) : null,
     aValider(tk) ? h('span', { class: 'a-valider', role: 'status', title: t('detail.a_valider') }, b(t('detail.valider'), valider, { cls: 'primaire' }), b(t('detail.renvoyer_btn'), renvoyer)) : null,
     pastilleLivrables(tk), // INV-LIVRABLES-1 : une pastille ; le volet porte le reste
@@ -170,7 +173,7 @@ function dessinerTete() {
     tk.etat_execution === 'en_pause' ? b(t('detail.reprendre_maintenant'), reprendreMaintenant, { cls: 'primaire', titre: t('detail.reprendre_quota_titre') }) : null,
     actif(tk) || tk.etat_execution === 'en_pause' ? b(t('detail.arreter'), arreter, { cls: 'danger' }) : null,
     tk.etat_execution === 'interrompu' ? b(t('detail.relancer'), relancer, { cls: 'primaire', titre: t('detail.relancer_titre') }) : null,
-    h('button', { class: 'btn petit d-bascule', type: 'button', 'data-id': 'details-bascule', 'aria-expanded': String(detOuvert), 'aria-controls': 'details', title: t('detail.details_titre'), onclick: basculerDetails }, t('detail.details')));
+    r.bascule);
   remplacer(r.detMeta,
     h('nav', { class: 'fil', 'aria-label': t('detail.fil') }, segmentsFil(tk)),
     h('div', { class: 'd-resultat-det' }, b(t('resultat.bouton'), () => voirResultat(tk.id), { cls: 'primaire', titre: t('resultat.aide') })),

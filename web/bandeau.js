@@ -15,6 +15,7 @@ import { dessinerAlertes } from './vigie.js';
 import { ouvrirGuide } from './guide.js';
 import { galerieModeles } from './modeles.js';
 import { dialogueRangement } from './lignes.js';
+import { deroulant } from './deroulant.js';
 
 function pastilleTour(x) {
   // INV-VIGIE-1 : phrase d'activité et fraîcheur ; un silence prolongé se dit à la place.
@@ -75,7 +76,7 @@ export function dessinerBandeau() {
   const cont = $('#tours');
   remplacer(cont, e.tours.length ? e.tours.map(pastilleTour) : h('span', { class: 'aucun' }, t('bandeau.aucun_actif')));
   dessinerFile(e.file || []);
-  if (!$('#panneau-props').hidden) dessinerPanneau();
+  props?.redessiner();
 }
 
 // INV-ORDO-1, INV-ORDO-2 : rang et motif de chaque tour en file, ou les prérequis qu'il attend.
@@ -93,17 +94,9 @@ ${act}`, onclick: () => ouvrir(f.tache) },
   }));
 }
 
-function dessinerPanneau() {
-  const l = enAttente();
-  remplacer($('#panneau-props'), l.length
-    ? listePropositions(l)
-    : h('p', { class: 'vide' }, t('bandeau.aucune_proposition')));
-}
-function panneau(ouvert) {
-  $('#panneau-props').hidden = !ouvert;
-  $('#btn-props').setAttribute('aria-expanded', String(ouvert));
-  if (ouvert) dessinerPanneau();
-}
+// INV-DEROULANT-1 : « Propositions (n) » déroule le panneau compact, rien de permanent à l'écran.
+let props = null;
+const dessinerPanneau = (corps) => remplacer(corps, enAttente().length ? listePropositions(enAttente()) : h('p', { class: 'vide' }, t('bandeau.aucune_proposition')));
 
 // INV-RAPPROCHEMENT-1 : tâches proches de la demande, avec « Compléter celle-ci » (message sur l'existante).
 const DELAI_PROCHES = 350;
@@ -240,20 +233,16 @@ export function initBandeau() {
   $('#btn-equipe').addEventListener('click', () => ouvrirVue('equipe'));
   $('#btn-reglages').addEventListener('click', () => ouvrirVue('reglages'));
   $('#btn-guide').addEventListener('click', () => ouvrirGuide());
-  $('#btn-aujourdhui').addEventListener('click', () => ouvrirVue('aujourdhui'));
-  $('#btn-decisions').addEventListener('click', () => ouvrirVue('decisions'));
-  $('#btn-amoi').addEventListener('click', () => { S.filtreAMoi = !S.filtreAMoi; emit('filtre'); });
-  $('#btn-props').addEventListener('click', () => panneau($('#panneau-props').hidden));
-  document.addEventListener('click', (e) => { if (!e.target.closest('#btn-props, #panneau-props')) panneau(false); });
+  props = deroulant({ bouton: $('#btn-props'), panneau: $('#panneau-props'), titre: t('apercus.propositions'),
+    toutVoir: { libelle: t('apercus.tout_voir'), agir: () => ouvrirVue('decisions') }, remplir: dessinerPanneau });
   const rech = $('#recherche');
   initRecherche();
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') panneau(false);
     if (e.key === '/' && !e.ctrlKey && !e.metaKey && !/^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement?.tagName)) { e.preventDefault(); rech.focus(); rech.select(); }
   });
   on('etat', dessinerBandeau);
   on('filtre', dessinerBandeau);
   on('selection', dessinerBandeau);
-  on('props', () => { if (!$('#panneau-props').hidden) dessinerPanneau(); });
+  on('props', () => props.redessiner());
   setInterval(dessinerBandeau, 30000);
 }

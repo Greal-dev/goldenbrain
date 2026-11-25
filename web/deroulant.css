@@ -1,0 +1,36 @@
+/* Rôle : mise en page du composant déroulant (INV-DEROULANT-1, voir deroulant.js) — le panneau flotte au-dessus du contenu
+   (jamais de saut de mise en page) ; au téléphone, feuille qui monte du bas. Frontières : aucune logique. */
+.deroulant[hidden] { display: none; }
+.deroulant .der-tete { display: flex; align-items: center; gap: 6px; margin: -2px 0 6px; min-height: 24px; }
+.deroulant .der-titre { font-size: 12.5px; color: var(--texte-2); margin-right: auto; }
+.deroulant .der-tete:not(:has(.der-titre)) .der-tout { margin-right: auto; }
+.der-epingle { margin-left: auto; border: 1px solid transparent; background: none; border-radius: 6px; padding: 1px 5px; font-size: 12px; line-height: 1.2;
+  cursor: pointer; filter: grayscale(1); opacity: .55; }
+.der-epingle:hover, .der-epingle:focus-visible { opacity: 1; border-color: var(--bord); }
+.der-epingle[aria-pressed="true"] { filter: none; opacity: 1; border-color: var(--accent); }
+.deroulant.epingle { box-shadow: var(--ombre), 0 0 0 1px var(--accent); }
+
+/* Aperçus de la barre haute : une ligne par élément, cinq au plus, puis « Tout voir ». */
+.apercu-liste { list-style: none; margin: 0; padding: 0; }
+.apercu-liste > li > button { display: flex; align-items: center; gap: 8px; width: 100%; min-height: 28px; padding: 3px 6px; border: 0; border-radius: 6px;
+  background: none; color: var(--texte); font: inherit; font-size: 13px; text-align: left; cursor: pointer; }
+.apercu-liste > li > button:hover, .apercu-liste > li > button:focus-visible { background: var(--survol); }
+.apercu-liste .ap-titre { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.apercu-liste .ap-sous { flex: none; max-width: 45%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--texte-2); font-size: 12px; }
+.apercu-liste .ap-sous.retard { color: var(--danger); }
+.panneau.apercu { width: 420px; }
+
+/* Pastille d'état : les bandeaux d'information y vivent, dépliés, l'un sous l'autre. */
+#panneau-etat > [role="status"] { padding: 6px 4px; border-bottom: 1px solid var(--bord); font-size: 13px; }
+#panneau-etat > [role="status"]:last-child { border-bottom: 0; }
+#panneau-etat > [hidden] { display: none; }
+#btn-etat[hidden] { display: none; }
+
+/* « Détails » de la fiche : flotte sous l'en-tête ; épinglé, il reprend sa place dans le flux. */
+.d-tete { position: relative; }
+.d-details.deroulant:not(.epingle) { position: absolute; top: 100%; left: 0; right: 0; z-index: 15; box-shadow: var(--ombre); border-bottom: 1px solid var(--bord-fort); }
+
+@media (max-width: 480px) {
+  .deroulant.panneau:not([hidden]), .d-details.deroulant:not(.epingle):not([hidden]) { position: fixed; left: 0; right: 0; bottom: 0; top: auto; width: auto;
+    max-height: 70dvh; overflow: auto; z-index: 60; border-radius: 14px 14px 0 0; box-shadow: 0 -8px 28px rgba(0, 0, 0, .25); }
+}

@@ -236,7 +236,8 @@ Les tests d'interface (`ui/`) se lancent à part : `python scripts/check_ui.py`.
 | `web/evitable.js` | section « Pastille « évitable ? » » des Réglages : activée, seuil. | INV-EVITABLE-1 | `ui/scenario_evitable.py` |
 | `web/decisions.css` | Page « Décisions » : cartes, groupes de projet repliables, barre de lot. | — | `ui/scenario_decisions.py` |
 | `web/aujourdhui.js` | vue « Aujourd'hui » du volet droit — en retard, dues aujourd'hui, dues dans les sept jours, puis « À moi ». | — | chargement par `ui/scenario_fumee.py` seulement |
-| `web/bandeau.js` | bandeau haut — tours en cours, compteurs (dont « Aujourd'hui »), panneau de propositions, recherche, nouvelle tâche. | — | chargement par `ui/scenario_fumee.py` seulement |
+| `web/bandeau.js` | bandeau haut — tours en cours, compteurs (dont « Aujourd'hui »), déroulant des propositions, recherche, nouvelle tâche. | INV-DEROULANT-1 | chargement par `ui/scenario_fumee.py` seulement |
+| `web/apercus.js` | aperçus déroulants de la barre haute (Aujourd'hui, Décisions, À moi, En cours) et pastille « Infos » des bandeaux d'information. | INV-DEROULANT-1 | `ui/scenario_deroulant.py` |
 | `web/cascade.js` | vue en cascade du volet droit — sous-arbre des tâches en tableau indenté repliable, | — | chargement par `ui/scenario_fumee.py` seulement |
 | `web/conseil.js` | avis d'un agent rapide avant une promotion ou une réduction — attente annulable, dialogue « L'agent déconseille… ». | — | chargement par `ui/scenario_fumee.py` seulement |
 | `web/conversation.js` | rendu de la conversation d'une tâche — messages, tours, étapes à la demande, activité en direct. | INV-WEB-1 | `ui/scenario_fumee.py` (arbre, tâche, conversation), `ui/scenario_modifier.py` |
@@ -246,6 +247,8 @@ Les tests d'interface (`ui/`) se lancent à part : `python scripts/check_ui.py`.
 | `web/paresseux.js` | Chargement à la demande (`import()`) des écrans, de la fiche de tâche et des services de fond : le premier affichage ne charge que ce qu'il montre. | INV-REACTIVITE-1 | `ui/scenario_reactivite.py` |
 | `web/styles.liste` | Liste ordonnée des feuilles de style servies d'un tenant par `/style-tout.css`. | INV-REACTIVITE-1 | `test_styles.py` |
 | `web/discussion.js` | mode discussion : barre haute d'une rangée, rail de l'arbre, menu, « Tout afficher » (disposition mémorisée par poste). | INV-DISCUSSION-1 | `ui/scenario_discussion.py` |
+| `web/deroulant.js` | composant déroulant unique : survol à délai d'intention, clic, clavier, toucher, Échap, clic extérieur, épingle ; `intention()` partagée par les rails. | INV-DEROULANT-1 | `ui/scenario_deroulant.py` |
+| `web/deroulant.css` | mise en page du déroulant : panneau flottant, épingle, aperçus d'une ligne, feuille du bas au téléphone | INV-DEROULANT-1 | `ui/scenario_deroulant.py` |
 | `web/detail.js` | volet droit — tâche sélectionnée (en-tête, actions, fiche, corps, conversation, saisie). | — | `ui/scenario_fumee.py` (arbre, tâche, conversation), `ui/scenario_console.py`, `ui/scenario_modifier.py` |
 | `web/notes_tache.js` | panneau « Notes » de la tâche : liste datée en Markdown, ajout, « Modifier » ; repli des deux panneaux. | INV-EXECUTANT-2 | `ui/scenario_executant.py` |
 | `web/notes_ia.js` | barre « IA » du panneau Notes : portée (sélection ou tout), proposition avec différence, Remplacer / Insérer / Annuler, annulation après application. | INV-EXECUTANT-3 | `ui/scenario_executant.py` |
@@ -503,6 +506,7 @@ Les tests d'interface (`ui/`) se lancent à part : `python scripts/check_ui.py`.
 | `tests/ui/scenario_ordonnancement.py` | Scénario de l'ordonnancement : lien « a pour prérequis » posé par « Lier… », « En attente de : … » puis départ seul, rang et motif dans « En file » et sur la tâche | — | — |
 | `tests/ui/scenario_ecrans_audit.py` | Audit L4 : fil sans « ? »/_meta, libellé « À valider », bandeau, colonnes DE/ES, gouttières, modale, graphe cadré, mobile | — | — |
 | `tests/ui/scenario_discussion.py` | Mode discussion : conversation ≥ 70 % de l'écran, rail de l'arbre (survol, clic, clavier), menu, notes en intercalaire, « Tout afficher », choix mémorisés | INV-DISCUSSION-1 | — |
+| `tests/ui/scenario_deroulant.py` | Déroulant unique : délai d'intention, clic, Échap, clic extérieur, épingle, clavier, toucher, feuille du bas ; mode discussion sans zone permanente | INV-DEROULANT-1 | — |
 | `tests/ui/scenario_reactivite.py` | Budget de réactivité sur vault chargé : premier affichage, ouverture d'une tâche, intercalaires, frappe, défilement, événement d'une autre tâche, requêtes en double. | INV-REACTIVITE-1 | — |
 | `tests/ui/charge.py` | Peuple un vault de charge (260 tâches, 150 décisions, fil de 200 messages) pour `scenario_reactivite.py`. | INV-REACTIVITE-1 | — |
 | `tests/ui/scenario_detail_allege.py` | Ouverture de tâche allégée : hauteur au-dessus des messages ≤ 15 % (bureau, téléphone, trois langues), « Détails » à un clic, choix mémorisé | INV-DETAIL-1 | — |
