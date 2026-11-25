@@ -297,7 +297,8 @@ Les tests d'interface (`ui/`) se lancent à part : `python scripts/check_ui.py`.
 | `web/pilotage.js` | accès à la conversation d'un conteneur depuis sa vue en cascade (bouton « Conversation », premier message). | INV-PILOTAGE-1 | `ui/scenario_pilotage.py` |
 | `web/execution.js` | réglage « Exécution » d'une tâche mère ou d'un conteneur ; motif de la décision sur une sous-tâche. | INV-REGROUPE-1 | `ui/scenario_execution.py` |
 | `web/ponts.js` | ponts entre tâches et notes — clic sur un wikilink ou un chemin de note (fiches, conversations, notes), | — | chargement par `ui/scenario_fumee.py` seulement |
-| `web/propositions.js` | carte d'une proposition d'agent (accepter / refuser), partagée par le panneau et la vue d'ensemble. | INV-EXEC-5 | chargement par `ui/scenario_fumee.py` seulement |
+| `web/propositions.js` | propositions d'agent groupées par tâche émettrice, une ligne chacune (accepter / refuser), partagées par le panneau, l'accueil et la page Décisions. | INV-EXEC-5, INV-PROP-2 | `ui/scenario_propositions_compactes.py` |
+| `web/propositions.css` | Propositions compactes : groupe replié d'une ligne, ligne de 30 px, boutons icônes. | INV-PROP-2 | `ui/scenario_propositions_compactes.py` |
 | `web/recherche.js` | champ de recherche du bandeau — filtre de l'arbre des tâches (existant) + liste déroulante à deux groupes | — | chargement par `ui/scenario_fumee.py` seulement |
 | `web/resultats.js` | page de résultats de la recherche plein texte dans les notes (volet droit) — extraits, termes surlignés, n° de ligne. | — | chargement par `ui/scenario_fumee.py` seulement |
 | `web/revues.js` | carte « Revues » d'une tâche (dernier avis par persona) et dialogue « Solliciter… ». | — | chargement par `ui/scenario_fumee.py` seulement |
@@ -316,10 +317,8 @@ Les tests d'interface (`ui/`) se lancent à part : `python scripts/check_ui.py`.
 | `web/integration.js` | Pastille « intégration en retard » de l'arbre et section « Intégration des branches » des Réglages. | INV-INTEG-1 | `ui/scenario_integration.py` |
 | `web/store.js` | état partagé de l'interface et petit bus d'événements (découple les modules). | — | `ui/scenario_fumee.py` (arbre, tâche, conversation) |
 | `web/style.css` | GoldenBrain — interface. Sobre, dense, sans dégradé. Jetons de design (couleurs `light-dark()`, rayons, espacements, durée), thème clair/sombre, écran étroit (≤ 900 px), repère « IA au travail ». | INV-VERROU-1 | `ui/scenario_demi_verrou.py`, `ui/scenario_design.py` |
-| `web/theme.js` | Applique le thème choisi (`orch.theme` en localStorage) avant le premier rendu, et la direction d'essai `?theme=a\|b\|c` ; script classique bloquant, la CSP interdisant le script en ligne | INV-DIRECTION-1 | `ui/scenario_design.py`, `ui/scenario_directions.py` |
-| `web/directions/a.css` | Direction d'essai A « sobre éditorial » : blanc, filets fins, accent vermillon, titres à empattement | INV-DIRECTION-1 | `test_directions.py` |
-| `web/directions/b.css` | Direction d'essai B « outil dense » : surfaces ardoise, barre sombre, hiérarchie par la graisse | INV-DIRECTION-1 | `test_directions.py` |
-| `web/directions/c.css` | Direction d'essai C « doux et chaleureux » : crème, sauge, rayons généreux, bulles | INV-DIRECTION-1 | `test_directions.py` |
+| `web/theme.js` | Applique le thème choisi (`orch.theme` en localStorage) avant le premier rendu ; script classique bloquant, la CSP interdisant le script en ligne | — | `ui/scenario_design.py`, `ui/scenario_affichage.py` |
+| `web/affichage.css` | Affichage par défaut « sobre éditorial », chargé en dernier : filets fins, titres à empattement, barre haute sombre et ses menus au thème de la page, action à l'encre | INV-AFFICHAGE-1 | `test_affichage.py`, `ui/scenario_affichage.py` |
 | `web/ecrans.css` | Cohérence de mise en page entre écrans (audit L4) : bandeau en deux rangées, gouttière commune, Guide, modale « Nouvelle tâche » bornée, colonnes du tableau | — | `ui/scenario_ecrans_audit.py` |
 | `web/telephone.css` | Mise en page téléphone (≤ 480 px) : une colonne, barre basse, tâche en plein écran avec onglets Conversation / Notes, cibles tactiles ≥ 44 px ; écrans sans survol | — | `ui/scenario_telephone.py` |
 | `web/telephone.js` | Usage au téléphone : barre basse (Tâches, Décisions, Recherche, Réglages), écran liste ou détail (`body[data-ecran]`), enregistrement du service worker | INV-PWA-1 | `ui/scenario_telephone.py` |
@@ -370,7 +369,7 @@ Les tests d'interface (`ui/`) se lancent à part : `python scripts/check_ui.py`.
 | `tests/conftest.py` | Fixtures : vault temporaire, configuration de test, harnais factice (jamais de vrai claude). | — | — |
 | `tests/test_alignement.py` | alignement physique : dossiers attendus, écarts, plan, application tout ou rien. | INV-ALIGN-2, INV-ARBRE-2 | — |
 | `tests/test_api.py` | API via TestClient : garde INV-API-1, formes JSON, 400/404/409, flux d'un tour. | INV-API-1, INV-EXEC-1, INV-VAULT-3 | — |
-| `tests/test_directions.py` | Directions d'essai : contrastes AA clair et sombre, poids ≤ 15 Ko, ni flou ni animation, règles bornées, défaut inchangé. | INV-DIRECTION-1 | — |
+| `tests/test_affichage.py` | Affichage par défaut : contrastes AA clair et sombre (barre haute comprise), accent unique et dérivés, action à l'encre, sobriété de la surcouche, plus de direction d'essai. | INV-AFFICHAGE-1 | — |
 | `tests/test_styles.py` | Feuille unique : toute feuille de `web/` est dans la liste, `index.html` n'en cite qu'une, assemblage ordonné et ETag. | INV-REACTIVITE-1 | — |
 | `tests/test_api_notes.py` | Routes `/api/vault/*` via TestClient : formes, erreurs, écriture, SSE, fichiers. | INV-ALIGN-2, INV-NOTE-3, INV-VERROU-1 | — |
 | `tests/test_agy.py` | Adaptateur Antigravity (`agy`) : faux exécutable Python (jamais le vrai CLI) et extraits réels | — | — |
@@ -493,6 +492,7 @@ Les tests d'interface (`ui/`) se lancent à part : `python scripts/check_ui.py`.
 | `tests/ui/scenario_glisser.py` | Scénarios de glisser-déposer (volet gauche et cascade) : dépôt admis, refusé, menu tâche sur tâche, annulation, clavier | — | — |
 | `tests/ui/scenario_agents_cc.py` | Agents de Claude Code dans Décisions : doublons regroupés, proposition modifiée, lot appliqué. | INV-AGENTSCC-1 | — |
 | `tests/ui/scenario_evitable.py` | Pastille « évitable ? » : Réglages puis Décisions, motif, seuil, désactivation. | INV-EVITABLE-1 | — |
+| `tests/ui/scenario_propositions_compactes.py` | Propositions compactes : six propositions de deux tâches, hauteurs repliées et dépliées au panneau, à l'accueil et aux Décisions ; refus par icône, « Tout refuser ». | INV-PROP-2 | — |
 | `tests/ui/scenario_decisions.py` | Page « Décisions » : adresse directe, question visible, réponse et acceptation sur place, fermetures cochées, filtre rapides, lot de validations. | INV-DECISIONS-1 | — |
 | `tests/ui/scenario_design.py` | Système visuel : thème sombre choisi dans Réglages, persistant au rechargement, retour au thème du système ; écran étroit (390 px) en une colonne, un écran à la fois (Réglages par la barre basse), sans débordement. | — | — |
 | `tests/ui/scenario_telephone.py` | Profil mobile : liste, tâche en plein écran (onglets), envoi d'un message, validation d'une décision par la barre basse ; application installable sans cache des données. | INV-PWA-1 | — |
@@ -531,7 +531,7 @@ Les tests d'interface (`ui/`) se lancent à part : `python scripts/check_ui.py`.
 | `tests/ui/scenario_reseau.py` | Scénario des coupures réseau : bandeau « Réseau perdu », état « En attente du réseau », reprise au retour du point d'accès sondé | INV-RESEAU-1, INV-RESEAU-2 | — |
 | `tests/ui/scenario_simultanes.py` | Scénario des Réglages « Agents simultanés » : choix du mode, plafond en Go, persistance relue | — | — |
 | `tests/ui/scenario_maj_auto.py` | Mise à jour automatique : réglage persistant, bandeaux de préparation, de fin et d'incident | — | — |
-| `tests/ui/scenario_directions.py` | Directions d'essai : `?theme=a\|b\|c` charge sa feuille, défaut sans feuille, budgets d'écran et focus visible par direction | INV-DIRECTION-1 | — |
+| `tests/ui/scenario_affichage.py` | Affichage par défaut : barre haute sombre en clair et en sombre, menus au thème de la page, budgets d'écran au bureau et au téléphone, focus visible | INV-AFFICHAGE-1 | — |
 | `tests/ui/scenario_reglages.py` | Réglages regroupés : groupes repliables mémorisés, résumés d'état, ancre `#reglages/<section>`, recherche, saisie conservée au redessin | INV-REGLAGES-1 | — |
 | `tests/ui/scenario_executeurs.py` | Scénario des Réglages « PC connectés » : appairage par code, jeton montré une fois, annonce, révocation | — | — |
 | `tests/ui/scenario_appareils.py` | Scénario des Réglages « Appareils » : ajouter un téléphone (code QR), échange, appareil listé, révocation | — | — |

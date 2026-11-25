@@ -1,0 +1,64 @@
+/* Affichage par défaut « sobre éditorial » (INV-AFFICHAGE-1), chargé en dernier : page blanche, filets fins, titres à
+   empattement du système, accent vermillon unique (jetons dans style.css), barre haute sombre. Sacrifie le repérage par
+   les surfaces au profit de la lecture. Les règles portent `:root ` pour l'emporter sur les feuilles d'écran. */
+:root { --barre: #1c1b19; }
+a { color: var(--accent); }  /* liens (guide, notes) : l'accent plutôt que le bleu du navigateur ; toute classe l'emporte */
+:root dialog { line-height: 1.4; }  /* dialogues : interligne resserré, la modale « Nouvelle tâche » tient sans défilement */
+/* Barre haute sombre en clair comme en sombre : la barre se résout en jetons sombres (color-scheme), pastilles contrastées ;
+   ses menus déroulants retrouvent le thème de la page. */
+#bandeau { color-scheme: dark; background: var(--barre); border-bottom: 1px solid #000; color: #f1efea; }
+:root #bandeau .btn-compte, :root #bandeau .btn, :root #bandeau .tour { background: #2a2926; border-color: #55524c; color: #f1efea; }
+:root #bandeau .btn-compte:hover, :root #bandeau .btn:hover, :root #bandeau .tour:hover { background: #3a3834; }
+:root #bandeau .btn-compte[aria-pressed="true"], :root #bandeau .tour.sel { background: #3a2620; border-color: var(--accent); color: #ffffff; }
+:root #bandeau .n { background: #0c0c0b; border-color: #6b6861; color: #ffffff; font-weight: 700; }
+:root #bandeau .btn-compte.alerte .n { background: var(--c-attente); border-color: var(--c-attente); color: var(--sur-vif); }
+:root #bandeau .btn.primaire, :root #bandeau .btn.primaire:hover { background: #f1efea; border-color: #f1efea; color: #161512; }
+:root #bandeau .marque { color: #ffffff; }
+:root #bandeau #recherche { background: #0f0f0e; border: 1px solid #55524c; border-radius: var(--r); color: #f1efea; }
+:root #bandeau #recherche::placeholder { color: #a8a49c; }
+:root #bandeau :is(.tour-act, .tour-t, .b-lib, .aucun) { color: #bdb9b1; }
+#bandeau :is(.panneau, .rech-liste), body.discussion #bandeau .b-menu { color-scheme: light dark; color: var(--texte); }
+:root[data-theme="clair"] #bandeau :is(.panneau, .rech-liste), :root[data-theme="clair"] body.discussion #bandeau .b-menu { color-scheme: light; }
+:root[data-theme="sombre"] #bandeau :is(.panneau, .rech-liste), :root[data-theme="sombre"] body.discussion #bandeau .b-menu { color-scheme: dark; }
+:root #bandeau :is(.panneau, .rech-liste) :is(.btn, .btn-compte):not(.primaire), :root body.discussion #bandeau .b-menu .btn { background: transparent; border-color: var(--bord); color: var(--texte); }
+:root #bandeau :is(.panneau, .rech-liste) .n { background: transparent; border-color: var(--bord-fort); color: var(--texte); }
+/* Marque en romain */
+:root .marque { font-family: var(--serif); font-size: 17px; font-weight: 600; letter-spacing: 0; }
+:root .btn-compte, :root .btn, :root .bascule button, :root .chip { border-color: var(--bord); background: transparent; }
+:root .btn-compte[aria-pressed="true"] { background: transparent; border-color: var(--accent); color: var(--accent); }
+:root .n { background: transparent; border-color: var(--bord-fort); font-weight: 600; }
+:root #recherche { background: transparent; border: 0; border-bottom: 1px solid var(--bord-fort); border-radius: 0; }
+:root .tour { background: transparent; border-color: var(--bord); }
+/* Boutons : primaire à l'encre (style.css), secondaire filet, discret souligné au survol */
+:root .btn:hover, :root .btn-compte:hover { background: var(--survol); }
+:root .btn-discret { border-color: transparent; background: transparent; }
+:root .btn-discret:hover { text-decoration: underline; background: transparent; }
+:root .btn.primaire, :root .btn.primaire:hover { background: var(--action); border-color: var(--action); color: var(--action-texte); }
+/* Rails et volets : séparés par un filet, sans fond propre */
+:root #volet-gauche { border-right-color: var(--bord); }
+:root .ligne { border-left-width: 2px; }
+:root .ligne.sel { background: transparent; border-left-color: var(--accent); font-weight: 600; }
+:root .ligne.sel, :root .ligne.sel * { color: var(--texte); }
+/* Fil : colonne de lecture, l'agent sans cadre, moi en retrait, le compte rendu en encadré fin */
+:root .conv { line-height: 1.62; }
+:root .msg { border: 0; border-radius: 0; background: transparent; padding: 10px 2px 12px; margin-bottom: 0; border-bottom: 1px solid var(--bord); }
+:root .msg.user { background: transparent; border-left: 2px solid var(--accent); padding-left: 14px; }
+:root .msg.systeme.remontee, :root .msg.systeme.regroupe { background: var(--panneau-2); border: 1px solid var(--bord); padding: 10px 14px; margin: 8px 0; }
+:root .msg.systeme.echec { border: 1px solid var(--c-bloque); padding: 10px 14px; margin: 8px 0; }
+:root .msg header { text-transform: uppercase; letter-spacing: .06em; font-size: 10.5px; }
+:root .fiche, :root .corps { border-color: var(--bord); border-radius: 0; border-width: 1px 0; padding-left: 0; padding-right: 0; }
+:root .fiche h3, :root .conv-titre { font-family: var(--serif); text-transform: none; letter-spacing: 0; font-size: 15px; font-weight: 600; color: var(--texte); }
+:root h1, :root h2, :root .conv-tete h2 { font-family: var(--serif); font-weight: 600; letter-spacing: 0; }
+/* Champs et compositeur : filet bas, focus en accent */
+:root .composer { border-top-color: var(--bord); }
+:root .composer textarea { background: transparent; border-color: var(--bord-fort); border-radius: 2px; }
+:root input[type="text"], :root input[type="search"], :root input:not([type]), :root select, :root textarea { border-radius: 2px; }
+:root :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+/* Décisions et Réglages : listes à filets, titres en romain */
+:root .dc-liste { border-width: 1px 0; border-radius: 0; }
+:root .dc:not(.dc-proposition) { padding: 12px 2px; }
+:root .dc-titre { font-weight: 600; }
+:root .dc-groupe > summary { font-family: var(--serif); font-size: 15px; }
+:root .rg-groupe { border-width: 0 0 1px; border-radius: 0; background: transparent; margin: 0; }
+:root .rg-groupe > summary { border-radius: 0; padding: 14px 2px; }
+:root .rg-titre { font-family: var(--serif); font-size: 15px; }

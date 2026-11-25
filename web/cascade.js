@@ -9,7 +9,7 @@ import { STATUTS_COURTS, statutsActifs, passeStatut, basculerStatut, effacerStat
 import { barreLot, caseLigne, caseTout, majLot, basculerSel } from './lot.js';
 import { S, on, ouvrir, ouvrirVue, ouvrirNote, parcourir, chemin, fixerToutes, cleNoeud as cle } from './store.js';
 import { cheminContexte } from './ponts.js';
-import { carteProposition, enAttente } from './propositions.js';
+import { listePropositions, enAttente } from './propositions.js';
 import { majBascule } from './arbre.js';
 import { brancher, actionsLigne } from './glisser.js';
 import { reduire } from './transfo.js';
@@ -179,7 +179,7 @@ function majProps() {
   ref.props.hidden = !l.length;
   remplacer(ref.props, l.length ? h('details', { class: 'casc-props-d', open: propsOuvert ? true : null, ontoggle: (e) => { propsOuvert = e.target.open; } },
     h('summary', null, t('cascade.propositions'), h('span', { class: 'n' }, l.length)),
-    h('ul', { class: 'props compact' }, l.map(carteProposition))) : null);
+    listePropositions(l, 'props compact')) : null);
 }
 
 // Vault vide (premier lancement après « Plus tard ») : trois gestes plutôt qu'un « Chargement… » sans fin (audit L3, A1).

@@ -9,7 +9,7 @@
 .ligne-ajout { display: flex; gap: 6px; margin-top: 6px; }
 .ligne-saisie { flex: 1; min-width: 0; }
 .nature { display: inline-block; padding: 0 5px; border-radius: var(--r-pastille); border: 1px solid var(--bord-fort); color: var(--texte-2); font-size: .72em; line-height: 1.5; }
-.nat-developpement { border-color: var(--accent); color: var(--accent-texte); background: var(--accent-fond); }
+.nat-developpement { border-color: var(--accent); color: var(--accent); background: var(--accent-fond); }
 .nat-operation { border-color: var(--ok); }
 .nat-pilotage { border-color: var(--c-attente); }
 .compte-lignes { color: var(--texte-2); font-size: .75em; white-space: nowrap; }

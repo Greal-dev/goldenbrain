@@ -4,6 +4,7 @@ notes.css
 lot7.css
 temps.css
 decisions.css
+propositions.css
 filtres.css
 statut.css
 reglages.css
@@ -17,3 +18,4 @@ livrables.css
 manager.css
 discussion.css
 bandeaux.css
+affichage.css

@@ -33,7 +33,7 @@
   .rg-sim { margin-left: 0; }
 }
 .rg-mode { display: flex; gap: 8px; }
-.rg-mode .btn[aria-pressed="true"] { background: var(--accent); color: var(--accent-texte); border-color: var(--accent); }
+.rg-mode .btn[aria-pressed="true"] { background: var(--action); color: var(--action-texte); border-color: var(--action); }
 .rg-liste { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
 .rg-fam .rg-phrase { margin: 2px 0 0 24px; font-size: 12.5px; color: var(--texte-2); }
 .reglages select { min-width: 280px; }

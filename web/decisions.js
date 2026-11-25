@@ -5,7 +5,7 @@ import { h, remplacer, pastille, nomLisible } from './dom.js';
 import { api, post } from './api.js';
 import { ouvrir, emit, erreur, titreTache } from './store.js';
 import { formulaire } from './dialogue.js';
-import { description } from './propositions.js';
+import { description, groupePropositions } from './propositions.js';
 import { libelleEcheance } from './temps.js';
 import { ligneAgent, lotAgents } from './decisions-agents.js';
 import { boutonAide } from './guide.js';
@@ -119,17 +119,8 @@ function ligneLot(g) {
     if (echecs.length) erreur(t('decisions.refuses', { n: echecs.length, liste: echecs.join(' ; ') }));
   });
   return h('li', { class: 'dc dc-proposition', 'data-genre': 'proposition', 'data-de': g.de },
-    h('details', { class: 'dc-lot' },
-      h('summary', null, h('span', { class: 'tag' }, t('decisions.propositions_de', { de: titreTache(g.de) })), ' ', h('span', { class: 'n' }, ps.length)),
-      h('ul', { class: 'dc-props' }, ps.map((p) => h('li', { class: 'dc-prop', 'data-n': p.n, title: p.motif || null },
-        p.motif ? h('details', null, h('summary', null, description(p)), h('p', { class: 'dc-essai' }, p.motif)) : h('span', null, description(p)),
-        p.echec ? h('p', { class: 'dc-essai manque' }, t('decisions.echec_office', { motif: p.echec })) : null,
-        h('span', { class: 'dc-prop-btns' },
-          h('button', { class: 'btn primaire petit', type: 'button', 'data-accepter': '', onclick: () => geste(() => post(`/propositions/${p.n}/accepter`)) }, t('decisions.accepter')),
-          h('button', { class: 'btn petit', type: 'button', 'data-refuser': '', onclick: () => geste(() => post(`/propositions/${p.n}/refuser`)) }, t('decisions.refuser'))))))),
-    h('div', { class: 'dc-actions' },
-      h('button', { class: 'btn primaire petit', type: 'button', 'data-tout': 'accepter', onclick: () => tout('accepter') }, t('decisions.tout_accepter')),
-      h('button', { class: 'btn petit', type: 'button', 'data-tout': 'refuser', onclick: () => tout('refuser') }, t('decisions.tout_refuser'))));
+    groupePropositions(g.de, ps, { tout, classeLigne: 'dc-prop', agir: (p, action) => geste(() => post(`/propositions/${p.n}/${action}`)),
+      extra: (p) => (p.echec ? h('p', { class: 'dc-essai manque' }, t('decisions.echec_office', { motif: p.echec })) : null) }));
 }
 
 // INV-PROP-1 : journal des gestes appliqués d'office (7 derniers jours), replié, chacun annulable.

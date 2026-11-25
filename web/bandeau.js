@@ -8,7 +8,7 @@ import { post, api } from './api.js';
 import { formulaire } from './dialogue.js';
 import { nouvelleRoutine } from './routines.js';
 import { ouvrirChaines } from './chaines.js';
-import { carteProposition, enAttente } from './propositions.js';
+import { listePropositions, enAttente } from './propositions.js';
 import { initRecherche } from './recherche.js';
 import { PRIORITES } from './temps.js';
 import { dessinerAlertes } from './vigie.js';
@@ -96,7 +96,7 @@ ${act}`, onclick: () => ouvrir(f.tache) },
 function dessinerPanneau() {
   const l = enAttente();
   remplacer($('#panneau-props'), l.length
-    ? h('ul', { class: 'props' }, l.map(carteProposition))
+    ? listePropositions(l)
     : h('p', { class: 'vide' }, t('bandeau.aucune_proposition')));
 }
 function panneau(ouvert) {
