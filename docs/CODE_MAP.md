@@ -313,7 +313,10 @@ Les tests d'interface (`ui/`) se lancent à part : `python scripts/check_ui.py`.
 | `web/integration.js` | Pastille « intégration en retard » de l'arbre et section « Intégration des branches » des Réglages. | INV-INTEG-1 | `ui/scenario_integration.py` |
 | `web/store.js` | état partagé de l'interface et petit bus d'événements (découple les modules). | — | `ui/scenario_fumee.py` (arbre, tâche, conversation) |
 | `web/style.css` | GoldenBrain — interface. Sobre, dense, sans dégradé. Jetons de design (couleurs `light-dark()`, rayons, espacements, durée), thème clair/sombre, écran étroit (≤ 900 px), repère « IA au travail ». | INV-VERROU-1 | `ui/scenario_demi_verrou.py`, `ui/scenario_design.py` |
-| `web/theme.js` | Applique le thème choisi (`orch.theme` en localStorage) avant le premier rendu ; script classique bloquant, la CSP interdisant le script en ligne | — | `ui/scenario_design.py` |
+| `web/theme.js` | Applique le thème choisi (`orch.theme` en localStorage) avant le premier rendu, et la direction d'essai `?theme=a\|b\|c` ; script classique bloquant, la CSP interdisant le script en ligne | INV-DIRECTION-1 | `ui/scenario_design.py`, `ui/scenario_directions.py` |
+| `web/directions/a.css` | Direction d'essai A « sobre éditorial » : blanc, filets fins, accent vermillon, titres à empattement | INV-DIRECTION-1 | `test_directions.py` |
+| `web/directions/b.css` | Direction d'essai B « outil dense » : surfaces ardoise, barre sombre, hiérarchie par la graisse | INV-DIRECTION-1 | `test_directions.py` |
+| `web/directions/c.css` | Direction d'essai C « doux et chaleureux » : crème, sauge, rayons généreux, bulles | INV-DIRECTION-1 | `test_directions.py` |
 | `web/ecrans.css` | Cohérence de mise en page entre écrans (audit L4) : bandeau en deux rangées, gouttière commune, Guide, modale « Nouvelle tâche » bornée, colonnes du tableau | — | `ui/scenario_ecrans_audit.py` |
 | `web/telephone.css` | Mise en page téléphone (≤ 480 px) : une colonne, barre basse, tâche en plein écran avec onglets Conversation / Notes, cibles tactiles ≥ 44 px ; écrans sans survol | — | `ui/scenario_telephone.py` |
 | `web/telephone.js` | Usage au téléphone : barre basse (Tâches, Décisions, Recherche, Réglages), écran liste ou détail (`body[data-ecran]`), enregistrement du service worker | INV-PWA-1 | `ui/scenario_telephone.py` |
@@ -364,6 +367,7 @@ Les tests d'interface (`ui/`) se lancent à part : `python scripts/check_ui.py`.
 | `tests/conftest.py` | Fixtures : vault temporaire, configuration de test, harnais factice (jamais de vrai claude). | — | — |
 | `tests/test_alignement.py` | alignement physique : dossiers attendus, écarts, plan, application tout ou rien. | INV-ALIGN-2, INV-ARBRE-2 | — |
 | `tests/test_api.py` | API via TestClient : garde INV-API-1, formes JSON, 400/404/409, flux d'un tour. | INV-API-1, INV-EXEC-1, INV-VAULT-3 | — |
+| `tests/test_directions.py` | Directions d'essai : contrastes AA clair et sombre, poids ≤ 15 Ko, ni flou ni animation, règles bornées, défaut inchangé. | INV-DIRECTION-1 | — |
 | `tests/test_styles.py` | Feuille unique : toute feuille de `web/` est dans la liste, `index.html` n'en cite qu'une, assemblage ordonné et ETag. | INV-REACTIVITE-1 | — |
 | `tests/test_api_notes.py` | Routes `/api/vault/*` via TestClient : formes, erreurs, écriture, SSE, fichiers. | INV-ALIGN-2, INV-NOTE-3, INV-VERROU-1 | — |
 | `tests/test_agy.py` | Adaptateur Antigravity (`agy`) : faux exécutable Python (jamais le vrai CLI) et extraits réels | — | — |
@@ -522,6 +526,7 @@ Les tests d'interface (`ui/`) se lancent à part : `python scripts/check_ui.py`.
 | `tests/ui/scenario_reseau.py` | Scénario des coupures réseau : bandeau « Réseau perdu », état « En attente du réseau », reprise au retour du point d'accès sondé | INV-RESEAU-1, INV-RESEAU-2 | — |
 | `tests/ui/scenario_simultanes.py` | Scénario des Réglages « Agents simultanés » : choix du mode, plafond en Go, persistance relue | — | — |
 | `tests/ui/scenario_maj_auto.py` | Mise à jour automatique : réglage persistant, bandeaux de préparation, de fin et d'incident | — | — |
+| `tests/ui/scenario_directions.py` | Directions d'essai : `?theme=a\|b\|c` charge sa feuille, défaut sans feuille, budgets d'écran et focus visible par direction | INV-DIRECTION-1 | — |
 | `tests/ui/scenario_reglages.py` | Réglages regroupés : groupes repliables mémorisés, résumés d'état, ancre `#reglages/<section>`, recherche, saisie conservée au redessin | INV-REGLAGES-1 | — |
 | `tests/ui/scenario_executeurs.py` | Scénario des Réglages « PC connectés » : appairage par code, jeton montré une fois, annonce, révocation | — | — |
 | `tests/ui/scenario_appareils.py` | Scénario des Réglages « Appareils » : ajouter un téléphone (code QR), échange, appareil listé, révocation | — | — |

@@ -1,0 +1,56 @@
+/* Direction d'essai A — « sobre éditorial » (INV-DIRECTION-1 : chargée par ?theme=a seulement).
+   Parti pris : page blanche, filets fins, une seule couleur d'accent (vermillon), titres en caractères à empattement du
+   système, fil de lecture aéré. Sacrifie : la densité (moins de lignes à l'écran) et le repérage par la couleur. */
+:root[data-direction="a"] {
+  --fond: light-dark(#ffffff, #121212); --panneau: light-dark(#ffffff, #121212); --panneau-2: light-dark(#fafaf8, #191919);
+  --bord: light-dark(#e6e4df, #2a2a2a); --bord-fort: light-dark(#8a8780, #77746e);
+  --texte: light-dark(#1a1a1a, #ebe9e4); --texte-2: light-dark(#5e5b55, #a19d96);
+  --accent: light-dark(#b3361b, #f08a6c); --accent-fond: light-dark(#fbf1ee, #2a1c18); --accent-texte: light-dark(#ffffff, #1a0e0a);
+  --info-fond: light-dark(#fbf1ee, #2a1c18);
+  --survol: light-dark(#f5f4f1, #1d1d1d); --sel: light-dark(#f7ebe7, #2c1f1b);
+  --ombre: 0 8px 28px light-dark(rgba(0, 0, 0, .10), rgba(0, 0, 0, .55)); --ombre-legere: none;
+  --r: 2px; --r-2: 3px; --r-pastille: 2px;
+  --serif: ui-serif, "Iowan Old Style", Charter, Georgia, "DejaVu Serif", serif;
+  font-size: 13.5px; line-height: 1.5;
+}
+/* Barre haute : un simple filet, marque en romain */
+[data-direction="a"] #bandeau { border-bottom-color: var(--bord); }
+[data-direction="a"] .marque { font-family: var(--serif); font-size: 17px; font-weight: 600; letter-spacing: 0; }
+[data-direction="a"] .btn-compte, [data-direction="a"] .btn, [data-direction="a"] .bascule button, [data-direction="a"] .chip { border-color: var(--bord); background: transparent; }
+[data-direction="a"] .btn-compte[aria-pressed="true"] { background: transparent; border-color: var(--accent); color: var(--accent); }
+[data-direction="a"] .n { background: transparent; border-color: var(--bord-fort); font-weight: 600; }
+[data-direction="a"] #recherche { background: transparent; border: 0; border-bottom: 1px solid var(--bord-fort); border-radius: 0; }
+[data-direction="a"] .tour { background: transparent; border-color: var(--bord); }
+/* Boutons : primaire plein, secondaire filet, discret souligné au survol */
+[data-direction="a"] .btn.primaire { background: var(--accent); border-color: var(--accent); color: var(--accent-texte); letter-spacing: .02em; }
+[data-direction="a"] .btn:hover, [data-direction="a"] .btn-compte:hover { background: var(--survol); }
+[data-direction="a"] .btn-discret { border-color: transparent; background: transparent; }
+[data-direction="a"] .btn-discret:hover { text-decoration: underline; background: transparent; }
+/* Rails et volets : séparés par un filet, sans fond propre */
+[data-direction="a"] #volet-gauche { border-right-color: var(--bord); }
+[data-direction="a"] .ligne { border-left-width: 2px; }
+[data-direction="a"] .ligne.sel { background: transparent; border-left-color: var(--accent); font-weight: 600; }
+[data-direction="a"] .ligne.sel, [data-direction="a"] .ligne.sel * { color: var(--texte); }
+/* Fil : colonne de lecture, l'agent sans cadre, moi en retrait, le compte rendu en encadré fin */
+[data-direction="a"] .conv { line-height: 1.62; }
+[data-direction="a"] .msg { border: 0; border-radius: 0; background: transparent; padding: 10px 2px 12px; margin-bottom: 0; border-bottom: 1px solid var(--bord); }
+[data-direction="a"] .msg.user { background: transparent; border-left: 2px solid var(--accent); padding-left: 14px; }
+[data-direction="a"] .msg.systeme.remontee, [data-direction="a"] .msg.systeme.regroupe { background: var(--panneau-2); border: 1px solid var(--bord); padding: 10px 14px; margin: 8px 0; }
+[data-direction="a"] .msg.systeme.echec { border: 1px solid var(--c-bloque); padding: 10px 14px; margin: 8px 0; }
+[data-direction="a"] .msg header { text-transform: uppercase; letter-spacing: .06em; font-size: 10.5px; }
+[data-direction="a"] .fiche, [data-direction="a"] .corps { border-color: var(--bord); border-radius: 0; border-width: 1px 0; padding-left: 0; padding-right: 0; }
+[data-direction="a"] .fiche h3, [data-direction="a"] .conv-titre { font-family: var(--serif); text-transform: none; letter-spacing: 0; font-size: 15px; font-weight: 600; color: var(--texte); }
+[data-direction="a"] h1, [data-direction="a"] h2, [data-direction="a"] .conv-tete h2 { font-family: var(--serif); font-weight: 600; letter-spacing: 0; }
+/* Champs et compositeur : filet bas, focus en accent */
+[data-direction="a"] .composer { border-top-color: var(--bord); }
+[data-direction="a"] .composer textarea { background: transparent; border-color: var(--bord-fort); border-radius: 2px; }
+[data-direction="a"] input[type="text"], [data-direction="a"] input[type="search"], [data-direction="a"] input:not([type]), [data-direction="a"] select, [data-direction="a"] textarea { border-radius: 2px; }
+[data-direction="a"] :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+/* Décisions et Réglages : listes à filets, titres en romain */
+[data-direction="a"] .dc-liste { border-width: 1px 0; border-radius: 0; }
+[data-direction="a"] .dc { padding: 12px 2px; }
+[data-direction="a"] .dc-titre { font-weight: 600; }
+[data-direction="a"] .dc-groupe > summary { font-family: var(--serif); font-size: 15px; }
+[data-direction="a"] .rg-groupe { border-width: 0 0 1px; border-radius: 0; background: transparent; margin: 0; }
+[data-direction="a"] .rg-groupe > summary { border-radius: 0; padding: 14px 2px; }
+[data-direction="a"] .rg-titre { font-family: var(--serif); font-size: 15px; }
