@@ -240,6 +240,7 @@ Le vault est votre **second cerveau** : des notes ordinaires (fichiers Markdown)
 - **À quoi ça sert** : parcourir et modifier tout le vault sans quitter GoldenBrain.
 - **Comment faire** : volet gauche, onglet « Notes » (mode Avancé). « Nouvelle note » ; « Modifier » (touche `e`, Ctrl+S enregistre) ; « Renommer / déplacer… » réécrit les liens.
 - **À savoir** : si la note a changé ailleurs (Obsidian, un agent), l'enregistrement est refusé et les deux versions vous sont proposées. Les blocs Dataview ne sont pas exécutés.
+- **Barre de chat IA** (sous la note ouverte) : « Créer une tâche », « Reformuler », « Réorganiser », « Résumer », ou une consigne libre (Entrée). Créer une tâche ouvre le formulaire « Nouvelle tâche » prérempli (titre, description, lien vers la note, projet déduit de la place de la note) : rien n'est créé avant « Créer ». Une retouche s'affiche en différence : « Appliquer » écrit la note, « Refuser » n'écrit rien, « Annuler la modification » rend la version d'origine. Seul le texte de la note ouverte part au modèle.
 - **Graphe** (cadré à l'ouverture ; bouton « Recentrer » après un déplacement ou un zoom) : bouton « Graphe » de l'onglet « Notes » (graphe global : notes, tâches, dossiers et leurs liens, filtres par casquette, projet, type, tag, période) ; bouton « Graphe » d'une tâche ou « Graphe local » d'une note (profondeur réglable). Un clic sur un élément ouvre la note ou la tâche.
 
 ### Bases

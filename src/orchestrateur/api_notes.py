@@ -14,11 +14,11 @@ from __future__ import annotations
 import asyncio
 import os
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Request
 from fastapi.responses import FileResponse, JSONResponse
 from pydantic import BaseModel
 
-from . import langues, notes
+from . import langues, notes, notes_chat
 from .config import Config
 from .graphe import PLAFOND, Graphe
 from .index_notes import IndexNotes
@@ -46,6 +46,12 @@ class CorpsNoteCreer(BaseModel):
     nom: str
     contenu: str = ""
     creer_dossier: bool = False
+
+
+class CorpsNoteIA(BaseModel):
+    chemin: str
+    action: str
+    consigne: str = ""
 
 
 class CorpsNoteDeplacer(BaseModel):
@@ -204,6 +210,14 @@ def routes(config: Config, vault: Vault, publier, verrou) -> APIRouter:
         if tache:
             publier("arbre")
         return {"note": n, "fichiers_reecrits": nb}
+
+    @r.post("/note/ia")
+    async def note_ia(c: CorpsNoteIA, request: Request):
+        # INV-NOTECHAT-1 : proposition seulement ; l'écriture suit le geste de l'utilisateur.
+        if request.headers.get("x-orch-tache"):  # geste humain : un agent n'appelle pas le modèle des notes
+            raise Conflit(langues.t("serveur.notes_chat.refus_agent"))
+        n = await asyncio.to_thread(lire, c.chemin)
+        return await notes_chat.proposer(verrou, n["chemin"], n["contenu"], c.action, c.consigne)
 
     @r.get("/recherche")
     async def recherche(q: str = "", limite: int = 30, dossier: str = ""):

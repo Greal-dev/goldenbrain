@@ -54,26 +54,24 @@ def extraire(final: str) -> str:
     return (blocs[-1] if blocs else final or "").strip()
 
 
-async def proposer(moteur, ident: str, action: str, texte: str) -> dict:
-    """INV-EXECUTANT-3 : rien n'est écrit ; seul `texte` (la portée choisie) part au modèle."""
+async def executer(moteur, nom: str, message: str, consigne: str = CONSIGNE) -> dict:
+    """Un appel éphémère du rôle `notes` (partagé avec `notes_chat`) : réponse finale ou erreur lisible,
+    harnais, modèle, coût, durée. Aucune écriture hors journal et consommation (INV-EXEC-4, INV-ECO-2)."""
     debut = time.monotonic()
-    texte = _valider(action, texte)
-    t = await asyncio.to_thread(moteur.vault.tache, ident)  # 404 si la tâche n'existe pas
     choix = moteur.roles.choisir("notes") or Choix(moteur.config.moteur.harnais_defaut, "")
-    message = f"{ACTIONS[action]}\n\nTexte (notes de la tâche « {t.titre} ») :\n<texte>\n{texte}\n</texte>"
     final, erreur, courant, mesure = None, None, [], None
     try:
-        with moteur._journal(f"notes-ia-{action}") as journal:  # INV-EXEC-4
-            flux = moteur.roles.lancer("notes", choix, message, consigne=CONSIGNE, env={},
-                                       sur_harnais=lambda h, nom: courant.append((h, nom)))
+        with moteur._journal(nom) as journal:  # INV-EXEC-4
+            flux = moteur.roles.lancer("notes", choix, message, consigne=consigne, env={},
+                                       sur_harnais=lambda h, n: courant.append((h, n)))
             async with aclosing(flux), asyncio.timeout(DELAI_S):
                 async for ev in flux:
                     journal.write(json.dumps(ev.brut or asdict(ev), ensure_ascii=False) + "\n")
                     if ev.type == "fin":
-                        final, nom = ev.texte, courant[-1][1]
-                        lecteur = conso.JETONS.get(nom)
+                        final, harnais = ev.texte, courant[-1][1]
+                        lecteur = conso.JETONS.get(harnais)
                         mesure = lecteur(ev.brut) if lecteur and ev.brut else None
-                        moteur.economie.conso.mesurer(nom, ev.brut)  # INV-ECO-2
+                        moteur.economie.conso.mesurer(harnais, ev.brut)  # INV-ECO-2
                     elif ev.type == "erreur":
                         erreur = ev.texte or langues.t("serveur.notes_ia.erreur_assistant")
     except TimeoutError:
@@ -83,12 +81,22 @@ async def proposer(moteur, ident: str, action: str, texte: str) -> dict:
     finally:
         for harnais, _ in courant:
             await asyncio.shield(harnais.arreter())
-    nom = courant[-1][1] if courant else choix.harnais
-    proposition = "" if erreur else extraire(final)
-    if not erreur and not proposition:
-        erreur = langues.t("serveur.notes_ia.reponse_vide")
-    return {"action": action, "original": texte, "proposition": proposition, "erreur": erreur or "",
-            "harnais": nom, "modele": dict([(choix.harnais, choix.modele), *choix.repli]).get(nom, ""),
+    harnais = courant[-1][1] if courant else choix.harnais
+    return {"final": final, "erreur": erreur or "", "harnais": harnais,
+            "modele": dict([(choix.harnais, choix.modele), *choix.repli]).get(harnais, ""),
             "cout": mesure["cout"] if mesure else None,
             "jetons": (mesure["entree"] + mesure["sortie"]) if mesure else None,
             "duree_s": round(time.monotonic() - debut, 2)}
+
+
+async def proposer(moteur, ident: str, action: str, texte: str) -> dict:
+    """INV-EXECUTANT-3 : rien n'est écrit ; seul `texte` (la portée choisie) part au modèle."""
+    texte = _valider(action, texte)
+    t = await asyncio.to_thread(moteur.vault.tache, ident)  # 404 si la tâche n'existe pas
+    message = f"{ACTIONS[action]}\n\nTexte (notes de la tâche « {t.titre} ») :\n<texte>\n{texte}\n</texte>"
+    r = await executer(moteur, f"notes-ia-{action}", message)
+    final = r.pop("final")
+    proposition = "" if r["erreur"] else extraire(final)
+    if not r["erreur"] and not proposition:
+        r["erreur"] = langues.t("serveur.notes_ia.reponse_vide")
+    return {"action": action, "original": texte, "proposition": proposition, **r}

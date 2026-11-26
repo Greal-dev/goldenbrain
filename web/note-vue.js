@@ -9,11 +9,12 @@ import { voirDossier } from './notes.js';
 import { editer, enEdition, signalerChangement, enregistrementRecent } from './note-edition.js';
 import { nouvelleNote, deplacerNote, deplacerDisponible } from './note-gestes.js';
 import { reduire } from './transfo.js';
+import { creerChat } from './notes_chat.js';
 import { t } from './langues.js';
 
 const enc = encodeURIComponent;
 const FRONT = /^﻿?---[ \t]*\r?\n[\s\S]*?\r?\n(?:---|\.\.\.)[ \t]*(?:\r?\n|$)/;
-let racine = null, note = null, chemin = null, ref = {}, ancien = null;
+let racine = null, note = null, chemin = null, ref = {}, ancien = null, chat = null;
 
 const valeur = (v) => (Array.isArray(v) ? v.map(valeur).join(', ') : v && typeof v === 'object' ? JSON.stringify(v) : String(v ?? ''));
 
@@ -106,18 +107,20 @@ function mentions(n) {
 
 function afficher(defilement = 0) {
   ref = {};
+  chat ||= creerChat(() => note, (n) => { note = n; afficher(ref.defile?.scrollTop || 0); }, erreur); // une barre par note ouverte : sa proposition survit au rendu
   ref.barre = h('div', { class: 'n-barre', role: 'toolbar', 'aria-label': t('note_vue.barre_aria') });
   ref.md = h('div', { class: 'md note-md' });
   ref.defile = h('div', { class: 'n-defile' }, proprietes(note), ref.md, entrants(note), mentions(note));
   ref.zone = h('div', { class: 'n-zone' }, ref.defile);
-  remplacer(racine, h('div', { class: 'vue-note' }, h('div', { class: 'd-tete' }, fil(note), h('h2', { class: 'd-titre' }, note.titre || note.nom), ref.barre), ref.zone));
+  remplacer(racine, h('div', { class: 'vue-note' }, h('div', { class: 'd-tete' }, fil(note), h('h2', { class: 'd-titre' }, note.titre || note.nom), ref.barre), ref.zone, chat));
   rendreMd(ref.md, String(note.contenu || '').replace(FRONT, ''), contexte(note));
   barreLecture();
   ref.defile.scrollTop = defilement;
 }
 
 function demarrerEdition() {
-  editer({ note, zone: ref.zone, barre: ref.barre, surFin: (n) => { if (n) note = n; afficher(); ref.barre.querySelector('button')?.focus(); } });
+  chat.hidden = true; // pas de retouche IA pendant l'édition à la main
+  editer({ note, zone: ref.zone, barre: ref.barre, surFin: (n) => { if (n) note = n; chat.hidden = false; afficher(); ref.barre.querySelector('button')?.focus(); } });
 }
 async function surDeplacer() {
   ancien = note.chemin; // le déplacement signale l'ancien chemin par SSE : ce n'est pas une suppression « ailleurs »
@@ -133,7 +136,7 @@ function absente(c, e) {
 }
 
 export async function dessinerNote(el, c) {
-  racine = el; chemin = c; note = null;
+  racine = el; chemin = c; note = null; chat = null;
   remplacer(el, h('p', { class: 'vide' }, t('note_vue.chargement')));
   try {
     const n = await api(`/vault/note?chemin=${enc(c)}`);

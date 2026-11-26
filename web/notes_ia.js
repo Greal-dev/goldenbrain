@@ -14,7 +14,7 @@ const ACTIONS = [['resumer', t('notes_ia.resumer')], ['corriger', t('notes_ia.co
 const LIBELLE = Object.fromEntries(ACTIONS);
 
 // Différence mot à mot (plus longue sous-suite commune) ; au-delà d'une taille raisonnable, rien.
-function difference(a, b) {
+export function difference(a, b) {
   const A = a.split(/(\s+)/), B = b.split(/(\s+)/), n = A.length, m = B.length;
   if (n * m > 2e6) return null;
   const L = Array.from({ length: n + 1 }, () => new Uint32Array(m + 1));

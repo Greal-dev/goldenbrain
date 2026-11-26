@@ -20,6 +20,8 @@ def test_panneaux_moi_notes_filtre_puis_confier_la_suite(page, serveur):
     conv, notes = page.locator(".volet-t-conv"), page.locator(".volet-t-notes")
     expect(conv).to_be_visible()
     expect(notes).to_be_visible()
+    # Attente explicite : la mise en page se pose avant la mesure, plus ou moins vite sous charge.
+    page.wait_for_function("""() => { const r = (s) => document.querySelector(s).getBoundingClientRect(); return Math.abs(r('.volet-t-conv').y - r('.volet-t-notes').y) < 2; }""", timeout=10000)
     bc, bn = conv.bounding_box(), notes.bounding_box()
     assert bc["x"] + bc["width"] <= bn["x"] + 1 and abs(bc["y"] - bn["y"]) < 2  # côte à côte, sans onglet
     expect(page.locator(".d-onglet")).to_have_count(0)
