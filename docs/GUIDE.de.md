@@ -229,6 +229,12 @@ Der Vault ist Ihr **zweites Gehirn**: gewöhnliche Notizen (Markdown-Dateien), d
 - **Gut zu wissen**: Hat sich die Notiz anderswo geändert (Obsidian, ein Agent), wird das Speichern abgelehnt, und Ihnen werden beide Fassungen angeboten. Dataview-Blöcke werden nicht ausgeführt.
 - **Graph**: Schaltfläche „Graph“ im Reiter „Notizen“ (globaler Graph: Notizen, Aufgaben, Ordner und ihre Verknüpfungen, Filter nach Rolle, Projekt, Typ, Schlagwort, Zeitraum); Schaltfläche „Graph“ einer Aufgabe oder „Lokaler Graph“ einer Notiz (einstellbare Tiefe). Ein Klick auf ein Element öffnet die Notiz oder die Aufgabe.
 
+### Datenbanken {#bases}
+
+- **Wozu**: einen Notizordner wie eine Datenbank ansehen, wie in Notion: eine Notiz pro Zeile, die Eigenschaften ihres Kopfes (Frontmatter) als Spalten — Beträge, Daten, Kontrollkästchen, Listen, Links.
+- **So geht's**: Reiter „Notizen“, mit der Maus über einen Ordner fahren und ▦ „Als Tabelle anzeigen“ klicken (oder Taste `t` auf dem Ordner). Ein Klick auf eine Spaltenüberschrift sortiert (zweimal: umgekehrt); unter jeder Überschrift filtern (enthaltener Text, Zahl Minimum und Maximum, Datum zwischen zwei Grenzen, Kästchen ja oder nein, Listenwert); „Gruppieren nach“ einer Spalte zeigt eine Zwischensumme je Gruppe; das Menü am Fuß einer Spalte wählt die Berechnung (Summe, Durchschnitt, Min, Max, Anzahl ausgefüllter Werte, verschiedener Werte, angehakter Kästchen); „Spalten“ blendet aus oder wieder ein. Ein Klick auf eine Zeile öffnet die Notiz, ein Klick auf einen Link `[[…]]` die Zielnotiz. Strg+K bietet „Datenbank: <Ordner>“ für kürzlich geöffnete Datenbanken an; die Adresse `#base=<Ordner>` lässt sich teilen.
+- **Gut zu wissen**: nur lesend — an Ihren Notizen wird nichts geändert. Nur die Notizen des Ordners selbst werden gelesen (nicht seine Unterordner), höchstens 5.000. Der Typ einer Spalte ergibt sich aus ihren Werten; eine Spalte mit gemischten Werten gilt als Text. Die Ansichtseinstellungen werden je Ordner in diesem Browser gespeichert.
+
 ### Dateileser {#lecteur-de-fichiers}
 
 - **Wozu**: eine Datei lesen, ohne GoldenBrain zu verlassen, über jeden Link (Verlauf, Karte, Zeilen, Spuren, Ergebnisse, Notizen).

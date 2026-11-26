@@ -229,6 +229,12 @@ The vault is your **second brain**: ordinary notes (Markdown files) that GoldenB
 - **Good to know**: if the note has changed elsewhere (Obsidian, an agent), saving is refused and both versions are offered to you. Dataview blocks are not run.
 - **Graph**: “Graph” button of the “Notes” tab (global graph: notes, tasks, folders and their links, filters by role, project, type, tag, period); “Graph” button of a task or “Local graph” of a note (adjustable depth). A click on an item opens the note or the task.
 
+### Databases {#bases}
+
+- **What it is for**: view a folder of notes as a database, Notion-style: one note per row, the properties of its header (frontmatter) as columns — amounts, dates, checkboxes, lists, links.
+- **How to**: "Notes" tab, hover a folder and click ▦ "View as table" (or press `t` on the folder). Click a header to sort (twice: reverse order); filter under each header (text contained, number minimum and maximum, dates between two bounds, checkbox yes or no, list value); "Group by" a column shows a subtotal per group; the menu at the foot of a column chooses the calculation (sum, average, min, max, count of filled values, of distinct values, of checked boxes); "Columns" hides or shows again. Clicking a row opens the note, clicking a `[[…]]` link opens the target note. Ctrl+K offers "Database: <folder>" for recently opened databases; the address `#base=<folder>` can be shared.
+- **Good to know**: read-only — nothing is changed in your notes. Only the notes of the folder itself are read (not its subfolders), at most 5,000. A column's type is inferred from its values; a column with mixed values reads as text. View settings are remembered per folder, in this browser.
+
 ### File reader {#lecteur-de-fichiers}
 
 - **What it is for**: reading a file without leaving GoldenBrain, from any link (thread, card, lines, traces, deliverables, notes).

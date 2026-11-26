@@ -129,10 +129,10 @@ function bannière() {
   });
 }
 
-// L'URL reflète le volet droit : #t=<tâche> · #n=<note> · #q=<recherche> · #g[=<centre>] (graphe) · #equipe. Chaque navigation ajoute une entrée d'historique.
+// L'URL reflète le volet droit : #t=<tâche> · #n=<note> · #q=<recherche> · #g[=<centre>] (graphe) · #base=<dossier> · #equipe. Chaque navigation ajoute une entrée d'historique.
 const enc = encodeURIComponent;
 const dec = (s) => { try { return decodeURIComponent(s); } catch { return s; } };
-const hashCourant = () => (S.selection ? `#t=${enc(S.selection)}` : S.vue === 'equipe' ? '#equipe' : S.vue === 'reglages' ? (pret('reglages')?.hashReglages() ?? location.hash) : S.vue === 'aujourdhui' ? '#aujourdhui' : S.vue === 'compagnon' ? '#compagnon' : S.vue === 'travail' ? (S.portee ? `#travail=${enc(S.portee)}` : '#travail') : S.vue === 'travaux' ? '#en-cours' : S.vue === 'etiquette' && S.portee ? `#etiquette=${enc(S.portee)}` : S.vue === 'decisions' ? '#decisions' : S.vue === 'guide' ? (pret('guide')?.hashGuide() ?? location.hash) : S.vue === 'note' && S.note ? `#n=${enc(S.note)}`
+const hashCourant = () => (S.selection ? `#t=${enc(S.selection)}` : S.vue === 'equipe' ? '#equipe' : S.vue === 'reglages' ? (pret('reglages')?.hashReglages() ?? location.hash) : S.vue === 'aujourdhui' ? '#aujourdhui' : S.vue === 'compagnon' ? '#compagnon' : S.vue === 'travail' ? (S.portee ? `#travail=${enc(S.portee)}` : '#travail') : S.vue === 'travaux' ? '#en-cours' : S.vue === 'etiquette' && S.portee ? `#etiquette=${enc(S.portee)}` : S.vue === 'decisions' ? '#decisions' : S.vue === 'guide' ? (pret('guide')?.hashGuide() ?? location.hash) : S.vue === 'note' && S.note ? `#n=${enc(S.note)}` : S.vue === 'base' ? `#base=${enc(S.portee ?? '')}`
   : S.vue === 'recherche' && S.requete ? `#q=${enc(S.requete)}` : S.vue === 'graphe' ? (S.centre ? `#g=${enc(S.centre)}` : '#g') : '');
 function pousserUrl(initial) {
   const hs = hashCourant();
@@ -158,6 +158,7 @@ function majVoletDroit() {
   else if (S.vue === 'decisions') ecran('decisions', (m) => m.dessinerDecisions(droit()));
   else if (S.vue === 'guide') ecran('guide', (m) => m.dessinerGuide(droit())); // INV-GUIDE-1
   else if (S.vue === 'note' && S.note) ecran('note-vue', (m) => m.dessinerNote(droit(), S.note), (m) => m.initNoteVue());
+  else if (S.vue === 'base') ecran('base_table', (m) => m.dessinerBase(droit(), S.portee ?? '')); // INV-BASES-1
   else if (S.vue === 'graphe') ecran('graphe', (m) => m.dessinerGraphe(droit(), S.centre));
   else if (S.vue === 'recherche') {
     const terme = S.requete;
@@ -172,7 +173,7 @@ const cascadeVisible = () => !S.selection && S.vue === 'cascade';
 // Le mode ou une famille a changé : écarter les vues devenues interdites, relire ce qui vient de s'ouvrir, redessiner.
 function surInterface() {
   if (S.vue === 'equipe' && !ouvert('equipe')) S.vue = 'cascade';
-  if (['note', 'recherche', 'graphe'].includes(S.vue) && !ouvert('notes')) { S.vue = 'cascade'; S.note = null; S.requete = ''; }
+  if (['note', 'recherche', 'graphe', 'base'].includes(S.vue) && !ouvert('notes')) { S.vue = 'cascade'; S.note = null; S.requete = ''; }
   if (S.onglet === 'notes' && !ouvert('notes')) fixerOnglet('taches');
   if (simple() && S.portee?.startsWith('operation:')) S.portee = null; // une opération n'existe plus à l'écran
   rafraichirEcarts();
@@ -186,7 +187,7 @@ function depuisUrl() {
   const m = /^#(t|n|q)=(.*)$/.exec(location.hash);
   const g = /^#g(?:=(.*))?$/.exec(location.hash);
   const v = m ? dec(m[2]) : '';
-  let ok = true, gd, rg, tv, ev;
+  let ok = true, gd, rg, tv, ev, bs;
   if (m && m[1] === 't' && v) { if (S.selection !== v) ok = ouvrir(v); }
   else if (m && m[1] !== 't' && !ouvert('notes')) { if (S.selection || S.vue !== 'cascade') ok = ouvrir(null); }
   else if (m && m[1] === 'n' && v) { if (S.vue !== 'note' || S.note !== v || S.selection) ok = ouvrirNote(v); }
@@ -210,6 +211,7 @@ function depuisUrl() {
   else if ((tv = /^#travail(?:=(.+))?$/.exec(location.hash))) { const id = tv[1] ? dec(tv[1]) : null; if (S.vue !== 'travail' || S.portee !== id || S.selection) ok = ouvrirVue('travail', id); }
   else if ((ev = /^#etiquette=(.+)$/.exec(location.hash))) { const mot = dec(ev[1]); if (S.vue !== 'etiquette' || S.portee !== mot || S.selection) ok = ouvrirVue('etiquette', mot); }
   else if (location.hash === '#en-cours') { if (S.vue !== 'travaux' || S.selection) ok = ouvrirVue('travaux'); }
+  else if ((bs = /^#base=(.*)$/.exec(location.hash)) && ouvert('notes')) { const d = dec(bs[1]); if (S.vue !== 'base' || S.portee !== d || S.selection) ok = ouvrirVue('base', d); }
   else if (S.selection || S.vue !== 'cascade') ok = ouvrir(null);
   if (!ok) history.pushState(null, '', hashCourant() || location.pathname + location.search); // navigation refusée (note modifiée) : l'URL reste fidèle à l'écran
 }
@@ -251,6 +253,7 @@ async function demarrer() {
   else if ((ev0 = /^#etiquette=(.+)$/.exec(location.hash))) { S.vue = 'etiquette'; S.portee = dec(ev0[1]); }
   else if (location.hash === '#en-cours') S.vue = 'travaux';
   else if (location.hash === '#decisions') S.vue = 'decisions';
+  else if (/^#base=/.test(location.hash) && !sansNotes) { S.vue = 'base'; S.portee = dec(location.hash.slice(6)); }
   else if (/^#guide(=|$)/.test(location.hash)) { S.vue = 'guide'; const ancre = dec(location.hash.slice(7)); charger('guide').then((m) => m.fixerAncre(ancre)); }
   initArbre();
   initNotes();

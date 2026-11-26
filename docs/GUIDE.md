@@ -242,6 +242,12 @@ Le vault est votre **second cerveau** : des notes ordinaires (fichiers Markdown)
 - **À savoir** : si la note a changé ailleurs (Obsidian, un agent), l'enregistrement est refusé et les deux versions vous sont proposées. Les blocs Dataview ne sont pas exécutés.
 - **Graphe** (cadré à l'ouverture ; bouton « Recentrer » après un déplacement ou un zoom) : bouton « Graphe » de l'onglet « Notes » (graphe global : notes, tâches, dossiers et leurs liens, filtres par casquette, projet, type, tag, période) ; bouton « Graphe » d'une tâche ou « Graphe local » d'une note (profondeur réglable). Un clic sur un élément ouvre la note ou la tâche.
 
+### Bases
+
+- **À quoi ça sert** : voir un dossier de notes comme une base de données, à la manière de Notion : une note par ligne, les propriétés de son en-tête (frontmatter) pour colonnes — montants, dates, cases à cocher, listes, liens.
+- **Comment faire** : onglet « Notes », survolez un dossier et cliquez ▦ « Voir en tableau » (ou touche `t` sur le dossier). Cliquez un en-tête pour trier (deux fois : ordre inverse) ; filtrez sous chaque en-tête (texte contenu, nombre minimum et maximum, dates entre deux bornes, case oui ou non, valeur d'une liste) ; « Regrouper par » une colonne affiche un sous-total par groupe ; le menu en pied de colonne choisit le calcul (somme, moyenne, min, max, nombre de valeurs remplies, de valeurs distinctes, de cases cochées) ; « Colonnes » masque ou réaffiche. Un clic sur une ligne ouvre la note, un clic sur un lien `[[…]]` ouvre la note visée. Ctrl+K propose « Base : <dossier> » pour les bases ouvertes récemment ; l'adresse `#base=<dossier>` se partage.
+- **À savoir** : lecture seule — rien n'est modifié dans vos notes. Seules les notes du dossier lui-même sont lues (pas ses sous-dossiers), au plus 5 000. Le type d'une colonne se déduit des valeurs ; une colonne aux valeurs mêlées se lit comme du texte. Les réglages de la vue sont retenus par dossier, sur ce navigateur.
+
 ### Lecteur de fichiers
 
 - **À quoi ça sert** : lire un fichier sans quitter GoldenBrain, depuis n'importe quel lien (fil, fiche, lignes, traces, livrables, notes).

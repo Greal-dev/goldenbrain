@@ -1,0 +1,34 @@
+/* Page « Base » (#base=<dossier>) : un dossier du vault en tableau. Mêmes variables de thème que style.css. */
+.base { display: flex; flex-direction: column; gap: 8px; min-height: 0; }
+.base-info { margin: 0; color: var(--texte-2); font-size: 12.5px; }
+.base-outils { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; font-size: 12.5px; }
+.base-colonnes { position: relative; }
+.base-colonnes[open] > label { display: block; padding: 1px 0; }
+.base-defile { overflow: auto; max-height: calc(100vh - 210px); border: 1px solid var(--bord); border-radius: 6px; }
+.base-table { border-collapse: collapse; width: 100%; font-size: 12.5px; }
+.base-table th, .base-table td { padding: 4px 8px; border-bottom: 1px solid var(--bord); text-align: left; vertical-align: top; }
+.base-table thead { position: sticky; top: 0; background: var(--panneau-2); z-index: 1; }
+.base-table tfoot { position: sticky; bottom: 0; background: var(--panneau-2); }
+.base-table td.t-nombre, .base-table td.base-agg.t-nombre { text-align: right; font-variant-numeric: tabular-nums; }
+.base-tri { border: 0; background: none; padding: 0; font: inherit; font-weight: 600; color: var(--texte); cursor: pointer; }
+th[aria-sort="ascending"] .base-tri::after { content: " ▲"; color: var(--accent); }
+th[aria-sort="descending"] .base-tri::after { content: " ▼"; color: var(--accent); }
+.base-filtre { width: 100%; min-width: 70px; box-sizing: border-box; font-size: 12px; padding: 2px 4px; }
+.base-filtres td { display: table-cell; }
+.base-filtres input[type="number"], .base-filtres input[type="date"] { width: 50%; min-width: 0; }
+.base-ligne { cursor: pointer; }
+.base-ligne:hover, .base-ligne:focus-visible { background: var(--sel); }
+.base-ligne th { font-weight: 500; }
+.base-groupe-titre th { background: var(--accent-fond); font-weight: 600; }
+.base-groupe-titre .n { margin-left: 6px; color: var(--texte-2); font-weight: 400; }
+.base-sous-total td { color: var(--texte-2); font-style: italic; }
+.base-puce { display: inline-block; margin: 0 4px 2px 0; padding: 0 6px; border-radius: 9px; background: var(--panneau-2); border: 1px solid var(--bord); }
+.base-case { display: inline-block; width: 12px; height: 12px; border: 1px solid var(--bord-fort); border-radius: 3px; vertical-align: middle; }
+.base-case.coche { background: var(--accent); border-color: var(--accent); }
+.base-lien { color: var(--accent); text-decoration: none; border-bottom: 1px solid color-mix(in srgb, var(--accent) 40%, transparent); }
+.base-choix-agg { font-size: 11.5px; max-width: 100%; }
+.base-valeur { display: block; font-weight: 600; }
+/* Geste « Voir en tableau » d'un dossier du volet Notes : visible au survol ou au focus de la ligne. */
+.t-dossier .t-base { margin-left: auto; border: 0; background: none; padding: 0 4px; color: var(--texte-2); cursor: pointer; visibility: hidden; }
+.t-dossier:hover .t-base, .t-dossier:focus-within .t-base, .t-dossier:focus .t-base { visibility: visible; }
+.t-dossier .t-base:hover { color: var(--accent); }

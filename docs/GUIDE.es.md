@@ -229,6 +229,12 @@ El vault es su **segundo cerebro**: notas corrientes (archivos Markdown) que Gol
 - **Conviene saber**: si la nota ha cambiado en otro sitio (Obsidian, un agente), el guardado se rechaza y se le ofrecen las dos versiones. Los bloques Dataview no se ejecutan.
 - **Grafo**: botón «Grafo» de la pestaña «Notas» (grafo global: notas, tareas, carpetas y sus enlaces, filtros por rol, proyecto, tipo, etiqueta, período); botón «Grafo» de una tarea o «Grafo local» de una nota (profundidad ajustable). Un clic en un elemento abre la nota o la tarea.
 
+### Bases {#bases}
+
+- **Para qué sirve**: ver una carpeta de notas como una base de datos, al estilo de Notion: una nota por fila, las propiedades de su encabezado (frontmatter) como columnas — importes, fechas, casillas, listas, enlaces.
+- **Cómo hacerlo**: pestaña «Notas», pase el ratón por una carpeta y haga clic en ▦ «Ver como tabla» (o tecla `t` sobre la carpeta). Un clic en un encabezado ordena (dos veces: orden inverso); filtre bajo cada encabezado (texto contenido, número mínimo y máximo, fechas entre dos límites, casilla sí o no, valor de lista); «Agrupar por» una columna muestra un subtotal por grupo; el menú al pie de una columna elige el cálculo (suma, media, mín, máx, número de valores rellenos, de valores distintos, de casillas marcadas); «Columnas» oculta o vuelve a mostrar. Un clic en una fila abre la nota, un clic en un enlace `[[…]]` abre la nota de destino. Ctrl+K propone «Base: <carpeta>» para las bases abiertas recientemente; la dirección `#base=<carpeta>` se puede compartir.
+- **Conviene saber**: solo lectura — no se modifica nada en sus notas. Solo se leen las notas de la propia carpeta (no sus subcarpetas), como máximo 5000. El tipo de una columna se deduce de sus valores; una columna con valores mezclados se lee como texto. Los ajustes de la vista se recuerdan por carpeta, en este navegador.
+
 ### Lector de archivos {#lecteur-de-fichiers}
 
 - **Para qué sirve**: leer un archivo sin salir de GoldenBrain, desde cualquier enlace (hilo, ficha, líneas, trazas, entregables, notas).

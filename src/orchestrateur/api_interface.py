@@ -32,6 +32,7 @@ FERMEES = [
     ("alignement", re.compile(r"^/api/alignement(/|$)"), False),
     ("jardinage", re.compile(r"^/api/jardinage$"), False),
     ("notes", re.compile(r"^/api/vault(/|$)"), False),
+    ("notes", re.compile(r"^/api/bases(/|$)"), False),  # INV-BASES-1 : une base est une vue des notes
 ]
 
 

@@ -1,5 +1,5 @@
 // Rôle : palette de commandes Ctrl+K / Cmd+K — retrouver une tâche en tapant quelques lettres, lancer un geste courant.
-// Frontières : lit S.arbre et GET /api/recherche (existante) ; n'écrit que par les gestes existants (statut, renvoi à l'IA). Chargée à la demande (app.js, INV-REACTIVITE-1).
+// Frontières : lit S.arbre, GET /api/recherche (existante) et les bases récentes (localStorage) ; n'écrit que par les gestes existants (statut, renvoi à l'IA). Chargée à la demande (app.js, INV-REACTIVITE-1).
 import { h, $, filLisible, libelleStatut, remplacer } from './dom.js';
 import { t } from './langues.js';
 import { api } from './api.js';
@@ -7,6 +7,7 @@ import { S, parcourir, chemin, ouvrir, ouvrirVue, erreur, emit, noeudTache } fro
 import { groupesStatut, ecrireStatut } from './statut.js';
 import { envoyerIA } from './main.js';
 import { motsConnus, charger as chargerEtiquettes } from './etiquettes.js';
+import { ouvert } from './interface.js';
 
 const MAX = 8, FERMES = new Set(['fait', 'cloture', 'abandonne']);
 const norm = (s) => (s || '').normalize('NFD').replace(/\p{M}/gu, '').toLowerCase();
@@ -31,6 +32,10 @@ function commandes() {
     { libelle: t('palette.reglages'), agir: () => ouvrirVue('reglages') },
     ...motsConnus().map((m) => ({ libelle: t('palette.etiquette', { mot: m }), agir: () => ouvrirVue('etiquette', m) })), // INV-ETIQUETTE-4
   ];
+  // Bases ouvertes récemment (base_table.js les note) : lues sans charger le module du tableau.
+  let recents = [];
+  try { recents = JSON.parse(localStorage.getItem('orch.bases.recents')) || []; } catch { /* liste illisible : aucune */ }
+  if (ouvert('notes')) for (const d of recents) cmds.push({ libelle: t('palette.base', { dossier: d || '/' }), agir: () => ouvrirVue('base', d) });
   const id = S.selection, n = id && noeudTache(id);
   if (n) {
     cmds.push({ libelle: t('palette.renvoyer'), agir: () => envoyerIA(id, null) });

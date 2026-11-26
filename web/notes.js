@@ -1,8 +1,8 @@
 // Rôle : volet gauche, onglets « Tâches » / « Notes » et arborescence des dossiers du vault (un niveau par requête).
-// Frontières : API /vault/dossier ; ouvre une note par store.ouvrirNote ; ne rend jamais le contenu d'une note.
+// Frontières : API /vault/dossier ; ouvre une note par store.ouvrirNote, un dossier en tableau par store.ouvrirVue('base') ; ne rend jamais le contenu d'une note.
 // Performance : chaque dossier n'est lu qu'une fois (cache) ; l'événement SSE `note` relit seulement les dossiers ancêtres.
 import { h, $, remplacer, nomDe } from './dom.js';
-import { S, on, ouvrirNote, ouvrirGraphe, fixerOnglet, erreur } from './store.js';
+import { S, on, ouvrirNote, ouvrirGraphe, ouvrirVue, fixerOnglet, erreur } from './store.js';
 import { ouvert } from './interface.js';
 import { api } from './api.js';
 import { t, tn } from './langues.js';
@@ -55,7 +55,8 @@ function ligne(v) {
       'aria-expanded': String(o), 'aria-label': tn('notes.dossier_aria', v.f.notes, { nom: v.f.nom }), tabindex: v.k === cleFocus ? '0' : '-1', style: pad },
     h('span', { class: `chev${o ? ' ouvert' : ''}`, 'aria-hidden': 'true' }),
     h('span', { class: 'titre', title: v.f.chemin }, v.f.nom),
-    h('span', { class: 'compte', title: tn('notes.compte_titre', v.f.notes) }, v.f.notes));
+    h('span', { class: 'compte', title: tn('notes.compte_titre', v.f.notes) }, v.f.notes),
+    h('button', { class: 't-base', type: 'button', tabindex: '-1', 'data-id': 'voir-tableau', title: t('base.voir'), 'aria-label': t('base.voir_aria', { nom: v.f.nom }) }, '▦'));
   }
   const sel = v.n.chemin === noteOuverte();
   return h('div', { class: `ligne t-note${sel ? ' sel' : ''}`, role: 'treeitem', 'data-k': v.k, 'aria-level': v.niveau + 1, 'aria-selected': String(sel),
@@ -128,6 +129,7 @@ function surTouche(e) {
       if (v.type === 'dossier' && ouverts[v.f.chemin]) basculer(v.f);
       else for (let j = i - 1; j >= 0; j--) if (+rows[j].getAttribute('aria-level') < niv) { rows[j].focus(); break; }
       return;
+    case 't': if (v.type === 'dossier') { e.preventDefault(); ouvrirVue('base', v.f.chemin); } return; // « Voir en tableau » au clavier
     case 'Enter': case ' ':
       e.preventDefault();
       if (v.type === 'note') ouvrirNote(v.n.chemin); else basculer(v.f);
@@ -183,6 +185,7 @@ export function initNotes() {
     const v = row && visibles.find((x) => x.k === row.dataset.k);
     if (!v) return;
     cleFocus = v.k;
+    if (v.type === 'dossier' && e.target.closest('.t-base')) { ouvrirVue('base', v.f.chemin); return; } // INV-BASES-1 : vue en lecture seule
     if (v.type === 'note') ouvrirNote(v.n.chemin); else basculer(v.f);
     row.focus?.();
   });
