@@ -132,7 +132,7 @@ function bannière() {
 // L'URL reflète le volet droit : #t=<tâche> · #n=<note> · #q=<recherche> · #g[=<centre>] (graphe) · #equipe. Chaque navigation ajoute une entrée d'historique.
 const enc = encodeURIComponent;
 const dec = (s) => { try { return decodeURIComponent(s); } catch { return s; } };
-const hashCourant = () => (S.selection ? `#t=${enc(S.selection)}` : S.vue === 'equipe' ? '#equipe' : S.vue === 'reglages' ? (pret('reglages')?.hashReglages() ?? location.hash) : S.vue === 'aujourdhui' ? '#aujourdhui' : S.vue === 'compagnon' ? '#compagnon' : S.vue === 'travail' ? (S.portee ? `#travail=${enc(S.portee)}` : '#travail') : S.vue === 'travaux' ? '#en-cours' : S.vue === 'decisions' ? '#decisions' : S.vue === 'guide' ? (pret('guide')?.hashGuide() ?? location.hash) : S.vue === 'note' && S.note ? `#n=${enc(S.note)}`
+const hashCourant = () => (S.selection ? `#t=${enc(S.selection)}` : S.vue === 'equipe' ? '#equipe' : S.vue === 'reglages' ? (pret('reglages')?.hashReglages() ?? location.hash) : S.vue === 'aujourdhui' ? '#aujourdhui' : S.vue === 'compagnon' ? '#compagnon' : S.vue === 'travail' ? (S.portee ? `#travail=${enc(S.portee)}` : '#travail') : S.vue === 'travaux' ? '#en-cours' : S.vue === 'etiquette' && S.portee ? `#etiquette=${enc(S.portee)}` : S.vue === 'decisions' ? '#decisions' : S.vue === 'guide' ? (pret('guide')?.hashGuide() ?? location.hash) : S.vue === 'note' && S.note ? `#n=${enc(S.note)}`
   : S.vue === 'recherche' && S.requete ? `#q=${enc(S.requete)}` : S.vue === 'graphe' ? (S.centre ? `#g=${enc(S.centre)}` : '#g') : '');
 function pousserUrl(initial) {
   const hs = hashCourant();
@@ -153,6 +153,7 @@ function majVoletDroit() {
   else if (S.vue === 'aujourdhui') ecran('aujourdhui', (m) => m.dessinerAujourdhui(droit()));
   else if (S.vue === 'compagnon') ecran('compagnon', (m) => m.dessinerCompagnon(droit())); // INV-COMPAGNON-1
   else if (S.vue === 'travail') ecran('travail', (m) => m.dessinerTravail(droit(), S.portee)); // INV-COMPAGNON-2
+  else if (S.vue === 'etiquette' && S.portee) ecran('vue_etiquette', (m) => m.dessinerVueEtiquette(droit(), S.portee)); // INV-ETIQUETTE-4
   else if (S.vue === 'travaux') ecran('travaux', (m) => m.dessinerTravaux(droit()));
   else if (S.vue === 'decisions') ecran('decisions', (m) => m.dessinerDecisions(droit()));
   else if (S.vue === 'guide') ecran('guide', (m) => m.dessinerGuide(droit())); // INV-GUIDE-1
@@ -185,7 +186,7 @@ function depuisUrl() {
   const m = /^#(t|n|q)=(.*)$/.exec(location.hash);
   const g = /^#g(?:=(.*))?$/.exec(location.hash);
   const v = m ? dec(m[2]) : '';
-  let ok = true, gd, rg, tv;
+  let ok = true, gd, rg, tv, ev;
   if (m && m[1] === 't' && v) { if (S.selection !== v) ok = ouvrir(v); }
   else if (m && m[1] !== 't' && !ouvert('notes')) { if (S.selection || S.vue !== 'cascade') ok = ouvrir(null); }
   else if (m && m[1] === 'n' && v) { if (S.vue !== 'note' || S.note !== v || S.selection) ok = ouvrirNote(v); }
@@ -207,6 +208,7 @@ function depuisUrl() {
   else if (location.hash === '#aujourdhui') { if (S.vue !== 'aujourdhui' || S.selection) ok = ouvrirVue('aujourdhui'); }
   else if (location.hash === '#compagnon') { if (S.vue !== 'compagnon' || S.selection) ok = ouvrirVue('compagnon'); }
   else if ((tv = /^#travail(?:=(.+))?$/.exec(location.hash))) { const id = tv[1] ? dec(tv[1]) : null; if (S.vue !== 'travail' || S.portee !== id || S.selection) ok = ouvrirVue('travail', id); }
+  else if ((ev = /^#etiquette=(.+)$/.exec(location.hash))) { const mot = dec(ev[1]); if (S.vue !== 'etiquette' || S.portee !== mot || S.selection) ok = ouvrirVue('etiquette', mot); }
   else if (location.hash === '#en-cours') { if (S.vue !== 'travaux' || S.selection) ok = ouvrirVue('travaux'); }
   else if (S.selection || S.vue !== 'cascade') ok = ouvrir(null);
   if (!ok) history.pushState(null, '', hashCourant() || location.pathname + location.search); // navigation refusée (note modifiée) : l'URL reste fidèle à l'écran
@@ -234,6 +236,7 @@ async function demarrer() {
   S.toutes = localStorage.getItem('orch.toutes') === '1';
   bannière();
   const h0 = /^#(t|n|q)=(.+)$/.exec(location.hash), tv0 = /^#travail(?:=(.+))?$/.exec(location.hash);
+  let ev0;
   const sansNotes = !ouvert('notes');
   if (h0 && h0[1] === 't') S.selection = dec(h0[2]);
   else if (h0 && h0[1] !== 't' && sansNotes) { /* notes fermées : lien ignoré */ }
@@ -245,6 +248,7 @@ async function demarrer() {
   else if (location.hash === '#aujourdhui') S.vue = 'aujourdhui';
   else if (location.hash === '#compagnon') S.vue = 'compagnon';
   else if (tv0) { S.vue = 'travail'; S.portee = tv0[1] ? dec(tv0[1]) : null; }
+  else if ((ev0 = /^#etiquette=(.+)$/.exec(location.hash))) { S.vue = 'etiquette'; S.portee = dec(ev0[1]); }
   else if (location.hash === '#en-cours') S.vue = 'travaux';
   else if (location.hash === '#decisions') S.vue = 'decisions';
   else if (/^#guide(=|$)/.test(location.hash)) { S.vue = 'guide'; const ancre = dec(location.hash.slice(7)); charger('guide').then((m) => m.fixerAncre(ancre)); }

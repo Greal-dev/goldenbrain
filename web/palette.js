@@ -6,6 +6,7 @@ import { api } from './api.js';
 import { S, parcourir, chemin, ouvrir, ouvrirVue, erreur, emit, noeudTache } from './store.js';
 import { groupesStatut, ecrireStatut } from './statut.js';
 import { envoyerIA } from './main.js';
+import { motsConnus, charger as chargerEtiquettes } from './etiquettes.js';
 
 const MAX = 8, FERMES = new Set(['fait', 'cloture', 'abandonne']);
 const norm = (s) => (s || '').normalize('NFD').replace(/\p{M}/gu, '').toLowerCase();
@@ -28,6 +29,7 @@ function commandes() {
     { libelle: t('palette.nouvelle'), agir: () => $('#btn-nouvelle').click() },
     { libelle: t('palette.decisions'), agir: () => ouvrirVue('decisions') },
     { libelle: t('palette.reglages'), agir: () => ouvrirVue('reglages') },
+    ...motsConnus().map((m) => ({ libelle: t('palette.etiquette', { mot: m }), agir: () => ouvrirVue('etiquette', m) })), // INV-ETIQUETTE-4
   ];
   const id = S.selection, n = id && noeudTache(id);
   if (n) {
@@ -81,4 +83,5 @@ export function ouvrirPalette() {
   if (!dlg) construire();
   if (dlg.open) { champ.select(); return; }
   champ.value = ''; actualiser(); dlg.showModal(); champ.focus();
+  chargerEtiquettes().then(() => { if (dlg.open) actualiser(); });
 }

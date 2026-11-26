@@ -78,6 +78,7 @@ Les tests d'interface (`ui/`) se lancent à part : `python scripts/check_ui.py`.
 | `tests/ui/scenario_installation.py` | Réglages : refus du dialogue, accord, accord erroné, appairage refusé (poste factice). | — | — |
 | `tests/ui/scenario_rapprochement.py` | Nouvelle tâche : suggestions au fil de la saisie, « Compléter celle-ci », refus doux puis « Créer quand même ». | INV-RAPPROCHEMENT-1 | — |
 | `tests/ui/scenario_etiquettes.py` | Étiquettes : ajout dans « Détails », puce dans l'arbre, consigne de réglage. | INV-ETIQUETTE-1, INV-ETIQUETTE-3 | — |
+| `tests/ui/scenario_vue_etiquette.py` | Vue par étiquette : liste, lancement groupé des routines, clic sur titre, puce de l'arbre, palette. | INV-ETIQUETTE-4 | — |
 | `src/orchestrateur/appairage.py` | Appairage d'un exécuteur : code court à usage unique, durée limitée, essais limités, échangé contre un jeton. | INV-APPAIRAGE-1 | `test_appairage.py` |
 | `src/orchestrateur/appareils.py` | Appareils distants (téléphone) : code d'appairage à usage unique, jetons d'appareil hachés, révocation, journal des connexions. | INV-DISTANT-5, INV-DISTANT-6, INV-DISTANT-8 | `test_appareils.py`, `ui/scenario_appareils.py` |
 | `src/orchestrateur/api_appareils.py` | Garde des requêtes distantes (jeton d'appareil, Origin, réservé au poste, gestes à risque) et routes `/api/appareils`. | INV-API-1, INV-DISTANT-1, INV-DISTANT-5, INV-DISTANT-6, INV-DISTANT-7, INV-DISTANT-8, INV-LANGUE-1, INV-APPAIRAGE-2 | `test_appareils.py`, `test_telegram.py`, `ui/scenario_appareils.py` |
@@ -199,7 +200,8 @@ Les tests d'interface (`ui/`) se lancent à part : `python scripts/check_ui.py`.
 | `src/orchestrateur/rapprochement.py` | Rapprochement avant création : tâches proches, score et seuil fort, mesure des créations évitées. | INV-RAPPROCHEMENT-1, INV-RAPPROCHEMENT-2, INV-PILOTAGE-1, INV-ETIQUETTE-3 | `test_rapprochement.py` |
 | `src/orchestrateur/api_rapprochement.py` | Routes du rapprochement et garde de `POST /api/taches` (409 + candidates, forcer, compléter, mesure). | INV-INTEG-2, INV-RAPPROCHEMENT-1, INV-RAPPROCHEMENT-2, INV-NATURE-1, INV-PLAFOND-1, INV-ETIQUETTE-2 | `test_rapprochement.py` |
 | `src/orchestrateur/etiquettes.py` | Étiquettes libres : normalisation, lecture/écriture de `etiquettes:`, registre des consignes, tâches liées par étiquette, texte joint au tour. | INV-ETIQUETTE-1, INV-ETIQUETTE-2, INV-ETIQUETTE-3, INV-PILOTAGE-1, INV-VAULT-1 | `test_etiquettes.py` |
-| `src/orchestrateur/api_etiquettes.py` | Routes `/api/etiquettes` (liste, consigne, renommer/fusionner, supprimer) et `POST /api/taches/{id}/etiquettes` (agent : étiquette connue seulement). | INV-ETIQUETTE-1, INV-ETIQUETTE-2, INV-LOT-1 | `test_etiquettes.py` |
+| `src/orchestrateur/api_etiquettes.py` | Routes `/api/etiquettes` (liste, consigne, renommer/fusionner, supprimer) et `POST /api/taches/{id}/etiquettes` (agent : étiquette connue seulement), `GET /api/etiquettes/{mot}/vue`. | INV-ETIQUETTE-1, INV-ETIQUETTE-2, INV-ETIQUETTE-4, INV-LOT-1 | `test_etiquettes.py` |
+| `src/orchestrateur/vue_etiquette.py` | Vue par étiquette : tâches et routines portant un mot, résultat de fiche, dernière et prochaine exécution, en lecture seule. | INV-ETIQUETTE-4, INV-PILOTAGE-1 | `test_vue_etiquette.py` |
 | `src/orchestrateur/cli_etiquettes.py` | `orch etiqueter <id> +mot -mot`, `orch etiquettes`, rendu des étiquettes dans `lire` et `arbre`. | INV-ETIQUETTE-2, INV-ETIQUETTE-3 | `test_etiquettes.py` |
 | `src/orchestrateur/pilotage.py` | Chat de projet : tâche de pilotage d'un nœud, amorçage de chaque tour, remontée des descendantes. | INV-PILOTAGE-1, INV-PILOTAGE-2, INV-PILOTAGE-3, INV-VAULT-3 | `test_pilotage.py` |
 | `src/orchestrateur/references.py` | Réécriture des références à des chemins déplacés (dossiers ou fichiers) dans un texte. | — | `test_references.py` |
@@ -282,6 +284,7 @@ Les tests d'interface (`ui/`) se lancent à part : `python scripts/check_ui.py`.
 | `web/filtres.css` | Pastille de statut, barre de filtres et en-têtes de groupe. Mêmes variables de thème que style.css. | INV-ROUTINE-5 | `ui/scenario_filtres.py` |
 | `web/lot.js` | Cases à cocher, Maj+clic, tout sélectionner, barre de changement en bloc, confirmation et annulation. | INV-LOT-1 | `ui/scenario_lot_statuts.py` |
 | `web/etiquettes.js` | Étiquettes : puces, carte de « Détails » (saisie, complétion), réglage (consigne, renommer, annuler). | INV-ETIQUETTE-1, INV-ETIQUETTE-3 | `ui/scenario_etiquettes.py` |
+| `web/vue_etiquette.js` | Page « Vue par étiquette » (`#etiquette=<mot>`) : une ligne par tâche ou routine, « Exécuter maintenant », « Lancer toutes les routines ». | INV-ETIQUETTE-4 | `ui/scenario_vue_etiquette.py` |
 | `web/main.js` | Pastille d'état unique, phrase, boutons « Confier à l'IA » / « Renvoyer à l'IA » avec consigne. | INV-MAIN-1, INV-MAIN-5 | `test_attente_muette.py` |
 | `web/filtres.js` | barre de filtres combinables (statut, priorité, échéance, casquette/projet, harnais, IA, à moi), regroupement (statut, priorité, projet, échéance), tri priorité puis échéance, compteur, mémoire du navigateur. | INV-ROUTINE-5 | `ui/scenario_filtres.py` |
 | `web/statut.js` | choix du statut d'une tâche : liste unique (détail : `<select>` ; arbre et cascade : menu sur la pastille), écriture par la route du détail, refus en ligne, bandeau « Annuler ». | — | `ui/scenario_statut_ligne.py` |
@@ -450,6 +453,7 @@ Les tests d'interface (`ui/`) se lancent à part : `python scripts/check_ui.py`.
 | `tests/test_moteurs.py` | Moteurs par tâche : clé `modele`, changement de harnais (sessions.json, préambule, retour), | INV-MOTEUR-1 | — |
 | `tests/test_graphe.py` | Mentions non liées et graphe : nœuds, arêtes, local, filtres, plafond, cache invalidé à l'écriture. | INV-NOTE-4, INV-GRAPHE-1, INV-GRAPHE-2 | — |
 | `tests/test_etiquettes.py` | Étiquettes : normalisation, contexte agent, rapprochement, renommage annulable, pose en bloc, refus d'agent, bornage des liens, recherche. | INV-ETIQUETTE-1, INV-ETIQUETTE-2, INV-ETIQUETTE-3 | — |
+| `tests/test_vue_etiquette.py` | Vue par étiquette : routines d'abord, résultat, dernière/prochaine exécution, pause, mot inconnu, lecture seule. | INV-ETIQUETTE-4 | — |
 | `tests/test_notes.py` | Notes du vault : chemins sûrs, extraction et résolution des liens, index incrémental. | — | — |
 | `tests/test_controle.py` | INV-CONTROLE-1 : échec puis correction puis modification (périmé), sans contrôle, déclaration non terminée, dossier hors dépôt, commande introuvable, délai, tâche permanente, persistance. | INV-CONTROLE-1 | — |
 | `tests/test_pilotage.py` | Chat de projet : création au premier message, unicité, masquage, amorçage, seuil, création et lancement d'une enfant par `orch`, remontée sans tour. | INV-PILOTAGE-1, INV-PILOTAGE-2, INV-PILOTAGE-3 | — |

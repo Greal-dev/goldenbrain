@@ -5,7 +5,7 @@
 import { t, tn } from './langues.js';
 import { h, remplacer } from './dom.js';
 import { api, post } from './api.js';
-import { erreur, emit, ouvrir } from './store.js';
+import { erreur, emit, ouvrir, ouvrirVue } from './store.js';
 
 const enc = encodeURIComponent;
 let connues = []; // [{mot, n, consigne}] : les plus utilisées d'abord
@@ -39,8 +39,11 @@ export function carteEtiquettes(tk, surChangement) {
   return h('div', { class: 'etiq-carte', 'data-id': 'etiquettes' },
     h('h4', { class: 'etiq-titre' }, t('etiquettes.titre')),
     h('div', { class: 'etiq-ligne' },
-      mots.map((m) => h('button', { type: 'button', class: 'etiq retirable', 'data-etiquette': m, title: (tk.consignes_etiquettes || {})[m] || t('etiquettes.retirer', { mot: m }),
-        'aria-label': t('etiquettes.retirer', { mot: m }), onclick: () => poser([], [m]) }, `#${m} ×`)),
+      mots.map((m) => h('span', { class: 'etiq-duo' },
+        h('button', { type: 'button', class: 'etiq retirable', 'data-etiquette': m, title: (tk.consignes_etiquettes || {})[m] || t('etiquettes.retirer', { mot: m }),
+          'aria-label': t('etiquettes.retirer', { mot: m }), onclick: () => poser([], [m]) }, `#${m} ×`),
+        h('button', { type: 'button', class: 'etiq retirable', 'data-vue-etiquette': m, title: t('vue_etiquette.puce_titre', { mot: m }),
+          'aria-label': t('vue_etiquette.puce_titre', { mot: m }), onclick: () => ouvrirVue('etiquette', m) }, '↗'))),
       saisie, completion('etiq-liste')),
     liees.length ? h('ul', { class: 'etiq-liees', 'aria-label': t('etiquettes.liees') }, liees.map((x) => h('li', null,
       h('button', { type: 'button', class: 'lien-titre', onclick: () => ouvrir(x.id) }, x.titre || x.id), ' ', h('span', { class: 'etiq-st' }, x.statut || '')))) : null);

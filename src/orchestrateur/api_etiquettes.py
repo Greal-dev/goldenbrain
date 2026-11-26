@@ -4,7 +4,7 @@ Rôle : traduire HTTP en appels à `etiquettes` et `lot_statuts` ; fournir à `G
 leurs consignes et les tâches liées par étiquette ; `GET /api/etiquettes` sert le filtre et Réglages.
 Frontières : aucune logique d'étiquette ici (module `etiquettes`) ; le renommage et la fusion passent par un lot
 annulable (INV-LOT-1). La consigne, le renommage et la fusion sont des gestes humains : refusés à un agent.
-Invariants portés : INV-ETIQUETTE-1, INV-ETIQUETTE-2 (un agent pose une étiquette connue, ne l'invente pas, ne
+Invariants portés : INV-ETIQUETTE-1, INV-ETIQUETTE-4 (vue par étiquette, lecture seule), INV-ETIQUETTE-2 (un agent pose une étiquette connue, ne l'invente pas, ne
 retire pas celle d'un autre), INV-LOT-1.
 """
 
@@ -13,7 +13,7 @@ from __future__ import annotations
 from fastapi import APIRouter, Request
 from pydantic import BaseModel
 
-from . import etiquettes, langues, lot_statuts
+from . import etiquettes, langues, lot_statuts, vue_etiquette
 from .vault import Conflit, Invalide
 
 
@@ -69,6 +69,10 @@ def routes(moteur, tache) -> APIRouter:
     async def lister():
         return {"etiquettes": [{"mot": m, **v} for m, v in
                                etiquettes.connues(moteur.vault.index()[0], moteur.etiquettes).items()]}
+
+    @r.get("/api/etiquettes/{mot}/vue")
+    async def vue_par_etiquette(mot: str):
+        return vue_etiquette.assembler(moteur, mot)
 
     @r.post("/api/taches/{ident}/etiquettes")
     async def poser(ident: str, c: CorpsPose, request: Request):

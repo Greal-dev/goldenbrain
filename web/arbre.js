@@ -15,7 +15,7 @@ import { appliquer, actif as filtreActif, badgeStatut, libelleCourt, compteur, i
 function puces(mots, max = 2) {
   if (!mots?.length) return null;
   const reste = mots.slice(max);
-  return h('span', { class: 'etiq-puces' }, mots.slice(0, max).map((m) => h('span', { class: 'etiq', 'data-etiquette': m }, `#${m}`)),
+  return h('span', { class: 'etiq-puces' }, mots.slice(0, max).map((m) => h('span', { class: 'etiq', 'data-etiquette': m, title: t('vue_etiquette.puce_titre', { mot: m }) }, `#${m}`)),
     reste.length ? h('span', { class: 'etiq plus', title: reste.map((m) => `#${m}`).join(' ') }, `+${reste.length}`) : null);
 }
 
@@ -178,6 +178,8 @@ export function initArbre() {
     const n = noeudDe(row);
     if (!n || e.target.closest('.st-chg, .st-refus')) return;
     cleFocus = cle(n);
+    const puce = e.target.closest('.etiq[data-etiquette]'); // INV-ETIQUETTE-4 : clic sur une puce = vue de l'étiquette
+    if (puce) { ouvrirVue('etiquette', puce.dataset.etiquette); return; }
     if (e.target.classList.contains('chev')) basculer(n); else if (n.type === 'tache') ouvrir(n.id); else if (n.type === 'groupe') basculer(n); else ouvrirVue('cascade', cle(n));
     row.focus?.();
   });
