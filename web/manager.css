@@ -1,5 +1,5 @@
 /* Volet « manager » (INV-MANAGER-1) : troisième colonne à droite quand il est ouvert ; plein écran sur téléphone. */
-body.manager-ouvert #corps { grid-template-columns: clamp(270px, 20vw, 370px) 1fr clamp(300px, 26vw, 420px); }
+body.manager-ouvert #corps { grid-template-columns: var(--l-arbre) 1fr clamp(300px, 26vw, 420px); }
 #volet-manager { background: var(--panneau); border-left: 1px solid var(--bord); display: flex; flex-direction: column; min-height: 0; }
 #volet-manager[hidden] { display: none; }
 .mgr-tete { display: flex; align-items: center; gap: 8px; padding: 7px 10px; border-bottom: 1px solid var(--bord); flex: none; }

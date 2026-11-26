@@ -263,6 +263,7 @@ Les tests d'interface (`ui/`) se lancent à part : `python scripts/check_ui.py`.
 | `web/paresseux.js` | Chargement à la demande (`import()`) des écrans, de la fiche de tâche et des services de fond : le premier affichage ne charge que ce qu'il montre. | INV-REACTIVITE-1 | `ui/scenario_reactivite.py` |
 | `web/styles.liste` | Liste ordonnée des feuilles de style servies d'un tenant par `/style-tout.css`. | INV-REACTIVITE-1 | `test_styles.py` |
 | `web/discussion.js` | mode discussion : barre haute d'une rangée, rail de l'arbre, menu, « Tout afficher » (disposition mémorisée par poste). | INV-DISCUSSION-1 | `ui/scenario_discussion.py` |
+| `web/volet_largeur.js` | largeur réglable du volet des tâches : poignée tirée à la souris, au doigt ou au clavier, mémorisée par navigateur | INV-DISCUSSION-1 | `ui/scenario_accueil_rangee.py` |
 | `web/deroulant.js` | composant déroulant unique : survol à délai d'intention, clic, clavier, toucher, Échap, clic extérieur, épingle ; `intention()` partagée par les rails. | INV-DEROULANT-1 | `ui/scenario_deroulant.py` |
 | `web/deroulant.css` | mise en page du déroulant : panneau flottant, épingle, aperçus d'une ligne, feuille du bas au téléphone | INV-DEROULANT-1 | `ui/scenario_deroulant.py` |
 | `web/detail.js` | volet droit — tâche sélectionnée (en-tête, actions, fiche, corps, conversation, saisie). | — | `ui/scenario_fumee.py` (arbre, tâche, conversation), `ui/scenario_console.py`, `ui/scenario_modifier.py` |

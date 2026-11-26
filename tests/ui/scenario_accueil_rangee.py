@@ -68,3 +68,34 @@ def test_fiche_ouverte_le_titre_long_reste_lisible_dans_l_en_tete(navigateur, sr
     assert m["visible"] >= 0.45 * m["ligne"], f"le titre n'a que {m['visible']} px sur une ligne de {m['ligne']} ({m})"
     assert m["visible"] >= 0.9 * m["entier"], f"titre de 86 caractères rogné : {m['visible']} px visibles sur {m['entier']} ({m})"
     assert m["haut"] <= 44 and m["dedans"], f"l'en-tête ne tient plus sur une ligne dans la fenêtre ({m})"
+
+
+def test_volet_des_taches_se_regle_en_tirant_son_bord_et_s_en_souvient(navigateur, srv):
+    ctx = navigateur.new_context(viewport={"width": 1366, "height": 768}, locale="fr-FR")
+    ctx.add_init_script("try{localStorage.setItem('gb.disposition-vu','1')}catch(e){}")
+    p = ctx.new_page()
+    p.goto(srv.url + "/")
+    p.wait_for_selector(".casc-corps .cl", timeout=90000)
+    largeur = "() => Math.round(document.getElementById('volet-gauche-corps').getBoundingClientRect().width)"
+    l0 = p.evaluate(largeur)
+    b = p.locator("[data-id=poignee-arbre]").bounding_box()
+    x, y = b["x"] + b["width"] / 2, b["y"] + 300
+    p.mouse.move(x, y)
+    p.mouse.down()
+    p.mouse.move(x + 180, y, steps=6)
+    p.mouse.up()
+    l1 = p.evaluate(largeur)
+    assert abs(l1 - (l0 + 180)) <= 4, f"le volet devait passer de {l0} à {l0 + 180} px, il fait {l1}"
+    p.mouse.move(x + 180, y)
+    p.mouse.down()
+    p.mouse.move(5, y, steps=6)  # tiré jusqu'au bord : borné, jamais fermé
+    p.mouse.up()
+    assert 198 <= p.evaluate(largeur) <= 200  # 200 px de colonne, bordure comprise
+    p.reload()
+    p.wait_for_selector(".casc-corps .cl", timeout=90000)
+    p.wait_for_selector("[data-id=poignee-arbre]", state="attached", timeout=90000)  # module chargé après le premier affichage
+    assert 198 <= p.evaluate(largeur) <= 200, "la largeur choisie doit survivre au rechargement"
+    p.locator("[data-id=poignee-arbre]").dblclick()
+    assert p.evaluate(largeur) == l0, "le double-clic rend la largeur d'origine"
+    assert p.evaluate("document.documentElement.scrollWidth - innerWidth") <= 0
+    ctx.close()

@@ -216,6 +216,7 @@ function differes() {
   sûr(charger('etoile', (m) => m.initEtoile()));
   sûr(charger('economie', (m) => m.initEconomie()));
   sûr(managerPret());
+  sûr(charger('volet_largeur', (m) => m.initLargeurVolet()));
   sûr(Promise.all([charger('note-gestes'), charger('ponts')]).then(([g, p]) => p.initPonts(g.creerDepuisLien)));
   // Second cerveau d'abord (INV-CERVEAU-1), puis assistant IA, puis l'accueil s'il se propose.
   sûr(Promise.all([charger('cerveau'), charger('premiers-pas'), charger('accueil')]).then(([c, pp, ac]) => c.initCerveau(() => pp.initPremiersPas(ac.initAccueil))));

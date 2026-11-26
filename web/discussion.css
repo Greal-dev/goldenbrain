@@ -27,9 +27,9 @@ body.barre-fine .b-menu.ouvert { display: flex; }
 body.barre-fine .b-menu > .btn { text-align: left; padding: 5px 10px; font-size: 13px; }
 
 /* 2. Arbre : rail étroit à intercalaire (survol = aperçu, clic = épinglé). */
-body.discussion #corps { grid-template-columns: calc(30px + clamp(270px, 20vw, 370px)) 1fr; }
+body.discussion #corps { grid-template-columns: calc(30px + var(--l-arbre)) 1fr; }
 body.discussion:not(.arbre-epingle) #corps { grid-template-columns: 30px 1fr; }
-body.discussion.manager-ouvert #corps { grid-template-columns: calc(30px + clamp(270px, 20vw, 370px)) 1fr clamp(300px, 26vw, 420px); }
+body.discussion.manager-ouvert #corps { grid-template-columns: calc(30px + var(--l-arbre)) 1fr clamp(300px, 26vw, 420px); }
 body.discussion.manager-ouvert:not(.arbre-epingle) #corps { grid-template-columns: 30px 1fr clamp(300px, 26vw, 420px); }
 body.discussion #volet-gauche { position: relative; z-index: 12; flex-direction: row; }
 body.discussion .intercalaire { display: flex; flex: none; width: 30px; flex-direction: column; align-items: center; gap: 8px; padding: 8px 0;
@@ -38,7 +38,7 @@ body.discussion .intercalaire:hover, body.discussion .intercalaire:focus-visible
 .inter-texte { writing-mode: vertical-rl; font-size: 12px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; }
 body.discussion #volet-gauche-corps { min-width: 0; }
 body.discussion #volet-gauche.rail #volet-gauche-corps { display: none; }
-body.discussion #volet-gauche.rail.apercu #volet-gauche-corps { display: flex; position: absolute; left: 30px; top: 0; bottom: 0; width: clamp(270px, 22vw, 380px);
+body.discussion #volet-gauche.rail.apercu #volet-gauche-corps { display: flex; position: absolute; left: 30px; top: 0; bottom: 0; width: var(--l-arbre);
   background: var(--panneau); border-right: 1px solid var(--bord-fort); box-shadow: var(--ombre); }
 body.discussion #volet-gauche.rail.apercu .inter-fleche { color: var(--accent); }
 
@@ -92,3 +92,14 @@ body.barre-fine .casc-live { display: none; }
 .d-une > select { max-width: 124px; }
 .d-une > :is(.d-resultat, .d-livrables) { padding: 2px 7px; min-width: 28px; }
 @media (max-width: 480px) { .d-une .d-titre, .d-une .d-titre-champ { flex: 1 1 0; min-width: 0; } }
+
+/* Volet des tâches à largeur réglable (26/11, volet_largeur.js) : une poignée sur son bord droit, tirée à la souris ou au doigt. */
+:root { --l-arbre: clamp(270px, 20vw, 370px); }
+#volet-gauche { position: relative; }
+.poignee-arbre { position: absolute; top: 0; bottom: 0; right: -4px; width: 8px; z-index: 13; cursor: col-resize; touch-action: none; }
+.poignee-arbre::after { content: ""; position: absolute; top: 0; bottom: 0; left: 3px; width: 2px; background: transparent; }
+.poignee-arbre:hover::after, .poignee-arbre:focus-visible::after, body.tire-arbre .poignee-arbre::after { background: var(--accent); }
+.poignee-arbre:focus-visible { outline: none; }
+body.tire-arbre { user-select: none; cursor: col-resize; }
+body.discussion #volet-gauche.rail:not(.apercu) .poignee-arbre { display: none; }
+@media (max-width: 480px) { .poignee-arbre { display: none; } }
