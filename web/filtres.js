@@ -1,4 +1,4 @@
-// Rôle : barre de filtres, regroupement et tri de l'arbre des tâches (vue de base) + libellé court du statut.
+// Rôle : filtres, regroupement et tri de l'arbre des tâches (vue de base), dans un déroulant (INV-DEROULANT-1) + libellé court du statut.
 // Frontières : calcul pur sur S.arbre (jamais d'écriture, pas d'API) ; l'état est gardé dans le navigateur
 // (localStorage). Le classement de l'ordonnancement (INV-ORDO-2) porte sur des tours en file, pas sur
 // l'arbre : ici, priorité puis échéance, comme son premier critère, sans le dupliquer.
@@ -9,6 +9,7 @@ import { S, on, emit, cleNoeud, parcourir } from './store.js';
 import { rangPriorite, libellePriorite, ecartJours } from './temps.js';
 import { NATURES, libelleNature } from './lignes.js';
 import { badgeRoutine, libelleRoutine } from './routines.js';
+import { deroulant } from './deroulant.js';
 
 const CLE = 'orch.filtres';
 const VIDE = { statuts: [], priorite: '', echeance: '', portee: '', harnais: '', executant: '', nature: '', ia: false, routines: false, amoi: false, groupe: '', tri: 'arbre' };
@@ -126,22 +127,22 @@ function coche(id, libelle, val, quand) {
 }
 const changer = (patch) => { Object.assign(F, patch); sauver(); emit('filtre'); };
 
-let dernier = 0;
-export function dessinerBarre() {
-  const zone = $('#filtres');
-  if (!zone) return;
-  sauver(); // « À moi » peut aussi être basculé depuis le bandeau
-  const foc = zone.contains(document.activeElement) ? document.activeElement : null;
+let dernier = 0, der = null;
+// INV-DEROULANT-1 : « Filtres et regroupement (n) » est une pastille ; le panneau flotte au-dessus de l'arbre, sans le pousser.
+function monter(zone) {
+  const bouton = h('button', { type: 'button', class: 'f-pastille', id: 'btn-filtres' });
+  const panneau = h('div', { class: 'panneau f-panneau', id: 'panneau-filtres', hidden: true });
+  remplacer(zone, bouton, panneau);
+  der = deroulant({ bouton, panneau, titre: t('filtres.titre'), remplir: contenu });
+}
+function contenu(corps) {
+  const foc = corps.contains(document.activeElement) ? document.activeElement : null;
   const reperer = foc && (foc.id ? `#${foc.id}` : foc.dataset.statut ? `[data-statut="${foc.dataset.statut}"]` : null);
-  const ouvert = zone.querySelector('details')?.open ?? false;
   const portees = [['', t('filtres.toutes')]];
   for (const x of parcourir(S.arbre)) if (x.type === 'casquette' || x.type === 'conteneur') portees.push([cleNoeud(x), x.titre]);
   const harnais = ['', ...new Set([...parcourir(S.arbre)].filter((x) => x.type === 'tache' && x.harnais).map((x) => x.harnais))].map((k) => [k, k || t('filtres.tous')]);
-  const n = filtresActifs();
   const comptes = comptesStatut(S.arbre);
-  const d = h('details', { class: 'f-boite', ...(ouvert ? { open: '' } : {}) },
-    h('summary', null, t('filtres.titre'), n ? h('span', { class: 'compte', title: tn('filtres.actifs', n) }, n) : null,
-      h('span', { class: 'f-compte', id: 'f-compte', role: 'status', 'aria-live': 'polite' })),
+  remplacer(corps,
     h('div', { class: 'f-statuts', role: 'group', 'aria-label': t('filtres.statut') }, STATUTS_COURTS.map(([k, l]) => h('button', {
       type: 'button', class: `f-st bs-${k}`, 'aria-pressed': String(F.statuts.includes(k)), 'data-statut': k,
       onclick: () => basculerStatut(k),
@@ -161,9 +162,20 @@ export function dessinerBarre() {
       coche('f-routines', t('filtres.routines'), F.routines, (v) => changer({ routines: v })),
       coche('f-amoi', t('filtres.a_moi'), S.filtreAMoi, (v) => { S.filtreAMoi = v; sauver(); emit('filtre'); }),
       h('button', { type: 'button', class: 'btn petit', id: 'f-raz', onclick: () => { F = { ...VIDE }; S.filtreAMoi = false; sauver(); emit('filtre'); } }, t('filtres.raz'))));
-  remplacer(zone, d);
+  if (reperer) corps.querySelector(reperer)?.focus();
+}
+export function dessinerBarre() {
+  const zone = $('#filtres');
+  if (!zone) return;
+  sauver(); // « À moi » peut aussi être basculé depuis le bandeau
+  if (!der || !zone.contains(der.bouton)) monter(zone);
+  const n = filtresActifs();
+  // Jamais invisible : la pastille dit le nombre de filtres actifs et combien de tâches restent affichées.
+  remplacer(der.bouton, h('span', null, t('filtres.titre')), n ? h('span', { class: 'compte', title: tn('filtres.actifs', n) }, n) : null,
+    h('span', { class: 'f-compte', id: 'f-compte', role: 'status', 'aria-live': 'polite' }));
+  der.bouton.classList.toggle('actif', actif());
+  der.redessiner();
   compteur(dernier);
-  if (reperer) zone.querySelector(reperer)?.focus();
 }
 export function compteur(k) {
   dernier = k;

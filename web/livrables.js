@@ -107,5 +107,5 @@ export async function volet(tk) {
   }
   await charger();
   await formulaire({ titre: t('livrables.titre_volet', { titre: tk.titre }), texte: t('livrables.consigne'), corps: h('div', { class: 'liv-volet' }, barre, zone, ajout),
-    valider: t('livrables.fermer'), annuler: t('livrables.fermer'), large: true });
+    valider: t('livrables.fermer'), annuler: null, large: true });
 }

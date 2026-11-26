@@ -35,7 +35,7 @@ def test_routine_creee_visible_executee_mise_en_pause_et_filtree(page, serveur):
     expect(ligne(page, "Veille Rt").locator(".badge-st")).to_contain_text("routine en pause")
     expect(page.locator(".routine-bloc")).to_contain_text("Routine en pause")
 
-    page.locator("#filtres summary").click()
+    page.click("#btn-filtres")
     page.locator("#f-routines").check()
     titres = page.locator("#arbre .ligne.t-tache .titre").all_inner_texts()
     assert "Veille Rt" in titres and "Ordinaire Rt" not in titres

@@ -101,6 +101,7 @@ def test_cascade_filtre_par_statut_et_ouverture(page, serveur):
     charger(page)
     ligne(page, "ArbreCasc").click()
     expect(page.locator(".casc-titre")).to_have_text("ArbreCasc")
+    page.click("#btn-statuts")  # INV-DEROULANT-1 : les puces de statut se déroulent
     page.locator(".chip-st", has_text="Bloquée").click()  # filtre cumulable : seules les tâches de ce statut
     expect(page.locator(".chip-st", has_text="Bloquée")).to_have_attribute("aria-pressed", "true")
     expect(page.locator(".casc-corps .cl:not(.ctx) .c-t")).to_have_text(["Bloquée AC"])

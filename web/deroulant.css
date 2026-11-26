@@ -2,7 +2,7 @@
    (jamais de saut de mise en page) ; au téléphone, feuille qui monte du bas. Frontières : aucune logique. */
 .deroulant[hidden] { display: none; }
 .deroulant .der-tete { display: flex; align-items: center; gap: 6px; margin: -2px 0 6px; min-height: 24px; }
-.deroulant .der-titre { font-size: 12.5px; color: var(--texte-2); margin-right: auto; }
+.deroulant .der-titre { flex: 1; font-size: 12.5px; color: var(--texte-2); } /* « Tout voir » et l'épingle se rangent à droite */
 .deroulant .der-tete:not(:has(.der-titre)) .der-tout { margin-right: auto; }
 .der-epingle { margin-left: auto; border: 1px solid transparent; background: none; border-radius: 6px; padding: 1px 5px; font-size: 12px; line-height: 1.2;
   cursor: pointer; filter: grayscale(1); opacity: .55; }

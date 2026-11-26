@@ -5,8 +5,13 @@
 .badge-st.bs-a-moi, .badge-st.bs-a-valider { background: var(--c-attente); color: var(--sur-vif); font-weight: 600; }
 .badge-st.bs-en-cours { border-width: 1.5px; }
 .t-groupe { font-weight: 600; }
-.filtres { border-bottom: 1px solid var(--bord); font-size: 12px; }
-.f-boite > summary { cursor: pointer; padding: 5px 10px; display: flex; align-items: center; gap: 8px; color: var(--texte-2); }
+.filtres { position: relative; border-bottom: 1px solid var(--bord); font-size: 12px; }
+/* INV-DEROULANT-1 : la pastille garde la place de l'ancien titre ; le panneau flotte sur l'arbre. */
+.f-pastille { display: flex; align-items: center; gap: 8px; width: 100%; padding: 5px 10px; border: 0; background: none; color: var(--texte-2); font: inherit; text-align: left; cursor: pointer; }
+.f-pastille:hover, .f-pastille[aria-expanded="true"] { background: var(--survol); color: var(--texte); }
+.f-pastille.actif { color: var(--texte); font-weight: 600; }
+.f-panneau { width: min(440px, calc(100vw - 16px)); font-size: 12px; }
+.f-panneau .f-statuts, .f-panneau .f-grille, .f-panneau .f-pied { padding-left: 2px; padding-right: 2px; }
 .f-compte { margin-left: auto; font-variant-numeric: tabular-nums; }
 .f-statuts { display: flex; flex-wrap: wrap; gap: 4px; padding: 2px 10px 6px; }
 .f-st { cursor: pointer; padding: 1px 8px; }
@@ -48,7 +53,11 @@
 .casc-nsurn { font-size: 12px; color: var(--texte-2); font-variant-numeric: tabular-nums; }
 .c-sel, .c-sel-tout { flex: none; width: 15px; height: 15px; margin: 0 6px 0 0; cursor: pointer; accent-color: var(--accent); }
 .c-th-titre { display: flex; align-items: center; }
-.lot-barre { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 8px; padding: 6px 8px; border: 1px solid var(--accent); border-radius: 6px; background: var(--accent-fond); font-size: 12.5px; }
+/* INV-DEROULANT-1 : pastille « n sélectionnées » et panneau d'actions flottant (épinglé tant que la sélection dure). */
+.lot-zone { position: relative; } .lot-zone[hidden] { display: none; }
+.lot-pastille { border-color: var(--accent); background: var(--accent-fond); font-weight: 600; }
+.lot-barre { width: min(560px, calc(100vw - 16px)); font-size: 12.5px; }
+.lot-barre .der-corps { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 .lot-barre[hidden] { display: none; }
 .lot-n { font-weight: 600; }
 .lot-note { color: var(--texte-2); }

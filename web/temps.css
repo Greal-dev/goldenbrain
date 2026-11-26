@@ -19,7 +19,8 @@
 
 /* Vue « Aujourd'hui » */
 .aujourdhui { padding: 14px 20px 28px; overflow: auto; height: 100%; box-sizing: border-box; }
-.au-date { margin: 2px 0 14px; color: var(--texte-2); text-transform: capitalize; }
+.au-date { margin: 2px 0 14px; color: var(--texte-2); }
+.au-date::first-letter { text-transform: uppercase; } /* « Mercredi 26 novembre », pas « Décision En Attente » */
 .au-groupe { margin: 0 0 18px; }
 .au-groupe h3 { margin: 0 0 6px; font-size: 13px; text-transform: uppercase; letter-spacing: .04em; color: var(--texte-2); }
 .au-retard h3 { color: var(--c-bloque); }

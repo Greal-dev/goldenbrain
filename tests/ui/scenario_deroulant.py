@@ -157,3 +157,20 @@ def test_mode_discussion_aucune_zone_permanente(navigateur, srv):
     h = p.evaluate("() => document.querySelector('#bandeau .b-haut').getBoundingClientRect().height")
     assert h <= 48, f"barre haute de {h:.0f} px : plus d'une rangée"
     ctx.close()
+
+
+def test_filtres_de_l_arbre_flottent_sans_pousser_l_arbre(navigateur, srv):
+    """Filtres et regroupement : une pastille ; le panneau flotte sur l'arbre (même position avant et après), Échap le referme."""
+    ctx, p = ouvrir(navigateur, srv)
+    avant = p.evaluate("() => JSON.stringify(document.querySelector('#arbre').getBoundingClientRect())")
+    p.click("#btn-filtres")
+    expect(p.locator("#panneau-filtres #f-groupe")).to_be_visible()
+    assert p.evaluate("() => JSON.stringify(document.querySelector('#arbre').getBoundingClientRect())") == avant, "le panneau pousse l'arbre"
+    p.locator('#panneau-filtres .f-st[data-statut="a-faire"]').click()
+    expect(p.locator("#btn-filtres .compte")).to_have_text("1")  # jamais invisible : le compte reste sur la pastille
+    expect(p.locator("#panneau-filtres")).to_be_visible()  # un clic dans le panneau ne le referme pas
+    p.keyboard.press("Escape")
+    expect(p.locator("#panneau-filtres")).to_be_hidden()
+    p.click("#btn-filtres")
+    p.locator("#f-raz").click()
+    ctx.close()

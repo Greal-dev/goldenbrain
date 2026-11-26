@@ -28,7 +28,7 @@
 .co-retour-geste .btn-discret { margin-left: auto; min-width: 44px; min-height: 44px; }
 .co-retour-geste.ok { border-color: var(--ok); }
 .co-retour-geste.ko { border-color: var(--c-bloque); color: var(--c-bloque); }
-.co-travail { width: 100%; min-height: 44px; display: flex; justify-content: center; gap: 6px; }
+.co-travail { width: 100%; min-height: 44px; display: flex; justify-content: center; align-items: center; gap: 6px; }
 .tr-ligne { display: flex; align-items: stretch; gap: 4px; }
 .tr-ligne .co-ligne { flex: 1; min-width: 0; }
 .tr-pin { min-width: 44px; min-height: 44px; font-size: 20px; color: var(--texte-2); }

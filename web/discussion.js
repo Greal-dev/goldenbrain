@@ -1,13 +1,14 @@
 // Rôle : mode discussion (INV-DISCUSSION-1) — dès qu'une tâche est ouverte, la conversation occupe l'essentiel de l'écran :
 // barre haute sur une rangée (les autres boutons dans « Menu »), arbre replié en un rail à intercalaire, notes derrière un
 // intercalaire à droite. Rien n'est supprimé : tout reste à un geste (survol, clic, Alt+T / Alt+N / Alt+M / Alt+D).
-// Frontières : DOM et localStorage seulement ; la mise en page est dans discussion.css (classes `discussion`, `rail`, `apercu`
+// Frontières : DOM, localStorage et PUT /api/interface (marque « vu ») ; la mise en page est dans discussion.css (classes `discussion`, `rail`, `apercu`
 // posées ici) ; les notes se replient par notes_tache.js, qui écoute l'événement `gb-disposition`.
-// Choix mémorisés par poste dans `gb.disposition` ; au téléphone (≤ 480 px) rien ne change.
+// Choix mémorisés dans `gb.disposition` (navigateur) ; bandeau de premier usage vu une fois par poste (serveur, INV-DISCUSSION-2) ; au téléphone (≤ 480 px) rien ne change.
 import { S, on } from './store.js';
 import { $, h } from './dom.js';
 import { t } from './langues.js';
 import { intention } from './deroulant.js';
+import { changerInterface } from './interface.js';
 
 const CLE = 'gb.disposition', VU = 'gb.disposition-vu';
 const lire = () => { try { return { tout: false, arbre: false, ...JSON.parse(localStorage.getItem(CLE)) }; } catch { return { tout: false, arbre: false }; } };
@@ -58,8 +59,9 @@ export const notesRepliees = () => etroit.matches || !D.tout;
 // (bandeaux.js : un seul à la fois, avant le corps), donc ne recouvre ni le titre ni le fil ; il ne s'affiche qu'une fois (marqué vu dès
 // l'apparition) et se referme seul à la première interaction (clic, touche) ou après 20 s.
 function bulle() {
-  let vu = true;
-  try { vu = localStorage.getItem(VU) === '1'; } catch { /* stockage indisponible : pas de bandeau */ }
+  // INV-DISCUSSION-2 : vu une fois par poste — mémoire du serveur (`[interface] vus`), pas seulement de ce navigateur.
+  let vu = !!S.interface?.vus?.includes('discussion');
+  try { vu ||= localStorage.getItem(VU) === '1'; } catch { vu = true; /* stockage indisponible : pas de bandeau */ }
   if (vu || document.querySelector('[data-id="bulle-discussion"]')) return;
   const ecoute = (e) => { if (!e.target.closest?.('.bulle-discussion')) fermer(); };
   const fermer = () => {
@@ -67,6 +69,7 @@ function bulle() {
     for (const ev of ['pointerdown', 'keydown']) document.removeEventListener(ev, ecoute, true);
   };
   try { localStorage.setItem(VU, '1'); } catch { /* sans effet */ }
+  changerInterface({ vu: 'discussion' }).catch(() => { /* hors ligne : le navigateur s'en souvient déjà */ });
   $('#bandeaux').append(h('div', { class: 'bulle-discussion', role: 'status', 'data-id': 'bulle-discussion' },
     h('b', null, t('discussion.bulle_titre')), h('span', null, t('discussion.bulle_texte')),
     h('button', { type: 'button', class: 'btn petit primaire', 'data-id': 'bulle-compris', onclick: fermer }, t('discussion.compris'))));

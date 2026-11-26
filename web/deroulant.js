@@ -33,7 +33,7 @@ export function deroulant(o) {
   bouton.setAttribute('aria-expanded', 'false');
   bouton.setAttribute('aria-haspopup', 'true');
   if (panneau.id) bouton.setAttribute('aria-controls', panneau.id);
-  const d = { mode: null, epingle: false, bouton, panneau, ouvrir: () => ouvrir('clic'), fermer: () => fermer(true), ouvert: () => !!d.mode, redessiner: () => { if (d.mode) o.remplir?.(corps); } };
+  const d = { mode: null, epingle: false, bouton, panneau, ouvrir: () => ouvrir('clic'), fermer: () => fermer(true), ouvert: () => !!d.mode, epingler: (v) => epingler(v), redessiner: () => { if (d.mode) o.remplir?.(corps); } };
 
   function ouvrir(mode) {
     for (const x of tous) if (x !== d && x.mode && !x.epingle) x.fermer();

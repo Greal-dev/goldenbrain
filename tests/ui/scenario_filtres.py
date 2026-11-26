@@ -44,7 +44,7 @@ def test_statut_visible_filtres_combines_groupement_et_memoire(page, serveur):
     assert ligne(page, "Gamma Filtre").locator(".badge-st").get_attribute("data-statut") == "bloque"
     assert ligne(page, "Delta Filtre").locator(".badge-st").get_attribute("data-statut") == "a-moi"
 
-    page.locator("#filtres summary").click()
+    page.click("#btn-filtres")
     # Statut multiple + compteur.
     page.locator('.f-st[data-statut="en-cours"]').click()
     page.locator('.f-st[data-statut="bloque"]').click()
@@ -59,7 +59,7 @@ def test_statut_visible_filtres_combines_groupement_et_memoire(page, serveur):
     page.wait_for_selector("#arbre .ligne")
     assert mes(page) == ["Alpha Filtre"]
     # Réinitialiser, puis échéance « en retard » et « à moi ».
-    page.locator("#filtres summary").click()
+    page.click("#btn-filtres")
     page.locator("#f-raz").click()
     page.select_option("#f-echeance", "retard")
     assert mes(page) == ["Beta Filtre"]

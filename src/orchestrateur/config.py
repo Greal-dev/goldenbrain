@@ -353,6 +353,7 @@ class ConfigInterface:
     propositions: str = ""  # sort des propositions d'agent : montrer (à valider), accepter ou ignorer en silence
     langue: str = ""  # INV-LANGUE-1 : fr, en, de, es ; vide = pas encore choisie (détectée par le navigateur)
     office: list[str] | None = None  # INV-PROP-1 : gestes appliqués d'office ; None = GESTES_OFFICE
+    vus: list[str] | None = None  # INV-DISCUSSION-2 : bandeaux de premier usage déjà montrés sur ce poste
 
     def __post_init__(self):
         from . import langues  # import tardif : langues importe config
@@ -361,8 +362,9 @@ class ConfigInterface:
         for cle, permis in (("propositions", POLITIQUES), ("langue", LANGUES)):
             if getattr(self, cle) and getattr(self, cle) not in permis:
                 raise ValueError(langues.t("serveur.config.interface_cle", cle=cle, valeur=getattr(self, cle)))
-        if self.office is not None and (not isinstance(self.office, list) or set(self.office) - set(GESTES)):
-            raise ValueError(langues.t("serveur.config.interface_cle", cle="office", valeur=self.office))
+        for cle, ok in (("office", lambda v: v in GESTES), ("vus", lambda v: isinstance(v, str) and re.fullmatch(r"[a-z-]{1,40}", v))):
+            if (val := getattr(self, cle)) is not None and (not isinstance(val, list) or not all(ok(v) for v in val)):
+                raise ValueError(langues.t("serveur.config.interface_cle", cle=cle, valeur=val))
 
     def actif(self, famille: str) -> bool:
         valeur = getattr(self, famille)
@@ -377,7 +379,7 @@ class ConfigInterface:
     def public(self) -> dict:
         return {"mode": self.mode, "familles": {f: self.actif(f) for f in FAMILLES},
                 "propositions": self.politique(), "langue": self.langue,
-                "office": list(self.gestes_office()), "gestes": list(GESTES)}
+                "office": list(self.gestes_office()), "gestes": list(GESTES), "vus": list(self.vus or [])}
 
 
 @dataclass

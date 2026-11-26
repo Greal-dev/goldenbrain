@@ -62,7 +62,7 @@ def test_panneaux_moi_notes_filtre_puis_confier_la_suite(page, serveur):
     assert "Devis reçus (2), reste à comparer" in texte
 
     # Filtre « À faire par moi » : seule la tâche menée par moi reste.
-    page.locator("#filtres summary").click()
+    page.click("#btn-filtres")
     page.select_option("#f-executant", "humain")
     expect(ligne(page, "IA ExecUI")).to_have_count(0)
     expect(ligne(page, "Moi ExecUI")).to_have_count(1)

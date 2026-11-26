@@ -23,15 +23,16 @@ def test_filtre_statut_partage_et_adresse(page, serveur):
     _poser(serveur)
     charger(page)
     _vue(page)
+    page.click("#btn-statuts")  # INV-DEROULANT-1
     page.locator(".chip-st", has_text="bloquée").click()
     expect(page.locator(".casc-nsurn")).to_contain_text("1 sur")
-    page.locator("#filtres summary").click()  # le volet reflète le même choix
+    page.click("#btn-filtres")  # le volet reflète le même choix
     expect(page.locator('.f-st[data-statut="bloque"]')).to_have_attribute("aria-pressed", "true")
     assert "st=bloque" in page.url
     page.reload()  # mémorisé et lisible dans l'adresse
     page.wait_for_selector("#arbre .ligne")
     assert "st=bloque" in page.url
-    page.locator("#filtres summary").click()
+    page.click("#btn-filtres")
     page.locator("#f-st-raz").click()
     assert "st=" not in page.url
 

@@ -33,11 +33,12 @@
 .mode-simple .eco-tache { display: none; }
 
 /* A7/A9 : les titres gardent la place ; les en-têtes de colonnes ne se coupent plus dans les langues longues. */
-.cl { grid-template-columns: minmax(300px, 4fr) 112px 88px minmax(100px, 1.2fr) 84px 96px 72px 44px 96px; column-gap: 8px; }
+.cl { grid-template-columns: minmax(270px, 4fr) 146px 88px minmax(100px, 1.2fr) 84px 96px 72px 44px 96px; column-gap: 8px; }
 .cl-tete > * { text-overflow: clip; font-size: 11px; letter-spacing: 0; }
 .cl-tete .c-lien { font-size: 0; }
 .cl-tete .c-lien::before { content: "⇄"; font-size: 13px; }
-.dlg .modeles { max-height: 11vh; }
+.dlg .modeles { max-height: max(11vh, 76px); }
+.dlg .modele span { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } /* résumé entier au survol (title) : la carte n'est plus coupée à mi-ligne */
 .dlg textarea { height: 64px; min-height: 48px; resize: vertical; }
 
 /* A7 : un titre long passe sur deux lignes (info-bulle en plus) au lieu de se couper net. */

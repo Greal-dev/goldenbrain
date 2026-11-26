@@ -56,7 +56,7 @@ async function compter() {
 }
 
 export function initIncidents() {
-  der = deroulant({ bouton: $('#btn-incidents'), panneau: $('#panneau-incidents'), remplir: dessinerPanneau }); // INV-DEROULANT-1
+  der = deroulant({ bouton: $('#btn-incidents'), panneau: $('#panneau-incidents'), titre: t('index.incidents'), remplir: dessinerPanneau }); // INV-DEROULANT-1
   on('incident', () => { compter(); der.redessiner(); });
   compter();
 }

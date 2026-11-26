@@ -37,6 +37,8 @@
 html, body { height: 100%; margin: 0; }
 body { background: var(--fond); display: flex; flex-direction: column; min-width: 1100px; overflow: hidden; }
 button, input, select, textarea { font: inherit; color: inherit; }
+:where(input:not([type=checkbox], [type=radio], [type=range], [type=color], [type=file]), textarea) { padding: 4px 8px; border: 1px solid var(--bord-fort); border-radius: 5px; background: var(--panneau-2); } /* champs sans style propre : plus de relief natif */
+select { padding: 3px 6px; border: 1px solid var(--bord-fort); border-radius: 5px; background: var(--panneau-2); } /* le gris natif du thème sombre jure avec la direction A */
 button { cursor: pointer; }
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 [hidden] { display: none !important; }
@@ -135,7 +137,7 @@ code, pre { font-family: var(--mono); font-size: 12px; }
 /* Détail */
 .detail { display: flex; flex-direction: column; height: 100%; }
 .d-tete { padding: 12px 20px 10px; background: var(--panneau); border-bottom: 1px solid var(--bord); flex: none; }
-.fil { display: flex; flex-wrap: wrap; font-size: 11.5px; color: var(--texte-2); }
+.fil { display: flex; flex-wrap: wrap; align-items: center; font-size: 11.5px; color: var(--texte-2); }
 .fil span + span::before { content: "\203A"; margin: 0 6px; }
 .d-titre { margin: 3px 0 8px; font-size: 18px; line-height: 1.3; }
 .d-titre-editable { cursor: text; border-radius: 4px; }
@@ -256,7 +258,12 @@ code, pre { font-family: var(--mono); font-size: 12px; }
 .casc-titre { margin: 0; font-size: 17px; line-height: 1.3; }
 .casc-total { color: var(--texte-2); font-size: 12px; }
 .casc-outils { margin-left: auto; display: flex; gap: 8px; align-items: center; align-self: center; }
+.casc-l2 { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; align-items: center; min-height: 24px; }
+.casc-st-zone { position: relative; } .casc-st-btn.actif { border-color: var(--accent); background: var(--accent-fond); }
+.casc-st-actifs { margin-left: 4px; font-weight: 600; }
+.casc-st-panneau { width: min(520px, calc(100vw - 16px)); }
 .casc-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; align-items: center; min-height: 24px; }
+.casc-st-panneau .casc-chips { margin-top: 0; }
 .chip-st { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--bord-fort); background: var(--panneau); border-radius: 13px; padding: 1px 6px 1px 9px; font-size: 12px; }
 .chip-st:hover { background: var(--survol); }
 .chip-st[aria-pressed="true"] { background: var(--accent-fond); border-color: var(--accent); font-weight: 600; }
@@ -284,6 +291,7 @@ code, pre { font-family: var(--mono); font-size: 12px; }
 .c-t { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 .c-st { display: flex; align-items: center; gap: 6px; }
 .c-st > span:not(.pastille):not(.tag) { overflow: hidden; text-overflow: ellipsis; }
+.c-st .tag { flex: none; }
 .tag { flex: none; font-size: 10.5px; padding: 0 5px; border: 1px solid var(--c-terminee); border-radius: 8px; background: color-mix(in srgb, var(--c-terminee) 15%, var(--panneau)); color: var(--texte); }
 .c-act { display: flex; align-items: center; gap: 6px; color: var(--texte-2); }
 .act-txt { overflow: hidden; text-overflow: ellipsis; min-width: 0; }
@@ -431,7 +439,7 @@ body.appairage { display: block; height: auto; min-width: 0; overflow: auto; max
 .note-t:hover .note-modifier, .note-modifier:focus-visible { opacity: 1; }
 .note-edition textarea, .notes-ajout textarea { width: 100%; box-sizing: border-box; resize: vertical; padding: 7px 10px; border: 1px solid var(--bord-fort); border-radius: 5px; background: var(--panneau-2); }
 .note-gestes { display: flex; justify-content: flex-end; gap: 6px; margin-top: 4px; }
-.ia-barre { display: flex; align-items: center; gap: 6px; padding: 4px 0; }
+.ia-barre { display: flex; align-items: center; gap: 6px; padding: 4px 12px; }
 .ia-label { font-weight: 600; font-size: .8em; opacity: .7; }
 .ia-prop, .ia-fait { padding: 6px 10px; margin-bottom: 8px; border: 1px dashed var(--accent); border-radius: 4px; max-height: 40vh; overflow: auto; }
 .ia-fait { display: flex; align-items: center; gap: 8px; }

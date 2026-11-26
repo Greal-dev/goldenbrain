@@ -49,6 +49,7 @@ class CorpsInterface(BaseModel):
     propositions: str | None = None
     langue: str | None = None
     office: list[str] | None = None
+    vu: str | None = None  # INV-DISCUSSION-2 : bandeau de premier usage à marquer vu sur ce poste
 
 
 def ecrire_section(chemin: Path, interface: ConfigInterface) -> None:
@@ -61,6 +62,8 @@ def ecrire_section(chemin: Path, interface: ConfigInterface) -> None:
         cles.append(("langue", f'"{interface.langue}"'))
     if interface.office is not None:  # INV-PROP-1
         cles.append(("office", "[" + ", ".join(f'"{g}"' for g in interface.office) + "]"))
+    if interface.vus:  # INV-DISCUSSION-2
+        cles.append(("vus", "[" + ", ".join(f'"{v}"' for v in interface.vus) + "]"))
     remplacer_section(chemin, "interface", cles)
 
 
@@ -89,9 +92,9 @@ def remplacer_section(chemin: Path, nom: str, cles: list[tuple[str, str]], garde
 def appliquer(config: Config, c: CorpsInterface) -> dict:
     """Valide, applique en mémoire puis persiste. Changer de mode remet les familles au mode."""
     cible = ConfigInterface(**{k: getattr(config.interface, k) for k in
-                               ("mode", "propositions", "langue", "office", *FAMILLES)})
+                               ("mode", "propositions", "langue", "office", "vus", *FAMILLES)})
     if c.mode is not None:  # la langue et les gestes d'office survivent au changement de mode
-        cible = ConfigInterface(mode=c.mode, langue=cible.langue, office=cible.office)
+        cible = ConfigInterface(mode=c.mode, langue=cible.langue, office=cible.office, vus=cible.vus)
     for famille, valeur in (c.familles or {}).items():
         if famille not in FAMILLES:
             raise ValueError(f"famille inconnue : {famille}")
@@ -102,6 +105,8 @@ def appliquer(config: Config, c: CorpsInterface) -> dict:
         cible.langue = c.langue
     if c.office is not None:
         cible.office = list(c.office)
+    if c.vu is not None and c.vu not in (cible.vus or []):
+        cible.vus = [*(cible.vus or []), c.vu]
     cible.__post_init__()
     if config.chemin:
         ecrire_section(config.chemin, cible)  # d'abord le disque : en cas d'échec rien ne change

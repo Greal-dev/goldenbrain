@@ -7,6 +7,7 @@ import { t, tn } from './langues.js';
 import { h, remplacer, libelleStatut, nomLisible, majCourt, depuis, groupeStatut, ORDRE_STATUTS } from './dom.js';
 import { STATUTS_COURTS, statutsActifs, passeStatut, basculerStatut, effacerStatuts, comptesStatut } from './filtres.js';
 import { barreLot, caseLigne, caseTout, majLot, basculerSel } from './lot.js';
+import { deroulant } from './deroulant.js';
 import { S, on, ouvrir, ouvrirVue, ouvrirNote, parcourir, chemin, fixerToutes, cleNoeud as cle } from './store.js';
 import { cheminContexte } from './ponts.js';
 import { majBascule } from './arbre.js';
@@ -143,13 +144,23 @@ function entete(c, racines) {
   majConversation(ref.chatBtn, ref.chat, cont);
   majReglageConteneur(ref.execution, cont); // INV-REGROUPE-1
   ref.total.textContent = tn(S.toutes ? 'cascade.total_toutes' : 'cascade.total_ouvertes', total);
-  const cs = comptesStatut(racines), actifs = statutsActifs();
+  // INV-DEROULANT-1 : la pastille « Statut » dit le filtre actif et le compte ; les puces de statut se déroulent.
+  const actifs = statutsActifs();
+  remplacer(ref.stBtn, h('span', null, t('filtres.statut')), actifs.length
+    ? h('b', { class: 'casc-st-actifs' }, actifs.map((k) => STATUTS_COURTS.find(([c]) => c === k)?.[1] || k).join(', ')) : null, ' ▾');
+  ref.stBtn.classList.toggle('actif', filtreActif());
+  remplacer(ref.nsurn, filtreActif() ? t('filtres.n_sur_n', { n: compterFiltrees(racines), total }) : '');
+  ref.racines = racines;
+  ref.stDer.redessiner();
+}
+function puces(corps) {
+  const cs = comptesStatut(ref.racines || S.arbre), actifs = statutsActifs();
   const chip = ([k, l]) => h('button', { class: 'chip-st', type: 'button', 'data-statut': k, 'aria-pressed': String(actifs.includes(k)), title: t('cascade.filtrer_titre', { statut: l }),
     onclick: () => basculerStatut(k) },
   point(k === 'a-moi' || k === 'a-valider' ? 'retour' : k), l, ' ', h('span', { class: 'n' }, cs[k] || 0));
-  remplacer(ref.chips, STATUTS_COURTS.filter(([k]) => cs[k] || actifs.includes(k)).map(chip),
-    filtreActif() ? h('button', { class: 'btn-discret', type: 'button', onclick: effacerStatuts }, t('cascade.effacer_filtre')) : null,
-    filtreActif() ? h('span', { class: 'casc-nsurn', role: 'status' }, t('filtres.n_sur_n', { n: compterFiltrees(racines), total })) : null);
+  const liste = STATUTS_COURTS.filter(([k]) => cs[k] || actifs.includes(k));
+  remplacer(corps, h('div', { class: 'casc-chips', role: 'group', 'aria-label': t('cascade.filtre_statut_groupe') }, liste.length ? liste.map(chip) : h('p', { class: 'vide' }, t('cascade.aucune')),
+    filtreActif() ? h('button', { class: 'btn-discret', type: 'button', onclick: effacerStatuts }, t('cascade.effacer_filtre')) : null));
 }
 const compterFiltrees = (racines) => [...parcourir(racines)].filter((x) => x.type === 'tache' && passeStatut(x)).length;
 
@@ -206,7 +217,7 @@ function majTout() {
   if (S.portee && !c && S.arbre.length) S.portee = null; // la portée a disparu de l'arbre
   const racines = (S.portee && c) ? c.at(-1).enfants : S.arbre;
   if (S.portee !== porteeAff) { porteeAff = S.portee; topSauve = 0; ref.defile.scrollTop = 0; }
-  entete(c, racines); majEnteteTri(); majLive(); corps(racines); // INV-DEROULANT-1 : les propositions se lisent dans le déroulant de la barre, plus en zone permanente majLot();
+  entete(c, racines); majEnteteTri(); majLive(); corps(racines); majLot(); // INV-DEROULANT-1 : les propositions se lisent dans le déroulant de la barre, plus en zone permanente
 }
 
 function majActivite() {
@@ -288,8 +299,12 @@ function construire() {
   ref.fil = h('nav', { class: 'fil casc-fil', 'aria-label': t('cascade.fil') });
   ref.titre = h('h2', { class: 'casc-titre' });
   ref.total = h('span', { class: 'casc-total' });
-  ref.chips = h('div', { class: 'casc-chips', role: 'group', 'aria-label': t('cascade.filtre_statut_groupe') });
+  ref.stBtn = h('button', { class: 'btn petit casc-st-btn', type: 'button', id: 'btn-statuts', title: t('cascade.filtre_statut_groupe') });
+  const stPanneau = h('div', { class: 'panneau casc-st-panneau', id: 'panneau-statuts', hidden: true });
+  ref.stDer = deroulant({ bouton: ref.stBtn, panneau: stPanneau, remplir: puces });
+  ref.nsurn = h('span', { class: 'casc-nsurn', role: 'status' });
   ref.lot = barreLot();
+  ref.chips = h('div', { class: 'casc-l2' }, h('span', { class: 'casc-st-zone' }, ref.stBtn, stPanneau), ref.nsurn, ref.lot);
   ref.live = h('div', { class: 'casc-live', 'aria-label': t('cascade.seances_label'), hidden: true });
   ref.corps = h('div', { role: 'rowgroup', class: 'casc-corps' });
   ref.vide = h('p', { class: 'vide', 'aria-live': 'polite' });
@@ -323,7 +338,7 @@ function construire() {
     h('button', { class: 'btn petit', type: 'button', onclick: () => toutBasculer(true) }, t('cascade.replier')),
     h('button', { class: 'btn petit', type: 'button', onclick: () => toutBasculer(false) }, t('cascade.deplier')), bascule);
   coque = h('div', { class: 'casc' },
-    h('div', { class: 'casc-tete' }, ref.fil, h('div', { class: 'casc-l1' }, ref.titre, ref.total, outils), ref.chips, ref.lot, ref.chat),
+    h('div', { class: 'casc-tete' }, ref.fil, h('div', { class: 'casc-l1' }, ref.titre, ref.total, outils), ref.chips, ref.chat),
     ref.live, ref.defile);
   sigTours = null;
 }

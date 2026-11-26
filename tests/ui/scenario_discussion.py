@@ -132,3 +132,25 @@ def test_intercalaires_utilisables_au_clavier_et_au_toucher(navigateur, srv):
         assert p.evaluate("[...document.querySelectorAll('.intercalaire, #btn-menu')].every((b) => { const r = b.getBoundingClientRect(); return r.width >= 24 && r.height >= 24; })")
     finally:
         ctx.close()
+
+
+def test_bandeau_de_premier_usage_une_seule_fois_par_poste(navigateur, srv):
+    """INV-DISCUSSION-2 : vu dans un contexte de navigateur, le bandeau ne revient dans aucun autre (mémoire du serveur)."""
+    import httpx
+    if "discussion" not in httpx.get(srv.url + "/api/interface").json()["vus"]:  # sinon déjà vu par un test précédent de ce serveur
+        p = ouvrir(navigateur, srv)
+        try:
+            p.wait_for_function("() => !!document.querySelector('[data-id=\"bulle-discussion\"]')", timeout=30000)
+        finally:
+            p.ctx.close()
+    for _ in range(50):
+        if "discussion" in httpx.get(srv.url + "/api/interface").json()["vus"]:
+            break
+        __import__("time").sleep(0.1)
+    assert "discussion" in httpx.get(srv.url + "/api/interface").json()["vus"]
+    p = ouvrir(navigateur, srv)  # contexte neuf : localStorage vide
+    try:
+        p.wait_for_timeout(1500)
+        assert p.locator('[data-id="bulle-discussion"]').count() == 0, "le bandeau revient dans un nouveau contexte"
+    finally:
+        p.ctx.close()

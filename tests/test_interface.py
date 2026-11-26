@@ -155,3 +155,14 @@ def test_famille_des_gestes_reglable_dans_reglages(client, config):
     client.put("/api/interface", headers=H, json={"mode": "simple"})  # le mode garde le choix
     assert config.interface.gestes_office() == ("lier", "renommer")
     assert client.put("/api/interface", headers=H, json={"office": ["supprimer"]}).status_code == 400
+
+
+def test_bandeau_de_premier_usage_vu_une_fois_par_poste(client, config):
+    """INV-DISCUSSION-2 : « vu » se garde dans `[interface] vus`, survit au changement de mode, sans doublon."""
+    assert client.get("/api/interface").json()["vus"] == []
+    for _ in range(2):
+        assert client.put("/api/interface", headers=H, json={"vu": "discussion"}).json()["vus"] == ["discussion"]
+    assert charger_interface(config).vus == ["discussion"]
+    client.put("/api/interface", headers=H, json={"mode": "simple"})
+    assert client.get("/api/interface").json()["vus"] == ["discussion"]
+    assert client.put("/api/interface", headers=H, json={"vu": "Pas Bon!"}).status_code == 400

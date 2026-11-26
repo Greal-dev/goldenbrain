@@ -15,8 +15,9 @@
 .liv-att { display: flex; gap: 8px; align-items: center; }
 .liv-att.fait span:not(.liv-disparu) { text-decoration: line-through; opacity: .7; }
 .liv-ajout { display: grid; gap: 6px; }
-.liv-form { display: flex; gap: 6px; }
-.liv-form input { flex: 1 1 0; min-width: 0; }
+.liv-form { display: grid; grid-template-columns: 1fr 1fr minmax(9em, auto); gap: 6px; } /* boutons en colonne commune : les deux rangées s'alignent */
+.liv-form input { min-width: 0; }
+.liv-form > input:only-of-type { grid-column: span 2; }
 /* Téléphone : l'en-tête ne passe pas à la ligne (INV-DETAIL-1) : un trombone seul, le compte reste dans le titre du bouton. */
-@media (max-width: 600px) { .liv-form { flex-wrap: wrap; } .d-livrables { padding-inline: 8px; } .d-une > button.d-livrables { order: 2; }
+@media (max-width: 600px) { .liv-form { display: flex; flex-wrap: wrap; } .liv-form input { flex: 1 1 100%; } .d-livrables { padding-inline: 8px; } .d-une > button.d-livrables { order: 2; }
   .d-livrables .liv-mot { font-size: 0; } .d-livrables .liv-mot::before { content: '📎'; font-size: 14px; } }

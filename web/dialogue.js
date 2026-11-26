@@ -30,7 +30,7 @@ function champ(c, i) {
   return h('div', { class: 'champ' }, h('label', { for: id }, c.label), ctrl, c.sous || null);
 }
 
-// `corps` : nœud inséré sous le texte ; `annuler` : libellé du refus ; `focus: 'annuler'` : le refus prend le focus (confirmation à risque).
+// `corps` : nœud inséré sous le texte ; `annuler` : libellé du refus (null : pas de refus, la validation ferme) ; `focus: 'annuler'` : le refus prend le focus (confirmation à risque).
 export function formulaire({ titre, texte, champs = [], valider = t('dialogue.valider'), large = false, corps = null, annuler = t('dialogue.annuler'), focus = null }) {
   return new Promise((resolve) => {
     let rendu = false;
@@ -39,7 +39,7 @@ export function formulaire({ titre, texte, champs = [], valider = t('dialogue.va
     const dlg = h('dialog', { class: large ? 'dlg large' : 'dlg', 'aria-label': titre }, form);
     ajouter(form, h('h3', null, titre), texte ? h('p', { class: 'dlg-texte' }, texte) : null, corps, champs.map(champ),
       h('div', { class: 'dlg-actions' },
-        h('button', { type: 'button', class: 'btn', 'data-refus': '', onclick: () => dlg.close() }, annuler),
+        annuler ? h('button', { type: 'button', class: 'btn', 'data-refus': '', onclick: () => dlg.close() }, annuler) : null,
         h('button', { type: 'submit', class: 'btn primaire' }, valider)));
     form.addEventListener('submit', (e) => {
       e.preventDefault();
@@ -52,7 +52,7 @@ export function formulaire({ titre, texte, champs = [], valider = t('dialogue.va
     dlg.addEventListener('close', () => { fin(null); dlg.remove(); });
     document.body.append(dlg);
     dlg.showModal();
-    if (focus === 'annuler') { dlg.querySelector('[data-refus]').focus(); return; }
+    if (focus === 'annuler' && annuler) { dlg.querySelector('[data-refus]').focus(); return; }
     (dlg.querySelector('input:not([type=checkbox]):not([type=radio]):not([readonly]), textarea, select') || dlg.querySelector('.primaire'))?.focus();
   });
 }

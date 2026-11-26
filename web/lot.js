@@ -1,11 +1,12 @@
 // Rôle : modification en bloc des tâches de la vue principale — cases à cocher, sélection par étendue (Maj+clic),
-// « tout sélectionner » (tâches affichées seulement), barre d'action, confirmation avec récapitulatif, annulation en un clic.
+// « tout sélectionner » (tâches affichées seulement), actions dans un déroulant (INV-DEROULANT-1), confirmation avec récapitulatif, annulation en un clic.
 // Frontières : l'état de sélection est local à l'affichage ; tout changement passe par POST /api/lots (tout ou rien,
 // tâches occupées exclues par le serveur, INV-LOT-1) ; aucune sélection ne survit à ce qui n'est plus affiché.
 import { t, tn } from './langues.js';
 import { h, remplacer, libelleStatut, ORDRE_STATUTS } from './dom.js';
 import { api } from './api.js';
 import { erreur, emit } from './store.js';
+import { deroulant } from './deroulant.js';
 
 const sel = new Set();
 let ancre = null, barre = null, tete = null, visibles = () => [], brouillon = { statut: '', echeance: '' }, recap = null, dernier = null, recapIA = null, consigneIA = '';
@@ -116,7 +117,15 @@ function contenu() {
 }
 const fermer = () => h('button', { type: 'button', class: 'btn-discret', 'aria-label': t('lot.fermer'), onclick: () => { dernier = null; majLot(); } }, '×');
 
-export const barreLot = () => { barre = h('div', { class: 'lot-barre', role: 'region', 'aria-label': t('lot.barre'), hidden: true }); return barre; };
+// INV-DEROULANT-1 : une pastille « n sélectionnées » déroule les actions ; épinglée dès la première case cochée (un clic dans la liste
+// ne la referme pas), elle se replie quand la sélection se vide. Le résultat (et « Annuler ce changement ») reste à la pastille.
+let der = null, pastille = null;
+export const barreLot = () => {
+  pastille = h('button', { type: 'button', class: 'btn petit lot-pastille', id: 'btn-lot' });
+  barre = h('div', { class: 'panneau lot-barre', id: 'panneau-lot', role: 'region', 'aria-label': t('lot.barre'), hidden: true });
+  der = deroulant({ bouton: pastille, panneau: barre, titre: t('lot.barre'), remplir: (corps) => remplacer(corps, contenu()) });
+  return h('span', { class: 'lot-zone', hidden: true }, pastille, barre);
+};
 // Rien d'invisible n'est modifié : une tâche repliée ou filtrée quitte la sélection.
 export function majLot() {
   if (!barre) return;
@@ -125,7 +134,9 @@ export function majLot() {
   if (tete) { const k = vis.size ? [...vis].filter((i) => sel.has(i)).length : 0; tete.checked = k > 0 && k === vis.size; tete.indeterminate = k > 0 && k < vis.size; }
   if (recap && recap.retenues.length + recap.exclues.length !== sel.size) recap = null;
   if (recapIA && recapIA.envoyees.length + recapIA.exclues.length !== sel.size) recapIA = null;
-  const c = contenu();
-  barre.hidden = !c.length;
-  remplacer(barre, c);
+  const rien = !sel.size && !dernier;
+  pastille.parentElement.hidden = rien;
+  pastille.textContent = sel.size ? tn('lot.n_selection', sel.size) : t('lot.barre');
+  if (rien) { der.fermer(); return; }
+  if (!der.ouvert()) der.epingler(true); else der.redessiner();
 }
