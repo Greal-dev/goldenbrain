@@ -1,26 +1,45 @@
-/* INV-BARRE-1 : repli de la barre haute par niveaux cumulatifs (web/interface.js pose `data-r1` … `data-r6` sur `.b-haut`). Ordre : pastilles
-   secondaires en icône (r1), pastilles « À moi » en icône (r2), repère « Intelligent » (r3), recherche resserrée (r4), logo seul et « + » (r5),
-   pastilles secondaires masquées (r6). « Nouvelle tâche » et « Menu » ne sortent jamais. */
-.b-haut > * { min-width: 0; }
-.b-haut :is(#btn-nouvelle, .b-menu-zone, #marque) { flex-shrink: 0; }
+/* INV-BARRE-1 : barre haute sans chevauchement. Chaque enfant garde sa largeur de contenu (jamais rétréci, aucune marge négative ni position
+   absolue) et chaque pastille est insécable ; seule la recherche cède de la place. Quand la rangée dépasse, web/interface.js pose les niveaux
+   cumulatifs `data-r1` … `data-r6` sur `.b-haut` : 1 pastilles secondaires en icône, 2 repère « Intelligent » masqué, 3 pastilles secondaires
+   dans « Menu », 4 recherche en loupe, 5 pastilles « À moi » en icône, 6 logo seul et « + ». */
+.b-haut > * { flex-shrink: 0; }
+.b-haut > .rech-zone { flex-shrink: 1; min-width: 0; }
+.b-haut :is(.btn, .btn-compte, .marque, .conn, .eco-repere) { white-space: nowrap; }
+.b-haut .rel > :is(.btn-compte, .btn) { flex-shrink: 0; }
 
-.b-haut[data-r1] :is(#btn-aujourdhui, #btn-decisions, #btn-props, #btn-incidents, #btn-etat, #btn-travaux) > span:not(.n),
-.b-haut[data-r2] :is(#btn-avalider, #btn-questions, #btn-afaire) > span:not(.n) { display: none; }
-.b-haut[data-r1] :is(#btn-aujourdhui, #btn-decisions, #btn-props, #btn-incidents, #btn-etat, #btn-travaux)::before,
-.b-haut[data-r2] :is(#btn-avalider, #btn-questions, #btn-afaire)::before { margin-right: 4px; }
+/* 1 — pastilles secondaires en icône + compteur */
+.b-haut[data-r1] :is(#btn-aujourdhui, #btn-decisions, #btn-props, #btn-incidents, #btn-align, #btn-etat) > span:not(.n),
+.b-haut[data-r5] :is(#btn-avalider, #btn-questions, #btn-afaire) > span:not(.n) { display: none; }
+.b-haut[data-r1] :is(#btn-aujourdhui, #btn-decisions, #btn-props, #btn-incidents, #btn-align, #btn-etat)::before,
+.b-haut[data-r5] :is(#btn-avalider, #btn-questions, #btn-afaire)::before { margin-right: 4px; }
 .b-haut[data-r1] #btn-aujourdhui::before { content: "☀"; }
 .b-haut[data-r1] #btn-decisions::before { content: "⚖"; }
 .b-haut[data-r1] #btn-props::before { content: "⊕"; }
 .b-haut[data-r1] #btn-incidents::before { content: "⚠"; }
+.b-haut[data-r1] #btn-align::before { content: "⇄"; }
 .b-haut[data-r1] #btn-etat::before { content: "ⓘ"; }
-.b-haut[data-r1] #btn-travaux::before { content: "⚙"; }
-.b-haut[data-r2] #btn-avalider::before { content: "✓"; }
-.b-haut[data-r2] #btn-questions::before { content: "?"; }
-.b-haut[data-r2] #btn-afaire::before { content: "✎"; }
+.b-haut[data-r5] #btn-avalider::before { content: "✓"; }
+.b-haut[data-r5] #btn-questions::before { content: "?"; }
+.b-haut[data-r5] #btn-afaire::before { content: "✎"; }
 
-.b-haut[data-r3] #eco-repere { display: none; }
-.b-haut[data-r4] .rech-zone { flex: 0 1 64px; min-width: 40px; }
-.b-haut[data-r5] #marque { font-size: 0; }
-.b-haut[data-r5] #btn-nouvelle > span { display: none; }
-.b-haut[data-r5] #btn-nouvelle::before { content: "+"; font-weight: 700; }
-.b-haut[data-r6] .rel:has(> :is(#btn-aujourdhui, #btn-decisions, #btn-props, #btn-incidents, #btn-etat, #btn-travaux)) { display: none; }
+/* 2 — repère « Intelligent » masqué */
+.b-haut[data-r2] #eco-repere { display: none; }
+
+/* 3 — pastilles secondaires rangées dans « Menu » : elles y reprennent leur libellé complet et le style des autres entrées */
+.b-menu > .rel.en-menu { display: block; position: relative; }
+body.discussion .b-menu > .rel.en-menu > button { width: 100%; text-align: left; padding: 5px 10px; font-size: 13px; }
+:root body.discussion #bandeau .b-menu > .rel.en-menu > button { background: transparent; border-color: var(--bord); color: var(--texte); }
+.b-haut[data-r1] .b-menu > .rel.en-menu > :is(#btn-aujourdhui, #btn-decisions, #btn-props, #btn-incidents, #btn-align, #btn-etat) > span:not(.n) { display: inline; }
+.b-haut[data-r1] .b-menu > .rel.en-menu > :is(#btn-aujourdhui, #btn-decisions, #btn-props, #btn-incidents, #btn-align, #btn-etat)::before { content: none; }
+
+/* 4 — recherche réduite à une loupe (reprend sa largeur quand on y écrit) */
+.b-haut[data-r4]:not([data-focus]) .rech-zone { flex: 0 0 34px; width: 34px; }
+.b-haut[data-r4]:not([data-focus]) #recherche { width: 34px; min-width: 34px; padding: 5px 0; color: transparent; cursor: pointer;
+  background: var(--panneau-2) no-repeat center / 16px url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23888' stroke-width='1.6'%3E%3Ccircle cx='7' cy='7' r='4.5'/%3E%3Cpath d='M10.5 10.5 14 14'/%3E%3C/svg%3E"); }
+.b-haut[data-r4]:not([data-focus]) #recherche::placeholder { color: transparent; }
+.b-haut[data-r4]:not([data-focus]) #recherche::-webkit-search-cancel-button { display: none; }
+
+/* 6 — dernier recours : logo seul et « + » */
+.b-haut[data-r6] #marque { font-size: 0; }
+.b-haut[data-r6] #btn-nouvelle > span { display: none; }
+.b-haut[data-r6] #btn-nouvelle::before { content: "+"; font-weight: 700; }

@@ -48,5 +48,6 @@ function panneau() {
 export function initAlignement() {
   der = deroulant({ bouton: $('#btn-align'), panneau: $('#panneau-align'), remplir: (c) => { corps = c; panneau(); } }); // INV-DEROULANT-1
   // Après chaque geste d'arbre (ou changement signalé par le serveur) ; regroupé pour ne pas multiplier les appels.
-  on('arbre', () => { clearTimeout(minuteur); minuteur = setTimeout(rafraichirEcarts, 600); }); // le premier chargement de l'arbre déclenche la première lecture
+  let premiere = true; // INV-FROID-1 : la première lecture suit l'arbre sans attendre (600 ms de regroupement la repoussaient en fin de chargement)
+  on('arbre', () => { clearTimeout(minuteur); minuteur = setTimeout(rafraichirEcarts, premiere ? 50 : 600); premiere = false; });
 }

@@ -46,6 +46,8 @@ def ouvrir(navigateur, srv, largeur, langue, discussion):
     if not discussion:
         ctx.add_init_script("try{localStorage.setItem('gb.disposition','{\"tout\":true}')}catch(e){}")
     p = ctx.new_page()
+    p.erreurs = []
+    p.on("pageerror", lambda e: p.erreurs.append(str(e)))
     p.goto(srv.url + ("/#t=" + charge.FIL_LONG if discussion else "/"))
     p.wait_for_selector(".composer textarea" if discussion else "#volet-gauche .ligne", timeout=90000)
     p.ctx = ctx
@@ -66,7 +68,7 @@ def test_la_barre_ne_deborde_jamais_meme_au_pire_cas(navigateur, srv, largeur, l
         assert m["barre"] <= 0 and m["page"] <= 0, f"débordement barre {m['barre']} px, page {m['page']} px"
         assert m["nouvelle"], "« Nouvelle tâche » sortie de la fenêtre"
         assert m["menu"] or not discussion, "« Menu » sorti de la fenêtre"
-        if m["niveau"] >= 2:  # repli des pastilles « À moi » : icône + nombre, l'infobulle porte le libellé
+        if m["niveau"] >= 5:  # repli des pastilles « À moi » : icône + nombre, l'infobulle porte le libellé
             assert all(t and not t.isdigit() for t in m["titres"]), m["titres"]
     finally:
         p.ctx.close()
@@ -80,7 +82,49 @@ def test_les_trois_pastilles_a_moi_portent_leur_libelle_quand_la_place_le_permet
         p.wait_for_function("() => /\\d/.test(document.getElementById('n-avalider').textContent)", timeout=30000)
         m = p.evaluate(MESURE)
         for texte, libelle in zip(m["textes"], ("À valider", "Questions", "À faire")):
-            assert texte.startswith(libelle), f"pastille sans libellé à {largeur} px : {m['textes']}"
+            assert texte.startswith(libelle), f"pastille sans libellé à {largeur} px : {m['textes']} niveau {m['niveau']}"
             assert any(c.isdigit() for c in texte), m["textes"]
+    finally:
+        p.ctx.close()
+
+
+DISJOINTS = """() => {
+  const barre = document.querySelector('.b-haut');
+  const ok = (e) => { const r = e.getBoundingClientRect(); return r.width > 0 && r.height > 0 && getComputedStyle(e).visibility !== 'hidden' && !e.closest('.panneau, .rech-liste, .b-menu, [hidden]'); };
+  const els = [...barre.querySelectorAll('button, input, a, #eco-repere, #conn, .etat-zone')].filter(ok)
+    .filter((e) => !e.matches('.etat-zone') || ![...e.querySelectorAll('button')].some(ok));
+  const nom = (e) => e.id || e.className || e.tagName;
+  const rects = els.map((e) => [nom(e), e.getBoundingClientRect()]);
+  const chevauche = [], dehors = [];
+  rects.forEach(([n, r]) => { if (r.left < -0.5 || r.right > innerWidth + 0.5) dehors.push(n + ' ' + Math.round(r.left) + '→' + Math.round(r.right)); });
+  for (let i = 0; i < rects.length; i++) for (let j = i + 1; j < rects.length; j++) {
+    const a = rects[i][1], b = rects[j][1];
+    if (a.left < b.right - 0.5 && b.left < a.right - 0.5 && a.top < b.bottom - 0.5 && b.top < a.bottom - 0.5) chevauche.push(rects[i][0] + ' × ' + rects[j][0]);
+  }
+  const coupes = els.filter((e) => e.matches('.btn-compte, #btn-nouvelle, #marque') && e.scrollWidth > e.clientWidth + 0.5).map((e) => nom(e) + ' ' + e.scrollWidth + '>' + e.clientWidth);
+  const vue = (id) => { const e = document.getElementById(id); return !!e && ok(e); };
+  return { chevauche, dehors, coupes, noms: rects.map(([n]) => n),
+           a_moi: ['btn-avalider', 'btn-questions', 'btn-afaire'].map(vue), nouvelle: vue('btn-nouvelle'), menu: vue('btn-menu') };
+}"""
+
+
+@pytest.mark.parametrize("discussion", [True, False], ids=["discussion", "complete"])
+@pytest.mark.parametrize("pire", [False, True], ids=["normal", "pire"])
+@pytest.mark.parametrize("largeur", [1366, 1280, 1024, 390])
+def test_aucun_element_de_la_barre_ne_chevauche_un_autre_ni_n_est_rogne(navigateur, srv, largeur, pire, discussion):
+    p = ouvrir(navigateur, srv, largeur, "fr-FR", discussion)
+    try:
+        p.wait_for_function("() => /\\d/.test(document.getElementById('n-avalider').textContent)", timeout=30000)
+        if pire:
+            p.evaluate(PIRE_CAS)
+        p.wait_for_timeout(400)
+        m = p.evaluate(DISJOINTS)
+        assert not p.erreurs, p.erreurs
+        assert not m["chevauche"], f"chevauchements à {largeur} px : {m['chevauche']} ({m['noms']})"
+        assert not m["dehors"], f"hors fenêtre à {largeur} px : {m['dehors']}"
+        assert not m["coupes"], f"texte rogné à {largeur} px : {m['coupes']}"
+        assert m["nouvelle"], "« Nouvelle tâche » absente ou invisible"
+        if largeur >= 1024:
+            assert all(m["a_moi"]), f"pastille « À moi » absente à {largeur} px : {m['a_moi']}"
     finally:
         p.ctx.close()

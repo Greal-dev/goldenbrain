@@ -49,19 +49,22 @@ function adopter(etat) {
 export async function chargerInterface() { adopter(etatInterfaceInitial() || await api('/interface')); }
 export async function changerInterface(corps) { adopter(await api('/interface', { methode: 'PUT', corps })); }
 
-// --- Barre haute : la barre haute ne déborde jamais de la fenêtre (INV-BARRE-1). Quand elle est trop large, elle se replie par niveaux
-// successifs, dans un ordre fixe : 1 pastilles secondaires en icône + nombre ; 2 pastilles « À moi » en icône + nombre ;
-// 3 repère « Intelligent » masqué ; 4 recherche resserrée ; 5 marque en logo seul et « Nouvelle tâche » en « + » ; 6 pastilles
-// secondaires masquées. « Nouvelle tâche » et « Menu » restent toujours visibles. Les libellés complets reviennent d'eux-mêmes
-// quand la place revient (le calcul repart du niveau 0 à chaque changement ; niveaux cumulatifs posés en attributs `data-r1` … `data-r6`).
+// --- Barre haute : elle ne déborde jamais de la fenêtre et rien n'y chevauche rien (INV-BARRE-1). Chaque pastille est insécable
+// (libellé + compteur d'un bloc, jamais rétrécie) ; quand la rangée est trop large, elle se replie par niveaux cumulatifs, dans cet ordre :
+// 1 pastilles secondaires (Aujourd'hui, Décisions, Propositions, Incidents, « dossier à aligner », Infos) en icône + compteur + infobulle ;
+// 2 repère « Intelligent » masqué ; 3 pastilles secondaires rangées dans « Menu » ; 4 recherche réduite à une loupe ; 5 pastilles « À moi »
+// en icône + compteur + infobulle ; 6 marque en logo seul et « Nouvelle tâche » en « + ». « Menu » reste toujours entier. Les libellés et
+// les pastilles reviennent d'eux-mêmes quand la place revient (le calcul repart du niveau 0 ; niveaux posés en `data-r1` … `data-r6`).
 // Frontières : DOM seul ; la mise en page des niveaux est dans barre.css (`.b-haut[data-r1…r6]`). Aucune requête.
 const MAX = 6;
-// Pastilles repliables en icône : elles gardent leur compte ; l'infobulle (title) reprend leur libellé.
-const PASTILLES = '#btn-aujourdhui, #btn-decisions, #btn-avalider, #btn-questions, #btn-afaire, #btn-props, #btn-incidents, #btn-etat, #btn-travaux';
+const SECOND = '#btn-aujourdhui, #btn-decisions, #btn-props, #btn-incidents, #btn-align, #btn-etat';
+const A_MOI = '#btn-avalider, #btn-questions, #btn-afaire';
 
-function libelles(barre, replie) {
-  for (const b of barre.querySelectorAll(PASTILLES)) {
-    if (!replie) { if (b.dataset.avant !== undefined) { b.title = b.dataset.avant; delete b.dataset.avant; } b.removeAttribute('aria-label'); continue; }
+// Une pastille en icône garde son compte ; l'infobulle (title) et l'étiquette d'accessibilité reprennent son libellé.
+function libelles(barre, n) {
+  const replies = new Set([...(n >= 1 && n < 3 ? barre.querySelectorAll(SECOND) : []), ...(n >= 5 ? barre.querySelectorAll(A_MOI) : [])]);
+  for (const b of barre.querySelectorAll(`${SECOND}, ${A_MOI}`)) {
+    if (!replies.has(b)) { if (b.dataset.avant !== undefined) { b.title = b.dataset.avant; delete b.dataset.avant; } b.removeAttribute('aria-label'); continue; }
     const lib = b.querySelector(':scope > span:not(.n)')?.textContent.trim();
     if (!lib || b.dataset.avant !== undefined) continue;
     b.dataset.avant = b.title;
@@ -70,35 +73,51 @@ function libelles(barre, replie) {
   }
 }
 
-// Trop large : le contenu dépasse la barre, ou un élément de la rangée dépasse la fenêtre (la barre peut elle-même être plus large qu'elle).
+// Niveau 3 : les pastilles secondaires passent dans « Menu » (un repère les ramène à leur place), niveaux inférieurs : elles reviennent.
+function ranger(barre, dans) {
+  const menu = barre.querySelector('#b-menu');
+  const rels = [...new Set([...barre.querySelectorAll(SECOND)].map((b) => b.closest('.rel')).filter(Boolean))];
+  if (!menu) return;
+  if (dans) {
+    for (const rel of rels) if (!rel._repere) { rel._repere = document.createComment('rel'); rel.before(rel._repere); rel.classList.add('en-menu'); }
+    menu.prepend(...rels);
+  } else for (const rel of rels) if (rel._repere) { rel._repere.replaceWith(rel); rel._repere = null; rel.classList.remove('en-menu'); }
+}
+
+// Trop large : le contenu dépasse la barre, un élément sort de la fenêtre, ou deux éléments de la rangée se recouvrent.
 function deborde(barre) {
   const fenetre = document.documentElement.clientWidth;
   if (barre.scrollWidth > barre.clientWidth || barre.getBoundingClientRect().right > fenetre) return true;
-  return [...barre.querySelectorAll(':scope > *, :scope > .rel > button, :scope > .b-menu-zone > button')].some((e) => {
-    const r = e.getBoundingClientRect();
-    return r.width > 0 && (r.right > fenetre + 0.5 || r.left < -0.5);
-  });
+  const rangee = [...barre.querySelectorAll(':scope > :not(.rel, .b-menu-zone, .rech-zone), :scope > .rel > button, .b-menu-zone button, .b-menu > .rel > button, .rech-zone > input')]
+    .map((e) => e.getBoundingClientRect()).filter((r) => r.width > 0 && r.height > 0);
+  return rangee.some((a, i) => a.right > fenetre + 0.5 || a.left < -0.5 || rangee.slice(i + 1).some((b) =>
+    a.left < b.right - 0.5 && b.left < a.right - 0.5 && a.top < b.bottom - 0.5 && b.top < a.bottom - 0.5));
 }
 
 export function ajuster() {
   const barre = $('.b-haut');
   if (!barre) return;
-  const niveau = (n) => { for (let k = 1; k <= MAX; k++) barre.toggleAttribute(`data-r${k}`, k <= n); };
+  const niveau = (n) => { for (let k = 1; k <= MAX; k++) barre.toggleAttribute(`data-r${k}`, k <= n); ranger(barre, n >= 3); };
   niveau(0);
-  libelles(barre, false);
+  libelles(barre, 0);
   let n = 0;
   while (deborde(barre) && n < MAX) niveau(++n);
-  if (n) libelles(barre, true);
+  libelles(barre, n);
 }
 
 export function initBarre() {
   const barre = $('.b-haut');
   let attente = 0;
-  const planifier = () => { cancelAnimationFrame(attente); attente = requestAnimationFrame(ajuster); };
-  new ResizeObserver(planifier).observe(barre);
-  new MutationObserver(planifier).observe(barre, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ['hidden'] });
-  new MutationObserver(planifier).observe(document.body, { attributes: true, attributeFilter: ['class'] });
+  const planifier = () => { cancelAnimationFrame(attente); attente = requestAnimationFrame(() => { ajuster(); observateurs.slice(1).forEach((o) => o.takeRecords()); }); };
+  const observateurs = [new ResizeObserver(planifier),
+    new MutationObserver(planifier), new MutationObserver(planifier)];
+  observateurs[0].observe(barre);
+  observateurs[1].observe(barre, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ['hidden'] });
+  observateurs[2].observe(document.body, { attributes: true, attributeFilter: ['class'] });
   addEventListener('resize', planifier);
+  // Recherche ouverte (focus) : elle reprend sa largeur, le reste se replie en conséquence.
+  barre.addEventListener('focusin', (e) => { if (e.target.id === 'recherche') { barre.dataset.focus = '1'; planifier(); } });
+  barre.addEventListener('focusout', (e) => { if (e.target.id === 'recherche') { delete barre.dataset.focus; planifier(); } });
   document.fonts?.ready.then(planifier);
   planifier();
 }

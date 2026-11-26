@@ -237,7 +237,7 @@ Les tests d'interface (`ui/`) se lancent à part : `python scripts/check_ui.py`.
 | Fichier | Rôle | INV-* cités | Tests |
 |---|---|---|---|
 | `web/alignement-plan.js` | dialogue du plan d'alignement (déplacements, réécritures avec exemples, références externes, avertissements), | INV-ALIGN-1, INV-ARBRE-2 | chargement par `ui/scenario_fumee.py` seulement |
-| `web/alignement.js` | alignement des dossiers sur l'arbre — pastille du bandeau, panneau des écarts (cases à cocher), appel du plan. | — | chargement par `ui/scenario_fumee.py` seulement |
+| `web/alignement.js` | alignement des dossiers sur l'arbre — pastille du bandeau, panneau des écarts (cases à cocher), appel du plan. | INV-FROID-1 | chargement par `ui/scenario_fumee.py` seulement |
 | `web/api.js` | client de l'API HTTP (/api) et flux SSE avec reconnexion ; rejeu avec `forcer` après confirmation d'un 409 `occupee`. | INV-API-1, INV-LANGUE-1, INV-VERROU-1, INV-VERSION-1 | `ui/scenario_fumee.py` (arbre, tâche, conversation) |
 | `web/app.js` | point d'entrée — chargements, flux SSE, bannière d'erreurs, aiguillage du volet droit. | — | `ui/scenario_fumee.py` (arbre, tâche, conversation) |
 | `web/arbre.js` | volet gauche — arbre repliable, pastille de statut courte, clavier, glisser-déposer ; applique `filtres.js`. | INV-ARBRE-2 | `ui/scenario_fumee.py` (arbre, tâche, conversation) |
@@ -252,7 +252,7 @@ Les tests d'interface (`ui/`) se lancent à part : `python scripts/check_ui.py`.
 | `web/conseil.js` | avis d'un agent rapide avant une promotion ou une réduction — attente annulable, dialogue « L'agent déconseille… ». | — | chargement par `ui/scenario_fumee.py` seulement |
 | `web/conversation.js` | rendu de la conversation d'une tâche — messages, tours, étapes à la demande, activité en direct. | INV-WEB-1 | `ui/scenario_fumee.py` (arbre, tâche, conversation), `ui/scenario_modifier.py` |
 | `web/barre.css` | niveaux de repli de la barre haute : icônes, repère masqué, recherche resserrée, « + ». | INV-BARRE-1 | `ui/scenario_barre_haute.py` |
-| `web/discussion.css` | mode discussion : grille à rail, barre d'une rangée, menu déroulant, notes en intercalaire | INV-DISCUSSION-1 | `ui/scenario_discussion.py` |
+| `web/discussion.css` | mode discussion : grille à rail, barre d'une rangée, menu déroulant, notes en intercalaire | INV-DISCUSSION-1, INV-BARRE-1 | `ui/scenario_discussion.py` |
 | `web/bandeaux.js` | Pile des bandeaux d'information : un seul à la fois (le plus urgent), les autres derrière « +N », détail au toucher. | INV-REACTIVITE-1 | `ui/scenario_reactivite.py` |
 | `web/bandeaux.css` | Bandeaux sur une ligne tronquée, compteur « +N », cibles compactes au téléphone. | INV-REACTIVITE-1 | `ui/scenario_reactivite.py` |
 | `web/paresseux.js` | Chargement à la demande (`import()`) des écrans, de la fiche de tâche et des services de fond : le premier affichage ne charge que ce qu'il montre. | INV-REACTIVITE-1 | `ui/scenario_reactivite.py` |

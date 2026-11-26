@@ -82,7 +82,8 @@ export function initDiscussion() {
   const nav = $('#volet-gauche'), zone = document.querySelector('.b-menu-zone');
   $('#btn-menu').addEventListener('click', () => menu(!$('#b-menu').classList.contains('ouvert')));
   intention([zone], () => menu(true), () => menu(false), actif); // INV-DEROULANT-1 : mêmes délais que tout déroulant
-  $('#b-menu').addEventListener('click', (e) => { if (e.target.closest('button') && e.target.id !== 'btn-menu') menu(false); });
+  // INV-BARRE-1 : une pastille rangée dans le menu y ouvre son panneau, le menu reste ouvert
+  $('#b-menu').addEventListener('click', (e) => { if (e.target.closest('button') && e.target.id !== 'btn-menu' && !e.target.closest('.en-menu')) menu(false); });
   document.addEventListener('click', (e) => { if (!e.target.closest('.b-menu-zone')) menu(false); });
   $('#btn-disposition').addEventListener('click', toutAfficher);
   $('#rail-arbre').addEventListener('click', () => { if (actif()) epingler(); });
