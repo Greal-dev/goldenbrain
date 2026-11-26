@@ -56,6 +56,9 @@ if __name__ == "__main__":
     from orchestrateur.harnais import HARNAIS
 
     HARNAIS["faux"] = HarnaisFactice
+    if os.environ.get("GB_FROID_LENT"):  # INV-FROID-1 : découverte des modèles lente, comme `claude`/`codex` sur le vrai poste (2,1 s mesurées)
+        import time
+        HarnaisFactice.decouvrir_modeles = lambda self: (time.sleep(2.1), ["modele-a"])[1]
     if os.environ.get("GB_DEMO"):  # démonstration : la colonne « Moteur » montre un harnais réel, joué par le factice
         HARNAIS["claude"] = HarnaisFactice
     faux_poste()  # INV-INSTALL-1 : l'interface n'atteint jamais le vrai poste

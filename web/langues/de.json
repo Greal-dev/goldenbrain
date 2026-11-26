@@ -1035,6 +1035,7 @@
  "incidents.suite": "— {assistant}, {date}",
  "incidents.suite_role": "— {assistant} ({role}), {date}",
  "incidents.utilise": "{part} % verbraucht, Fortsetzung {date}",
+ "index.a_faire_court": "Zu erledigen",
  "index.a_faire_vous": "Von Ihnen zu erledigen",
  "index.a_faire_vous_titre": "Aufgaben, die Sie selbst ausführen oder die die KI nicht abschließen konnte",
  "index.a_moi": "Für mich",

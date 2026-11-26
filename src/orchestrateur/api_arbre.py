@@ -77,6 +77,8 @@ def routes(config, moteur, aligneur, index_notes) -> APIRouter:
         suivi.annoter(noeuds, taches)  # cache seul : ne bloque jamais l'arbre
         return {"noeuds": moteur.routines.annoter(noeuds) if hasattr(moteur, "routines") else noeuds}  # INV-ROUTINE-5
 
+    r.chauffer = lambda: asyncio.to_thread(arbre_, 0)  # INV-FROID-1 : l'arbre tel que servi, chaud avant la première requête
+
     @r.get("/api/arbre")
     async def arbre(toutes: int = 0):
         return arbre_(toutes)

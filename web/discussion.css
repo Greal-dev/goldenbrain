@@ -13,7 +13,6 @@ body.tache-ouverte #btn-disposition { display: inline-flex; }
 body.discussion .b-bas { display: none; }
 body.discussion .b-haut { flex-wrap: nowrap; gap: 5px; padding: 3px 10px; min-height: 36px; box-sizing: border-box; }
 body.discussion .b-haut::before { display: none; }
-body.discussion :is(#btn-avalider, #btn-questions, #btn-afaire) > span:not(.n) { display: none; } /* INV-DISCUSSION-1 : barre à une rangée, les trois pastilles « À moi » ne gardent que leur compte (titre au survol) */
 body.discussion .marque { padding: 2px 4px; margin-right: 2px; }
 body.discussion .btn-compte, body.discussion .btn { padding: 2px 8px; font-size: 12.5px; }
 body.discussion .btn-compte .n { min-width: 16px; font-size: 11px; }

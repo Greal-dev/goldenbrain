@@ -10,7 +10,7 @@ import { initArbre, dessiner as dessinerArbre } from './arbre.js';
 import { initBandeau, chargerRevue } from './bandeau.js';
 import { initIncidents } from './incidents.js';
 import { dessinerCascade, etatCascade, initCascade } from './cascade.js';
-import { chargerInterface, ouvert, simple } from './interface.js';
+import { chargerInterface, ouvert, simple, initBarre } from './interface.js';
 import { initNotes, evtNote as evtNoteArbre, actualiser as actualiserNotes } from './notes.js';
 import { initAlignement, rafraichirEcarts } from './alignement.js';
 import { evtTransfo } from './transfo.js';
@@ -248,6 +248,7 @@ async function demarrer() {
   initTelephone();
   initBandeaux();
   initDiscussion();
+  initBarre(); // INV-BARRE-1
   initCascade();
   initAlignement();
   on('selection', majVoletDroit);

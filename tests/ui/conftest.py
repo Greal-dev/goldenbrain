@@ -35,11 +35,11 @@ def serveur(tmp_path_factory):
     yield from demarrer(tmp_path_factory.mktemp("ui"))
 
 
-def demarrer(dossier: Path, supplement: str = "", cerveau_fait: bool = True, ttl: float = 0, avant=None, sonde_vault: bool = True):
+def demarrer(dossier: Path, supplement: str = "", cerveau_fait: bool = True, ttl: float = 0, avant=None, sonde_vault: bool = True, harnais_lent: bool = False):
     """Vrai serveur sur un univers neuf ; `supplement` s'ajoute à la fin de son config.toml. `cerveau_fait` : le second cerveau est
     réglé (INV-CERVEAU-1) ; faux = poste neuf, le parcours « Configurer votre second cerveau » ouvre l'interface.
     `avant(vault)` peuple le vault avant le lancement ; `sonde_vault=False` attend le serveur par `/`, sans chauffer le vault
-    (mesure à froid, INV-FROID-1)."""
+    (mesure à froid, INV-FROID-1) ; `harnais_lent` : catalogue des moteurs en découverte « auto » qui prend 2,1 s."""
     port = port_libre()
     faux_tg = FauxTelegram()
     config = univers.construire(dossier, port, faux_tg.url)
@@ -50,6 +50,8 @@ def demarrer(dossier: Path, supplement: str = "", cerveau_fait: bool = True, ttl
         (dossier / "etat" / "cerveau.json").write_text('{"etat": "fait"}', encoding="utf-8")
     if ttl:
         config.write_text(config.read_text(encoding="utf-8").replace("index_ttl_s = 0", f"index_ttl_s = {ttl}", 1), encoding="utf-8")
+    if harnais_lent:
+        config.write_text(config.read_text(encoding="utf-8").replace("[harnais.faux]\n", '[harnais.faux]\nmodeles = "auto"\n', 1), encoding="utf-8")
     if supplement:
         config.write_text(config.read_text(encoding="utf-8") + supplement, encoding="utf-8")
     # Journal sur fichier, jamais sur un tuyau : un tuyau que personne ne vide se remplit (quelques Ko
@@ -62,7 +64,7 @@ def demarrer(dossier: Path, supplement: str = "", cerveau_fait: bool = True, ttl
     temporaire = dossier / "temporaire"  # le dossier de travail des scénarios n'est pas « temporaire » pour l'accueil
     temporaire.mkdir()
     proc = subprocess.Popen([sys.executable, str(SERVEUR), str(config)], stdout=sortie, stderr=subprocess.STDOUT,
-                            env={**{k: v for k, v in os.environ.items() if not k.startswith("ORCH_")}, "ORCH_ACCUEIL_HOME": str(home), "TMPDIR": str(temporaire), "TEMP": str(temporaire)})
+                            env={**{k: v for k, v in os.environ.items() if not k.startswith("ORCH_")}, "ORCH_ACCUEIL_HOME": str(home), **({"GB_FROID_LENT": "1"} if harnais_lent else {}), "TMPDIR": str(temporaire), "TEMP": str(temporaire)})
     url = f"http://127.0.0.1:{port}"
     try:
         for _ in range(100):

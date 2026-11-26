@@ -149,7 +149,7 @@ def creer_app(config: Config, moteur: Moteur | None = None) -> FastAPI:
         moteur.demarrer_reveils()
         app.state.maj_auto.demarrer()  # INV-MAJ-3
         connecteur.demarrer()  # INV-TELEGRAM-1 : seulement si activé dans les Réglages
-        await asyncio.to_thread(prechauffage.chauffer, moteur)  # INV-FROID-1 : premier écran chaud avant la première requête
+        await prechauffage.chauffer_tout(moteur, catalogue.lister, routeur_maj.chauffer, routeur_arbre.chauffer)  # INV-FROID-1 : premier écran chaud avant la première requête
         yield
         for x in fond: x.cancel()
         moteur.vigie.fermer()

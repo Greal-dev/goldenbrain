@@ -35,7 +35,7 @@
 @media (prefers-reduced-motion: reduce) { :root { --duree: 0ms; } *, *::before, *::after { animation: none !important; transition: none !important; } }
 * { box-sizing: border-box; }
 html, body { height: 100%; margin: 0; }
-body { background: var(--fond); display: flex; flex-direction: column; min-width: 1100px; overflow: hidden; }
+body { background: var(--fond); display: flex; flex-direction: column; min-width: 960px; /* INV-BARRE-1 : la barre se replie jusqu’à 1024 px sans sortir de la fenêtre */ overflow: hidden; }
 button, input, select, textarea { font: inherit; color: inherit; }
 :where(input:not([type=checkbox], [type=radio], [type=range], [type=color], [type=file]), textarea) { padding: 4px 8px; border: 1px solid var(--bord-fort); border-radius: 5px; background: var(--panneau-2); } /* champs sans style propre : plus de relief natif */
 select { padding: 3px 6px; border: 1px solid var(--bord-fort); border-radius: 5px; background: var(--panneau-2); } /* le gris natif du thème sombre jure avec la direction A */

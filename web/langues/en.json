@@ -1035,6 +1035,7 @@
  "incidents.suite": "— {assistant}, {date}",
  "incidents.suite_role": "— {assistant} ({role}), {date}",
  "incidents.utilise": "{part}% used, resumes {date}",
+ "index.a_faire_court": "To do",
  "index.a_faire_vous": "Yours to do",
  "index.a_faire_vous_titre": "Tasks you carry out yourself, or that the AI could not conclude",
  "index.a_moi": "For me",

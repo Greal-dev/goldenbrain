@@ -22,6 +22,7 @@ from .config import RACINE_DEPOT, Config
 from .vault import Conflit, ErreurOrch, TropTot
 
 TTL_S, TTL_ERREUR_S = 3600, 300  # hors ligne : on réessaie plus tôt
+FRAICHEUR_PREALABLE_S = 30  # INV-FROID-1 : l'état lu sans réseau au démarrage vaut 30 s, puis le contrôle réel (`git fetch`) reprend
 
 
 class CorpsRedemarrer(BaseModel):
@@ -52,13 +53,13 @@ def routes(config: Config, moteur, version, depot=RACINE_DEPOT) -> APIRouter:
     memo: dict = {"instant": 0.0, "valeur": None}
     verrou = asyncio.Lock()
 
-    async def controle(actualiser: bool) -> dict:
+    async def controle(actualiser: bool, recuperer: bool = True) -> dict:
         async with verrou:
             ttl = TTL_ERREUR_S if (memo["valeur"] or {}).get("erreur") else TTL_S
             if memo["valeur"] is None or actualiser or time.monotonic() - memo["instant"] >= ttl:
                 try:
                     suivie, canaux = auto.suivie()
-                    v = await asyncio.to_thread(mise_a_jour.etat, depot, suivie, True, canaux)
+                    v = await asyncio.to_thread(mise_a_jour.etat, depot, suivie, recuperer, canaux)
                     if v.get("retard"):  # avis « Quoi de neuf » : ce qu'apporte la version en attente
                         v["nouveautes"] = await asyncio.to_thread(
                             nouveautes.quoi_de_neuf, depot, f"{v['distant']}/{v['branche']}")
@@ -68,12 +69,17 @@ def routes(config: Config, moteur, version, depot=RACINE_DEPOT) -> APIRouter:
                 else:
                     v.pop("erreur", None)
                 v["canal"] = auto.reglage["canal"]
-                memo.update(instant=time.monotonic(), valeur=v,
+                memo.update(instant=time.monotonic() - (0 if recuperer else TTL_S - FRAICHEUR_PREALABLE_S), valeur=v,
                             controle=dt.datetime.now().isoformat(timespec="seconds"))
             return {**memo["valeur"], "dernier_controle": memo.get("controle")}
 
     auto = maj_auto.MajAuto(moteur, version, depot, c, controle, lambda: memo.update(valeur=None),
                             config.donnees / "etat" / "maj_auto.json")
+    async def chauffer() -> None:  # INV-FROID-1 : premier état local sans `git fetch` (0,9 s mesurées) ; en erreur, on n'en garde rien
+        if (await controle(False, recuperer=False)).get("erreur"):
+            memo["valeur"] = None
+
+    r.chauffer = chauffer
     r.auto = auto  # lu par `creer_app` (démarrage et arrêt dans le lifespan)
     version.complements = lambda: {k: v for k, v in auto.vue().items() if k != "dans_fenetre"}
 

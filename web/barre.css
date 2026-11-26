@@ -1,0 +1,26 @@
+/* INV-BARRE-1 : repli de la barre haute par niveaux cumulatifs (web/interface.js pose `data-r1` … `data-r6` sur `.b-haut`). Ordre : pastilles
+   secondaires en icône (r1), pastilles « À moi » en icône (r2), repère « Intelligent » (r3), recherche resserrée (r4), logo seul et « + » (r5),
+   pastilles secondaires masquées (r6). « Nouvelle tâche » et « Menu » ne sortent jamais. */
+.b-haut > * { min-width: 0; }
+.b-haut :is(#btn-nouvelle, .b-menu-zone, #marque) { flex-shrink: 0; }
+
+.b-haut[data-r1] :is(#btn-aujourdhui, #btn-decisions, #btn-props, #btn-incidents, #btn-etat, #btn-travaux) > span:not(.n),
+.b-haut[data-r2] :is(#btn-avalider, #btn-questions, #btn-afaire) > span:not(.n) { display: none; }
+.b-haut[data-r1] :is(#btn-aujourdhui, #btn-decisions, #btn-props, #btn-incidents, #btn-etat, #btn-travaux)::before,
+.b-haut[data-r2] :is(#btn-avalider, #btn-questions, #btn-afaire)::before { margin-right: 4px; }
+.b-haut[data-r1] #btn-aujourdhui::before { content: "☀"; }
+.b-haut[data-r1] #btn-decisions::before { content: "⚖"; }
+.b-haut[data-r1] #btn-props::before { content: "⊕"; }
+.b-haut[data-r1] #btn-incidents::before { content: "⚠"; }
+.b-haut[data-r1] #btn-etat::before { content: "ⓘ"; }
+.b-haut[data-r1] #btn-travaux::before { content: "⚙"; }
+.b-haut[data-r2] #btn-avalider::before { content: "✓"; }
+.b-haut[data-r2] #btn-questions::before { content: "?"; }
+.b-haut[data-r2] #btn-afaire::before { content: "✎"; }
+
+.b-haut[data-r3] #eco-repere { display: none; }
+.b-haut[data-r4] .rech-zone { flex: 0 1 64px; min-width: 40px; }
+.b-haut[data-r5] #marque { font-size: 0; }
+.b-haut[data-r5] #btn-nouvelle > span { display: none; }
+.b-haut[data-r5] #btn-nouvelle::before { content: "+"; font-weight: 700; }
+.b-haut[data-r6] .rel:has(> :is(#btn-aujourdhui, #btn-decisions, #btn-props, #btn-incidents, #btn-etat, #btn-travaux)) { display: none; }
