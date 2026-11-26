@@ -249,8 +249,11 @@ Les tests d'interface (`ui/`) se lancent à part : `python scripts/check_ui.py`.
 | `web/decisions.js` | page « Décisions » du volet droit — une carte par décision, question en clair, gestes sur place, lot de validations. | INV-DECISIONS-1, INV-ROUTINE-4, INV-PROP-1 | `ui/scenario_decisions.py` |
 | `web/decisions-agents.js` | Lignes « Agent Claude Code » de la page Décisions : choix rattacher / créer / ignorer, lot. | INV-AGENTSCC-1 | `ui/scenario_agents_cc.py` |
 | `web/evitable.js` | section « Pastille « évitable ? » » des Réglages : activée, seuil. | INV-EVITABLE-1 | `ui/scenario_evitable.py` |
+| `web/tri_rapide.js` | « Tri rapide » de la page Décisions : une carte plein écran à la fois, gestes à la touche ou au clic par les routes existantes. | INV-DECISIONS-1 | `ui/scenario_tri_rapide.py` |
 | `web/decisions.css` | Page « Décisions » : cartes, groupes de projet repliables, barre de lot. | — | `ui/scenario_decisions.py` |
+| `web/palette.css` | Palette Ctrl+K : dialogue centré en haut, liste et ligne active. | — | `ui/scenario_palette.py` |
 | `web/aujourdhui.js` | vue « Aujourd'hui » du volet droit — en retard, dues aujourd'hui, dues dans les sept jours, puis « À moi ». | — | chargement par `ui/scenario_fumee.py` seulement |
+| `web/palette.js` | palette de commandes Ctrl+K — recherche locale des tâches (S.arbre) complétée par /api/recherche, gestes (nouvelle tâche, décisions, réglages, renvoi à l'IA, statut) ; chargée à la demande par `app.js`. | INV-REACTIVITE-1 | `ui/scenario_palette.py` |
 | `web/bandeau.js` | bandeau haut — tours en cours, compteurs (dont « Aujourd'hui »), déroulant des propositions, recherche, nouvelle tâche. | INV-DEROULANT-1 | chargement par `ui/scenario_fumee.py` seulement |
 | `web/apercus.js` | aperçus déroulants de la barre haute (Aujourd'hui, Décisions, À moi, En cours) et pastille « Infos » des bandeaux d'information. | INV-DEROULANT-1 | `ui/scenario_deroulant.py` |
 | `web/cascade.js` | vue en cascade du volet droit — sous-arbre des tâches en tableau indenté repliable, | — | chargement par `ui/scenario_fumee.py` seulement |
@@ -266,6 +269,7 @@ Les tests d'interface (`ui/`) se lancent à part : `python scripts/check_ui.py`.
 | `web/volet_largeur.js` | largeur réglable du volet des tâches : poignée tirée à la souris, au doigt ou au clavier, mémorisée par navigateur | INV-DISCUSSION-1 | `ui/scenario_accueil_rangee.py` |
 | `web/deroulant.js` | composant déroulant unique : survol à délai d'intention, clic, clavier, toucher, Échap, clic extérieur, épingle ; `intention()` partagée par les rails. | INV-DEROULANT-1 | `ui/scenario_deroulant.py` |
 | `web/deroulant.css` | mise en page du déroulant : panneau flottant, épingle, aperçus d'une ligne, feuille du bas au téléphone | INV-DEROULANT-1 | `ui/scenario_deroulant.py` |
+| `web/encart_etat.js` | encart « Où en est-on » sous l'en-tête d'une tâche : fait, attendu de vous, prochaine étape (lecture de `fiche` et `main`, rien d'écrit). | INV-MAIN-1 | `ui/scenario_encart_etat.py` |
 | `web/detail.js` | volet droit — tâche sélectionnée (en-tête, actions, fiche, corps, conversation, saisie). | — | `ui/scenario_fumee.py` (arbre, tâche, conversation), `ui/scenario_console.py`, `ui/scenario_modifier.py` |
 | `web/notes_tache.js` | panneau « Notes » de la tâche : liste datée en Markdown, ajout, « Modifier » ; repli des deux panneaux. | INV-EXECUTANT-2 | `ui/scenario_executant.py` |
 | `web/notes_ia.js` | barre « IA » du panneau Notes : portée (sélection ou tout), proposition avec différence, Remplacer / Insérer / Annuler, annulation après application. | INV-EXECUTANT-3 | `ui/scenario_executant.py` |
@@ -520,7 +524,10 @@ Les tests d'interface (`ui/`) se lancent à part : `python scripts/check_ui.py`.
 | `tests/ui/scenario_agents_cc.py` | Agents de Claude Code dans Décisions : doublons regroupés, proposition modifiée, lot appliqué. | INV-AGENTSCC-1 | — |
 | `tests/ui/scenario_evitable.py` | Pastille « évitable ? » : Réglages puis Décisions, motif, seuil, désactivation. | INV-EVITABLE-1 | — |
 | `tests/ui/scenario_propositions_compactes.py` | Propositions compactes : six propositions de deux tâches, hauteurs repliées et dépliées au panneau, à l'accueil et aux Décisions ; refus par icône, « Tout refuser ». | INV-PROP-2 | — |
+| `tests/ui/scenario_encart_etat.py` | Encart « Où en est-on » : trois lignes (fait, attendu de vous, prochaine étape), absent sans fiche, texte long tronqué. | INV-MAIN-1 | — |
+| `tests/ui/scenario_tri_rapide.py` | Tri rapide des décisions : A valide, R refuse (proposition, motif d'une validation), → passe, Échap quitte, « Tout est trié ». | INV-DECISIONS-1 | — |
 | `tests/ui/scenario_decisions.py` | Page « Décisions » : adresse directe, question visible, réponse et acceptation sur place, fermetures cochées, filtre rapides, lot de validations. | INV-DECISIONS-1 | — |
+| `tests/ui/scenario_palette.py` | Palette Ctrl+K : ouverture (même depuis un champ), recherche d'une tâche, ouverture de la fiche, changement de statut, Échap. | INV-REACTIVITE-1 | — |
 | `tests/ui/scenario_design.py` | Système visuel : thème sombre choisi dans Réglages, persistant au rechargement, retour au thème du système ; écran étroit (390 px) en une colonne, un écran à la fois (Réglages par la barre basse), sans débordement. | — | — |
 | `tests/ui/scenario_telephone.py` | Profil mobile : liste, tâche en plein écran (onglets), envoi d'un message, validation d'une décision par la barre basse ; application installable sans cache des données. | INV-PWA-1 | — |
 | `tests/ui/scenario_console.py` | Bouton « Console GoldenBrain » : offert sans session, demande l'onglet `orch console <id>` (aucun onglet réel : `console.lancer` neutralisé par `ui/serveur.py`). | INV-CONSOLE-1 | — |

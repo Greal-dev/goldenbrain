@@ -20,6 +20,13 @@ import { initBandeaux } from './bandeaux.js';
 import { initApercus } from './apercus.js';
 import { charger, pret, sur, surCharge } from './paresseux.js';
 
+// Ctrl+K / Cmd+K, même depuis un champ : seul l'écouteur vit au premier affichage, la palette arrive à la demande.
+function initPalette() {
+  document.addEventListener('keydown', (e) => {
+    if ((e.ctrlKey || e.metaKey) && !e.altKey && !e.shiftKey && e.key.toLowerCase() === 'k') { e.preventDefault(); charger('palette').then((m) => m.ouvrirPalette(), (x) => erreur(x.message)); }
+  });
+}
+
 const droit = () => $('#volet-droit');
 // INV-REACTIVITE-1 : ces modules ne sont pas chargés au premier affichage ; tant qu'ils ne sont pas prêts, leurs événements n'ont rien à mettre à jour.
 const rafraichir = sur('detail', 'rafraichir'), evtDetail = sur('detail', 'evtDetail'), tacheOuverte = () => pret('detail')?.tacheOuverte() ?? null;
@@ -249,6 +256,7 @@ async function demarrer() {
   initTelephone();
   initBandeaux();
   initDiscussion();
+  initPalette();
   initBarre(); // INV-BARRE-1
   initCascade();
   initAlignement();

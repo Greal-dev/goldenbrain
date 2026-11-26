@@ -1,0 +1,8 @@
+/* Rôle : palette de commandes Ctrl+K (voir palette.js) — dialogue centré en haut de l'écran.
+   Frontières : aucune logique ; la classe `actif` est posée par palette.js. */
+dialog.palette { margin: 12vh auto 0; width: min(560px, 92vw); }
+.palette .pal-champ { width: 100%; box-sizing: border-box; border: 0; border-bottom: 1px solid var(--bord-fort); padding: var(--esp-2); background: transparent; color: inherit; font: inherit; outline: none; }
+.palette .pal-liste { list-style: none; margin: 0; padding: 0; max-height: 50vh; overflow-y: auto; }
+.palette .pal-ligne { display: flex; justify-content: space-between; gap: var(--esp-2); padding: 6px var(--esp-2); cursor: pointer; }
+.palette .pal-ligne.actif, .palette .pal-ligne:hover { background: var(--survol); }
+.palette .pal-fil { color: var(--texte-discret, gray); font-size: .85em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

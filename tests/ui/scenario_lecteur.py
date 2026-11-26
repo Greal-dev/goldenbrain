@@ -45,3 +45,26 @@ def test_docx_ouvert_dans_l_application(page, serveur):
     page.wait_for_selector("text=ouvert dans Word")
     assert len(appels) == 1 and "doc.docx" in appels[0]
     assert page.locator("dialog.lecteur").count() == 0  # pas de volet : l'application s'en charge
+
+
+def test_liens_cliquables_et_dossier_ouvert_dans_l_explorateur(page, serveur):
+    """26/11 : les liens écrits par les agents sous toutes leurs formes sont cliquables ; un chemin de dossier du poste
+    ouvre l'explorateur (appel simulé), un chemin hors des dossiers autorisés dit pourquoi il ne s'ouvre pas."""
+    _preparer(serveur)
+    dossier = str(serveur.vault / "Ressources" / "lecteur-ui")
+    texte = ("Voir https://exemple.org/a. Lien <https://exemple.org/b> et «https://exemple.org/c» et **https://exemple.org/d** "
+             f"et `https://exemple.org/e` et www.exemple.org ; dossier `{dossier}` ; dehors /tmp/nulle-part-gb.txt")
+    appels = []
+    page.route("**/api/lecteur/dossier", lambda r: (appels.append(r.request.post_data), r.fulfill(json={"message": "Dossier affiché"}))[1])
+    page.goto(page.url_serveur + "/")
+    page.wait_for_selector(".ligne")
+    page.evaluate("""(t) => import('/md.js').then((m) => { const d = document.createElement('div'); d.id = 'essai-liens';
+      d.className = 'md'; document.body.prepend(d); m.rendreMd(d, t); })""", texte)
+    hrefs = page.eval_on_selector_all("#essai-liens a[target=_blank]", "as => as.map((a) => a.getAttribute('href'))")
+    assert hrefs == [f"https://exemple.org/{c}" for c in "abcde"] + ["https://www.exemple.org"], hrefs
+    page.click(f"#essai-liens a[data-fichier='{dossier}']")
+    page.wait_for_selector("text=Dossier affiché")
+    assert appels and dossier in appels[0]
+    page.click("#essai-liens a[data-fichier='/tmp/nulle-part-gb.txt']")
+    page.wait_for_selector("text=hors des dossiers lisibles")
+    assert not [e for e in page.erreurs if "403" not in e], page.erreurs  # le refus attendu se journalise en console

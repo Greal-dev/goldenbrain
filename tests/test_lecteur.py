@@ -143,6 +143,31 @@ def test_un_script_ne_se_lance_jamais(client, ouvertures):
     assert ouvertures[-1].endswith("notes")
 
 
+def test_lien_vers_un_dossier_l_ouvre_dans_l_explorateur(client, ouvertures):
+    i = client.get("/api/lecteur/info", params={"chemin": "Projets/C1-Alpha/notes"}).json()
+    assert i["mode"] == "dossier" and i["application"] is True
+    assert client.get("/api/lecteur/page", params={"chemin": "Projets/C1-Alpha/notes"}).status_code == 400
+    r = client.post("/api/lecteur/dossier", json={"chemin": "Projets/C1-Alpha/notes"}, headers=H)
+    assert r.status_code == 200 and ouvertures[-1].endswith("notes")
+
+
+def test_dossier_hors_racines_refuse(client, tmp_path, ouvertures):
+    assert client.get("/api/lecteur/info", params={"chemin": str(tmp_path)}).status_code == 403
+    assert client.post("/api/lecteur/dossier", json={"chemin": str(tmp_path)}, headers=H).status_code == 403
+    assert not ouvertures
+
+
+def test_chemin_en_tilde_vaut_le_dossier_personnel(client, config, tmp_path, monkeypatch):
+    d = tmp_path / "maison" / "docs"
+    d.mkdir(parents=True)
+    (d / "a.txt").write_text("bonjour", encoding="utf-8")
+    monkeypatch.setenv("HOME", str(tmp_path / "maison"))
+    monkeypatch.setenv("USERPROFILE", str(tmp_path / "maison"))
+    config.lecteur = ConfigLecteur(dossiers=[str(d)])
+    lecteur.vider_cache()
+    assert client.get("/api/lecteur/page", params={"chemin": "~/docs/a.txt"}).json()["texte"] == "bonjour"
+
+
 def test_agent_ne_peut_pas_ouvrir_une_application(client, ouvertures):
     for tete in ({"X-Orch-Tache": "chantier"}, {"X-Orch-Jeton": "x"}):
         r = client.post("/api/lecteur/ouvrir", json={"chemin": "Projets/C1-Alpha/notes/budget.docx"}, headers={**H, **tete})

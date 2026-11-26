@@ -97,15 +97,16 @@ def _ignore(p: Path, base: Path) -> bool:
     return bool(set(p.relative_to(base).parts) & resultat.IGNORES)
 
 
-def resoudre(moteur, chemin: str, distant: bool = False) -> Path:
-    """Chemin réel d'un fichier lisible. INV-LECTEUR-1 : ni `..` ni octet nul, lien symbolique résolu avant le
-    contrôle, et le résultat sous une racine autorisée (ou être un livrable déclaré) — sinon 403, jamais servi."""
+def resoudre(moteur, chemin: str, distant: bool = False, dossier: bool = False) -> Path:
+    """Chemin réel d'un fichier lisible (ou d'un dossier si `dossier`). INV-LECTEUR-1 : ni `..` ni octet nul, lien
+    symbolique résolu avant le contrôle, et le résultat sous une racine autorisée (ou être un livrable déclaré) —
+    sinon 403, jamais servi. `~` vaut le dossier personnel du poste (chemins cités par les agents, 26/11)."""
     brut = str(chemin or "").strip()
     if not brut or len(brut) > 2000 or "\x00" in brut:
         raise Invalide(langues.t("serveur.lecteur.chemin_invalide"))
     if ".." in Path(brut.replace("\\", "/")).parts:
         raise Invalide(langues.t("serveur.lecteur.traversee"))
-    p = Path(brut)
+    p = Path(brut).expanduser()
     vault = Path(moteur.vault.racine)
     try:
         reel = (p if p.is_absolute() else vault / p).resolve()
@@ -115,7 +116,7 @@ def resoudre(moteur, chemin: str, distant: bool = False) -> Path:
     sous = next((b for b in dossiers if reel.is_relative_to(b)), None)
     if (sous is None or _ignore(reel, sous)) and reel not in fichiers:
         raise HorsRacines(langues.t("serveur.lecteur.hors_racines"))
-    if not reel.is_file():
+    if not (reel.is_file() or (dossier and reel.is_dir())):
         raise NonTrouve(langues.t("serveur.lecteur.introuvable", nom=reel.name))
     return reel
 
@@ -136,7 +137,9 @@ def _executable(p: Path) -> bool:
 
 
 def info(moteur, chemin: str, distant: bool = False) -> dict:
-    p = resoudre(moteur, chemin, distant)
+    p = resoudre(moteur, chemin, distant, dossier=True)
+    if p.is_dir():  # un dossier cité s'ouvre dans l'explorateur du poste, jamais dans le lecteur
+        return {"nom": p.name, "chemin": str(p), "mode": "dossier", "application": not distant}
     st = p.stat()
     ext = ext_de(p)
     mode, genre = mode_de(moteur.config.lecteur, ext)
@@ -223,12 +226,13 @@ def ouvrir_application(moteur, chemin: str) -> dict:
 
 
 def afficher_dossier(moteur, chemin: str) -> dict:
-    p = resoudre(moteur, chemin, False)
+    p = resoudre(moteur, chemin, False, dossier=True)
+    cible = p if p.is_dir() else p.parent
     try:
-        resultat.ouvrir_systeme(str(p.parent))
+        resultat.ouvrir_systeme(str(cible))
     except (OSError, webbrowser.Error) as e:
-        raise Conflit(langues.t("serveur.resultat.echec", libelle=p.parent.name)) from e
-    return {"message": langues.t("serveur.lecteur.dossier_ouvert", nom=p.parent.name)}
+        raise Conflit(langues.t("serveur.resultat.echec", libelle=cible.name)) from e
+    return {"message": langues.t("serveur.lecteur.dossier_ouvert", nom=cible.name)}
 
 
 def vider_cache() -> None:

@@ -8,8 +8,7 @@ import { formulaire } from './dialogue.js';
 import { description, groupePropositions } from './propositions.js';
 import { libelleEcheance } from './temps.js';
 import { ligneAgent, lotAgents } from './decisions-agents.js';
-import { boutonAide } from './guide.js';
-import { t, tn } from './langues.js';
+import { boutonAide } from './guide.js';import { t, tn } from './langues.js';
 
 let coque = null, version = 0, donnees = null;
 const reponses = new Map();   // brouillons de réponse, conservés d'un redessin à l'autre
@@ -185,6 +184,8 @@ function dessiner() {
       onchange: (e) => { seulementRapides = e.target.checked; dessiner(); } }), t('decisions.rapides_seulement')),
     h('button', { class: 'btn primaire petit', id: 'dc-lot', type: 'button', disabled: sel.length ? null : true,
       onclick: () => { cochees.clear(); geste(() => lot('/decisions/valider', { taches: sel })); } }, t('decisions.valider_selection', { n: sel.length })),
+    h('button', { class: 'btn petit', id: 'dc-tri', type: 'button', disabled: liste.length ? null : true,
+      onclick: async () => (await import('./tri_rapide.js')).triRapide(liste, actualiser) }, t('tri.bouton')),
     tout.some((d) => d.genre === 'agent') ? lotAgents(tout, { geste, lot }) : null,
     h('button', { class: 'btn petit', id: 'dc-scan', type: 'button', title: t('decisions.scan_titre'),
       onclick: () => geste(async () => {

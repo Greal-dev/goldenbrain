@@ -35,6 +35,7 @@ import { panneau, creerNotes } from './notes_tache.js';
 import { t } from './langues.js';
 import { voirResultat } from './resultat.js';
 import { pastilleMain, phraseMain, boutonIA, envoyerIA } from './main.js';
+import { placerEncart } from './encart_etat.js';
 
 let racine, id = null, tache = null, instantane = '', colle = true, ficheAbsente = false;
 let direct = false; // un tour de cette tâche est en cours : le dernier tour de la conversation n'a pas encore de réponse finale
@@ -55,6 +56,7 @@ const actif = (tk) => tk && (tk.etat_execution === 'en_cours' || tk.etat_executi
 function squelette() {
   r = {};
   r.une = h('div', { class: 'd-une' });
+  r.encart = h('div', { class: 'd-encart' });
   r.vie = h('div', { class: 'd-vie' });
   r.fiche = h('section', { class: 'fiche' });
   r.lignes = h('div', { class: 'liens f-lignes' });
@@ -75,7 +77,7 @@ function squelette() {
   r.details = h('div', { class: 'd-details', 'data-id': 'details', id: 'details', hidden: true }, r.detMeta, r.vie, r.fiche, r.lignes, r.liens, r.etiq, r.revues, r.corps);
   r.bascule = h('button', { class: 'btn petit d-bascule', type: 'button', 'data-id': 'details-bascule', title: t('detail.details_titre') }, t('detail.details'));
   r.der = deroulant({ bouton: r.bascule, panneau: r.details, garder: true, epingle: detOuvert, surEpingle: epinglerDetails });
-  r.tete = h('div', { class: 'd-tete' }, r.une, r.details);
+  r.tete = h('div', { class: 'd-tete' }, r.une, r.encart, r.details);
   r.defile = h('div', { class: 'd-defile' }, h('div', { class: 'conv-tete' }, (r.convTitre = h('h3', { class: 'conv-titre' }, t('detail.echanges'))), r.etapes), r.conv);
   r.defile.addEventListener('scroll', () => { colle = r.defile.scrollHeight - r.defile.scrollTop - r.defile.clientHeight < 48; r.bas.hidden = colle; });
   r.bas = h('button', { class: 'btn petit retour-bas', type: 'button', hidden: true, onclick: () => descendre(true) }, t('detail.direct'));
@@ -227,6 +229,7 @@ function majVie() {
 const NON_INDIQUE = t('detail.non_indique');
 function dessinerFiche() {
   const f = tache.fiche || {};
+  placerEncart(r.encart, tache);
   const champ = (l, v) => h('div', { class: 'f-champ' }, h('dt', null, l), rendreMd(h('dd', { class: 'md' }), v || '—'));
   const st = f.sous_taches || [];
   remplacer(r.fiche, h('h3', null, t('detail.fiche')),

@@ -63,3 +63,11 @@ a { color: var(--accent); }  /* liens (guide, notes) : l'accent plutôt que le b
 :root .rg-groupe { border-width: 0 0 1px; border-radius: 0; background: transparent; margin: 0; }
 :root .rg-groupe > summary { border-radius: 0; padding: 14px 2px; }
 :root .rg-titre { font-size: 15px; }
+/* Encart « Où en est-on » : trois lignes sobres sous l'en-tête de la tâche */
+/* Une seule rangée (budget d'en-tête ≤ 15 % de la hauteur, scenario_detail_allege) : trois segments qui cèdent chacun à « … »,
+   texte entier au survol ; absent au téléphone, où la phrase de la main suffit. */
+.encart-etat { display: flex; gap: 14px; padding: 0 16px 4px; font-size: 12px; line-height: 1.4; color: var(--texte); min-width: 0; }
+.encart-ligne { display: flex; gap: 6px; flex: 1 1 0; min-width: 0; }
+.encart-lib { color: var(--texte-2); white-space: nowrap; flex: none; }
+@media (max-width: 480px) { .encart-etat { display: none; } }
+.encart-txt { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

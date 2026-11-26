@@ -19,10 +19,11 @@ const taille = (o) => {
 let ouvert = null, avant = '';
 
 /** Clic sur un lien de fichier : le serveur dit « lecteur » ou « application » ; rien n'est deviné ici. */
-export async function ouvrirFichier(chemin) {
+export async function ouvrirFichier(chemin, signaler = false) {
   let i;
-  try { i = await api(`/lecteur/info?chemin=${enc(chemin)}`); } catch { return false; } // hors racines ou absent : l'appelant a son repli
-  if (i.mode === 'application') await ouvrirApplication(i);
+  try { i = await api(`/lecteur/info?chemin=${enc(chemin)}`); } catch (e) { if (signaler) erreur(e.message); return false; } // hors racines ou absent : l'appelant a son repli
+  if (i.mode === 'dossier') await ouvrirDossier(i);
+  else if (i.mode === 'application') await ouvrirApplication(i);
   else await volet(i);
   return true;
 }
@@ -30,6 +31,11 @@ export async function ouvrirFichier(chemin) {
 async function ouvrirApplication(i) {
   if (!i.application) { erreur(t('lecteur.poste_seul'), 'info'); return; }
   try { erreur((await post('/lecteur/ouvrir', { chemin: i.chemin })).message, 'info'); } catch (e) { erreur(e.message); }
+}
+
+async function ouvrirDossier(i) {
+  if (!i.application) { erreur(t('lecteur.poste_seul'), 'info'); return; }
+  try { erreur((await post('/lecteur/dossier', { chemin: i.chemin })).message, 'info'); } catch (e) { erreur(e.message); }
 }
 
 // --- formats ---

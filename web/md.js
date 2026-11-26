@@ -25,6 +25,21 @@ export function joindre(depuis, rel) {
   return parts.join('/');
 }
 
+// Chemin du poste cité en clair (~/…, /home/…, C:\…), fichier ou dossier : ouvert par le lecteur, qui confie un dossier à
+// l'explorateur ; le serveur seul juge des racines autorisées (INV-LECTEUR-1). Sans espace hors `code` (où il est pris entier).
+const CHEMIN = /(?<![\w\\/:.~-])(?:~[\\/]|\/(?:home|Users|tmp|mnt|media|srv|opt|var|etc)\/|[A-Za-z]:[\\/])[^\s`<>|*?&]*[^\s`<>|*?&.,;:!)\]]/g;
+const CHEMIN_ENTIER = /^(?:~[\\/]|\/(?:home|Users|tmp|mnt|media|srv|opt|var|etc)\/|[A-Za-z]:[\\/])[^`<>|*?\n]+$/;
+// URL nue : la ponctuation et les guillemets qui la suivent n'en font pas partie (parenthèse fermante gardée si appariée).
+const URL_NUE = /(?<![\w/@.-])(?:https?:\/\/|www\.)[^\s<]+/gi;
+function couperUrl(u) {
+  let fin = '';
+  for (let m; (m = /(&gt;|&quot;|&#39;|&lt;|[.,;:!?*»"'\]]|\))$/.exec(u));) {
+    if (m[1] === ')' && (u.match(/\(/g) || []).length >= (u.match(/\)/g) || []).length) break;
+    u = u.slice(0, -m[1].length); fin = m[1] + fin;
+  }
+  return [u, fin];
+}
+const lienFichier = (chemin, html) => `<a class="wl" href="#f=${encodeURIComponent(chemin)}" data-fichier="${echapper(chemin)}">${html}</a>`;
 const pont = (attrs, html) => `<a class="wl pont" href="#" ${attrs} title="${echapper(t('md.ouvrir_note'))}">${html}</a>`;
 const lienNote = (chemin, html) => `<a class="wl" href="#n=${encodeURIComponent(chemin)}" data-note="${echapper(chemin)}">${html}</a>`;
 const ext = (u, html) => `<a href="${u}" target="_blank" rel="noopener noreferrer">${html}</a>`;
@@ -64,7 +79,7 @@ function lienMd(txt, url, ctx) {
   if (ctx.depuis === undefined || /^[a-z][a-z0-9+.-]*:/i.test(u) || u.startsWith('#')) return txt;
   const chemin = joindre(ctx.depuis, u);
   if (!chemin) return txt;
-  return /\.md$/i.test(chemin) ? lienNote(chemin, txt) : `<a class="wl" href="#f=${encodeURIComponent(chemin)}" data-fichier="${echapper(chemin)}">${txt}</a>`; // lecteur intégré (INV-LECTEUR-1)
+  return /\.md$/i.test(chemin) ? lienNote(chemin, txt) : lienFichier(chemin, txt); // lecteur intégré (INV-LECTEUR-1)
 }
 function imageMd(alt, url, ctx) {
   const u = desech(url.replace(/^&lt;|&gt;$/g, ''));
@@ -77,13 +92,23 @@ function inline(brut, ctx) {
   const pile = [];
   const garder = (html) => `\u0000${pile.push(html) - 1}\u0000`;
   const abs = (s) => s.replace(ABS, (m) => garder(pont(`data-chemin="${echapper(relatifVault(desech(m)))}"`, m)));
+  const url = (u) => { const [v, fin] = couperUrl(u); return garder(ext(/^www\./i.test(v) ? `https://${v}` : v, v)) + fin; };
+  const chemins = (s) => s.replace(CHEMIN, (m) => garder(lienFichier(desech(m), m)));
+  const code = (c) => {
+    const nu = c.trim();
+    if (/^(?:https?:\/\/|www\.)\S+$/i.test(nu)) return url(nu);
+    if (CHEMIN_ENTIER.test(nu) && !ABS.test(nu)) return lienFichier(desech(nu), c);
+    ABS.lastIndex = 0;
+    return abs(c);
+  };
   let x = echapper(brut).replace(/\u0000/g, '');
-  x = x.replace(/`([^`\n]+)`/g, (_, c) => garder(`<code>${abs(c)}</code>`));
+  x = x.replace(/`([^`\n]+)`/g, (_, c) => garder(`<code>${code(c)}</code>`));
   x = x.replace(/(!?)\[\[([^\]\n]+?)\]\]/g, (_, e, i) => garder(wikilien(!!e, i, ctx)));
   x = x.replace(/!\[([^\]\n]*)\]\((&lt;[^)\n]+?&gt;|[^\s)]+)(?:\s+&quot;[^)]*&quot;)?\)/g, (_, a, u) => garder(imageMd(a, u, ctx)));
   x = x.replace(/\[([^\]\n]+)\]\((&lt;[^)\n]+?&gt;|[^\s)]+)(?:\s+&quot;[^)]*&quot;)?\)/g, (_, a, u) => garder(lienMd(a, u, ctx)));
-  x = x.replace(/(^|[\s(])(https?:\/\/[^\s<)]+)/g, (_, av, u) => av + garder(ext(u, u)));
-  x = abs(x);
+  x = x.replace(/&lt;(https?:\/\/[^\s<]+?)&gt;/gi, (_, u) => garder(ext(u, u))); // <https://…> (lien automatique Markdown)
+  x = x.replace(URL_NUE, url);
+  x = chemins(abs(x));
   x = x.replace(/\*\*([^*\n]+)\*\*/g, '<strong>$1</strong>');
   x = x.replace(/~~([^~\n]+)~~/g, '<del>$1</del>');
   x = x.replace(/==([^=\n]+)==/g, '<mark>$1</mark>');
