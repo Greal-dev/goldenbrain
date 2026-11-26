@@ -338,7 +338,7 @@ function construire() {
     h('button', { class: 'btn petit', type: 'button', onclick: () => toutBasculer(true) }, t('cascade.replier')),
     h('button', { class: 'btn petit', type: 'button', onclick: () => toutBasculer(false) }, t('cascade.deplier')), bascule);
   coque = h('div', { class: 'casc' },
-    h('div', { class: 'casc-tete' }, ref.fil, h('div', { class: 'casc-l1' }, ref.titre, ref.total, outils), ref.chips, ref.chat),
+    h('div', { class: 'casc-tete' }, ref.fil, h('div', { class: 'casc-l1' }, ref.titre, ref.total, ref.chips, outils), ref.chat),
     ref.live, ref.defile);
   sigTours = null;
 }

@@ -27,8 +27,8 @@
 
 /* 3 — pastilles secondaires rangées dans « Menu » : elles y reprennent leur libellé complet et le style des autres entrées */
 .b-menu > .rel.en-menu { display: block; position: relative; }
-body.discussion .b-menu > .rel.en-menu > button { width: 100%; text-align: left; padding: 5px 10px; font-size: 13px; }
-:root body.discussion #bandeau .b-menu > .rel.en-menu > button { background: transparent; border-color: var(--bord); color: var(--texte); }
+body.barre-fine .b-menu > .rel.en-menu > button { width: 100%; text-align: left; padding: 5px 10px; font-size: 13px; }
+:root body.barre-fine #bandeau .b-menu > .rel.en-menu > button { background: transparent; border-color: var(--bord); color: var(--texte); }
 .b-haut[data-r1] .b-menu > .rel.en-menu > :is(#btn-aujourdhui, #btn-decisions, #btn-props, #btn-incidents, #btn-align, #btn-etat) > span:not(.n) { display: inline; }
 .b-haut[data-r1] .b-menu > .rel.en-menu > :is(#btn-aujourdhui, #btn-decisions, #btn-props, #btn-incidents, #btn-align, #btn-etat)::before { content: none; }
 

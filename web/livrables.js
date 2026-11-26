@@ -17,9 +17,10 @@ const fermerVolet = () => document.querySelector('dialog[open]')?.close();
 // Pastille : « Livrables (n) » ; le compte est relu à part (une requête légère) pour ne pas alourdir la fiche.
 export function pastilleLivrables(tk) {
   const b = h('button', { class: 'btn petit d-livrables', type: 'button', 'data-id': 'livrables-pastille', title: t('livrables.pastille_titre'),
-    'aria-label': t('livrables.titre'), onclick: () => volet(tk) }, h('span', { class: 'liv-mot' }, t('livrables.titre')));
+    'aria-label': t('livrables.titre'), onclick: () => volet(tk) }, h('span', { class: 'liv-mot' }, '⧉'));
   api(`/livrables?de=${enc(tk.id)}`).then((r) => {
-    b.firstChild.textContent = r.total ? t('livrables.pastille', { n: r.total }) : t('livrables.titre');
+    b.firstChild.textContent = r.total ? `⧉ ${r.total}` : '⧉'; // icône + nombre : le libellé est dans l'infobulle et le nom accessible
+    if (r.total) b.title = `${t('livrables.pastille', { n: r.total })} — ${t('livrables.pastille_titre')}`;
     b.classList.toggle('manque', r.manquants > 0);
     if (r.manquants) b.title = `${t('livrables.pastille_titre')} — ${t('livrables.manquants', { n: r.manquants })}`;
   }).catch(() => {});

@@ -39,6 +39,14 @@ export function ligneVie(ident, s, raison) {
 
 // Bandeau : une ligne par tour silencieux ou en exploration prolongée, avec ses gestes.
 export function dessinerAlertes(zone, liste) {
+  // Barre fine : le silence colore la pastille « En cours » et s'y lit ; le détail et les gestes sont dans son déroulant et la fiche.
+  const pastille = document.getElementById('btn-travaux'), muet = liste?.find((a) => a.silencieux);
+  if (pastille) {
+    pastille.classList.toggle('silence', !!muet);
+    let note = pastille.querySelector('.tr-silence');
+    if (muet && !note) pastille.append(note = h('span', { class: 'tr-silence', 'data-id': 'pastille-silence' }));
+    if (note) { note.hidden = !muet; if (muet) note.textContent = ` · ${texteSilence(muet).toLowerCase()}`; }
+  }
   zone.hidden = !liste?.length;
   if (!liste?.length) return;
   remplacer(zone, liste.map((a) => h('div', { class: 'vie-ligne', 'data-id': a.tache },

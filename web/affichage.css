@@ -17,10 +17,10 @@ a { color: var(--accent); }  /* liens (guide, notes) : l'accent plutôt que le b
 :root #bandeau #recherche { background: #0f0f0e; border: 1px solid #55524c; border-radius: var(--r); color: #f1efea; }
 :root #bandeau #recherche::placeholder { color: #a8a49c; }
 :root #bandeau :is(.tour-act, .tour-t, .b-lib, .aucun) { color: #bdb9b1; }
-#bandeau :is(.panneau, .rech-liste), body.discussion #bandeau .b-menu { color-scheme: light dark; color: var(--texte); }
-:root[data-theme="clair"] #bandeau :is(.panneau, .rech-liste), :root[data-theme="clair"] body.discussion #bandeau .b-menu { color-scheme: light; }
-:root[data-theme="sombre"] #bandeau :is(.panneau, .rech-liste), :root[data-theme="sombre"] body.discussion #bandeau .b-menu { color-scheme: dark; }
-:root #bandeau :is(.panneau, .rech-liste) :is(.btn, .btn-compte):not(.primaire), :root body.discussion #bandeau .b-menu .btn { background: transparent; border-color: var(--bord); color: var(--texte); }
+#bandeau :is(.panneau, .rech-liste), body.barre-fine #bandeau .b-menu { color-scheme: light dark; color: var(--texte); }
+:root[data-theme="clair"] #bandeau :is(.panneau, .rech-liste), :root[data-theme="clair"] body.barre-fine #bandeau .b-menu { color-scheme: light; }
+:root[data-theme="sombre"] #bandeau :is(.panneau, .rech-liste), :root[data-theme="sombre"] body.barre-fine #bandeau .b-menu { color-scheme: dark; }
+:root #bandeau :is(.panneau, .rech-liste) :is(.btn, .btn-compte):not(.primaire), :root body.barre-fine #bandeau .b-menu .btn { background: transparent; border-color: var(--bord); color: var(--texte); }
 :root #bandeau :is(.panneau, .rech-liste) .n { background: transparent; border-color: var(--bord-fort); color: var(--texte); }
 /* Marque en romain */
 :root .marque { font-family: var(--serif); font-size: 17px; font-weight: 600; letter-spacing: 0; }

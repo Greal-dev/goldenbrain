@@ -15,6 +15,7 @@ def test_theme_sombre_choisi_persiste_puis_retour_au_systeme(navigateur, serveur
         page.goto(serveur.url + "/")
         page.wait_for_selector(".ligne")
         clair = page.evaluate(FOND)
+        page.click("#btn-menu")  # barre d'une rangée sur tous les écrans : Réglages est dans « Menu »
         page.click("#btn-reglages")
         page.click("[data-id=theme-sombre]")
         assert page.get_attribute("html", "data-theme") == "sombre"
@@ -24,6 +25,7 @@ def test_theme_sombre_choisi_persiste_puis_retour_au_systeme(navigateur, serveur
         page.reload()
         page.wait_for_selector(".ligne")
         assert page.evaluate(FOND) == sombre
+        page.click("#btn-menu")
         page.click("#btn-reglages")
         assert page.get_attribute("[data-id=theme-sombre]", "aria-pressed") == "true"
         page.click("[data-id=theme-systeme]")

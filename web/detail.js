@@ -170,7 +170,8 @@ function dessinerTete() {
       h('span', { class: 'd-alerte-t' }, alertes[0]), alertes.length > 1 ? h('span', { class: 'd-alerte-n' }, t('detail.alertes_plus', { n: alertes.length - 1 })) : null) : null,
     aValider(tk) ? h('span', { class: 'a-valider', role: 'status', title: t('detail.a_valider') }, b(t('detail.valider'), valider, { cls: 'primaire' }), b(t('detail.renvoyer_btn'), renvoyer)) : null,
     pastilleLivrables(tk), // INV-LIVRABLES-1 : une pastille ; le volet porte le reste
-    b(t('resultat.bouton'), () => voirResultat(tk.id), { cls: `${aValider(tk) ? '' : 'primaire'} d-resultat`, titre: t('resultat.aide') }), // au téléphone : dans « Détails » (INV-REACTIVITE-1)
+    h('button', { class: 'btn petit d-resultat', type: 'button', 'aria-label': t('resultat.bouton'), title: `${t('resultat.bouton')} — ${t('resultat.aide')}`,
+      onclick: () => voirResultat(tk.id) }, h('span', { 'aria-hidden': 'true' }, '↗')), // icône : le titre de la tâche garde la place (26/11) // au téléphone : dans « Détails » (INV-REACTIVITE-1)
     tk.pause_ram ? b(t('detail.reprendre_maintenant'), reprendreRam, { cls: 'primaire', titre: t('detail.reprendre_ram_titre') }) : null,
     tk.etat_execution === 'en_pause' ? b(t('detail.reprendre_maintenant'), reprendreMaintenant, { cls: 'primaire', titre: t('detail.reprendre_quota_titre') }) : null,
     actif(tk) || tk.etat_execution === 'en_pause' ? b(t('detail.arreter'), arreter, { cls: 'danger' }) : null,

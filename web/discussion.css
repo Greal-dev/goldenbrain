@@ -10,21 +10,21 @@ body.tache-ouverte #btn-disposition { display: inline-flex; }
 #volet-gauche-corps { flex: 1; min-height: 0; display: flex; flex-direction: column; }
 
 /* 1. Barre haute : une rangée fine ; « En cours » y devient une pastille ; le reste est dans « Menu ». */
-body.discussion .b-bas { display: none; }
-body.discussion .b-haut { flex-wrap: nowrap; gap: 5px; padding: 3px 10px; min-height: 36px; box-sizing: border-box; }
-body.discussion .b-haut::before { display: none; }
-body.discussion .marque { padding: 2px 4px; margin-right: 2px; }
-body.discussion .btn-compte, body.discussion .btn { padding: 2px 8px; font-size: 12.5px; }
-body.discussion .btn-compte .n { min-width: 16px; font-size: 11px; }
-body.discussion #btn-travaux { font-weight: 400; color: inherit; }
-body.discussion .rech-zone { flex: 1 1 140px; min-width: 100px; max-width: 420px; margin-left: auto; }
-body.discussion #recherche { min-width: 0; width: 100%; box-sizing: border-box; margin-left: 0; padding: 3px 10px; }
-body.discussion .b-menu-zone { display: block; position: relative; flex: none; }
-body.discussion #btn-menu { display: inline-flex; gap: 4px; align-items: center; }
-body.discussion .b-menu { display: none; position: absolute; right: 0; top: 100%; z-index: 40; flex-direction: column; align-items: stretch; gap: 4px;
+body.barre-fine .b-bas { display: none; }
+body.barre-fine .b-haut { flex-wrap: nowrap; gap: 5px; padding: 3px 10px; min-height: 36px; box-sizing: border-box; }
+body.barre-fine .b-haut::before { display: none; }
+body.barre-fine .marque { padding: 2px 4px; margin-right: 2px; }
+body.barre-fine .btn-compte, body.barre-fine .btn { padding: 2px 8px; font-size: 12.5px; }
+body.barre-fine .btn-compte .n { min-width: 16px; font-size: 11px; }
+body.barre-fine #btn-travaux { font-weight: 400; color: inherit; }
+body.barre-fine .rech-zone { flex: 1 1 140px; min-width: 100px; max-width: 420px; margin-left: auto; }
+body.barre-fine #recherche { min-width: 0; width: 100%; box-sizing: border-box; margin-left: 0; padding: 3px 10px; }
+body.barre-fine .b-menu-zone { display: block; position: relative; flex: none; }
+body.barre-fine #btn-menu { display: inline-flex; gap: 4px; align-items: center; }
+body.barre-fine .b-menu { display: none; position: absolute; right: 0; top: 100%; z-index: 40; flex-direction: column; align-items: stretch; gap: 4px;
   min-width: 220px; padding: 8px; background: var(--panneau); border: 1px solid var(--bord-fort); border-radius: 8px; box-shadow: var(--ombre); }
-body.discussion .b-menu.ouvert { display: flex; }
-body.discussion .b-menu > .btn { text-align: left; padding: 5px 10px; font-size: 13px; }
+body.barre-fine .b-menu.ouvert { display: flex; }
+body.barre-fine .b-menu > .btn { text-align: left; padding: 5px 10px; font-size: 13px; }
 
 /* 2. Arbre : rail étroit à intercalaire (survol = aperçu, clic = épinglé). */
 body.discussion #corps { grid-template-columns: calc(30px + clamp(270px, 20vw, 370px)) 1fr; }
@@ -72,3 +72,23 @@ body.discussion .volet-t-notes.replie.apercu > .p-corps { display: block; positi
 /* Intercalaire des notes au clavier : le bouton couvre le rail sans se voir ; son foyer s'affiche sur le rail entier (INV-REACTIVITE-1). */
 body.discussion .volet-t-notes.replie > .p-tete:has(.p-replier:focus-visible) { outline: 2px solid var(--accent); outline-offset: -2px; }
 body.discussion #rail-arbre:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+
+/* Accueil sur une rangée (26/11) : en barre fine, le silence d'un tour se lit sur la pastille « En cours » (plus de bandeau),
+   la rangée « En direct » de la vue d'ensemble disparaît (doublon de la pastille) et le filtre de statut tient sur la ligne du titre. */
+body.barre-fine #vigie-alertes { display: none; }
+body.barre-fine .casc-live { display: none; }
+#btn-travaux.silence { background: var(--alerte, #b45309); border-color: var(--alerte, #b45309); color: #fff; }
+#btn-travaux .tr-silence { font-weight: 400; }
+.casc-l1 { flex-wrap: wrap; row-gap: 4px; }
+.casc-l1 > .casc-l2 { margin: 0; align-self: center; display: flex; align-items: center; gap: 8px; min-height: 0; }
+
+/* Fiche (26/11) : le titre de la tâche a la priorité dans l'en-tête — il cède sa place en dernier (la phrase d'état puis la pastille d'état se réduisent avant lui) ; la phrase d'état
+   cède la place la première (elle se lit en entier dans l'infobulle de la pastille et dans « Détails ») ; le statut du vault se
+   réduit à sa liste ; Livrables et « Voir le résultat » sont des boutons-icônes. */
+.d-une .d-titre, .d-une .d-titre-champ { flex: 1 1 auto; min-width: 120px; }
+.d-une .main-phrase { flex: 0 8 24ch; }
+.d-une > .etat { flex: 0 4 auto; min-width: 9ch; overflow: hidden; text-overflow: ellipsis; } /* cède avant le titre, jamais sous 9 caractères */
+.d-une > .pastille { display: none; }
+.d-une > select { max-width: 124px; }
+.d-une > :is(.d-resultat, .d-livrables) { padding: 2px 7px; min-width: 28px; }
+@media (max-width: 480px) { .d-une .d-titre, .d-une .d-titre-champ { flex: 1 1 0; min-width: 0; } }

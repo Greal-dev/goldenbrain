@@ -61,6 +61,7 @@ def test_revue_de_coherence_demande_confirmation_et_n_agit_pas_si_on_refuse(page
     page_vide.on("dialog", lambda d: (messages.append(d.message), d.dismiss()))
     appels = []
     page_vide.on("request", lambda r: appels.append(r.url) if r.method == "POST" and "jardinage" in r.url else None)
+    page_vide.click("#btn-menu")  # barre d'une rangée sur tous les écrans : le geste est dans « Menu »
     page_vide.click("#btn-revue")
     page_vide.wait_for_timeout(400)
     assert messages and "quota" in messages[0]

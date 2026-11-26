@@ -17,6 +17,8 @@ export const disposition = () => D;
 const ecrire = () => { try { localStorage.setItem(CLE, JSON.stringify(D)); } catch { /* stockage indisponible : le choix vaut pour la séance */ } };
 const etroit = matchMedia('(max-width: 480px)');
 const actif = () => !!S.selection && !D.tout && !etroit.matches;
+// Barre haute d'une rangée sur TOUS les écrans (accueil compris, 26/11) : seule « Tout afficher » rend les trois rangées.
+const fine = () => !D.tout && !etroit.matches;
 
 function menu(ouvert) {
   $('#b-menu').classList.toggle('ouvert', ouvert);
@@ -25,7 +27,9 @@ function menu(ouvert) {
 
 function appliquer() {
   const on_ = actif(), corps = document.body.classList, nav = $('#volet-gauche');
+  const fin = fine();
   corps.toggle('discussion', on_);
+  corps.toggle('barre-fine', fin);
   corps.toggle('tache-ouverte', !!S.selection && !etroit.matches);
   corps.toggle('arbre-epingle', on_ && D.arbre);
   nav.classList.toggle('rail', on_ && !D.arbre);
@@ -33,12 +37,12 @@ function appliquer() {
   $('#rail-arbre').setAttribute('aria-expanded', String(!on_ || D.arbre || nav.classList.contains('apercu')));
   // « En cours » devient une pastille de la rangée haute ; hors discussion, il retrouve sa rangée.
   const travaux = $('#btn-travaux'), zone = travaux.parentElement; // la pastille voyage avec son déroulant (INV-DEROULANT-1)
-  if (on_) $('#btn-nouvelle').before(zone); else if (zone.parentElement.classList.contains('b-haut')) document.querySelector('.b-bas').prepend(zone);
-  travaux.classList.toggle('btn-compte', on_);
+  if (fin) $('#btn-nouvelle').before(zone); else if (zone.parentElement.classList.contains('b-haut')) document.querySelector('.b-bas').prepend(zone);
+  travaux.classList.toggle('btn-compte', fin);
   const bascule = $('#btn-disposition');
   bascule.setAttribute('aria-pressed', String(D.tout));
   bascule.firstElementChild.textContent = t(D.tout ? 'index.mode_discussion' : 'index.tout_afficher');
-  if (!on_) menu(false);
+  if (!fin) menu(false);
   if (on_) bulle();
 }
 

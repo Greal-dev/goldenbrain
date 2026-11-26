@@ -523,6 +523,7 @@ Les tests d'interface (`ui/`) se lancent à part : `python scripts/check_ui.py`.
 | `tests/ui/scenario_a_moi.py` | « À moi » en trois pastilles : comptes, validation en lot et annulation. | INV-MAIN-4, INV-MAIN-6, INV-MAIN-7 | — |
 | `tests/ui/scenario_ecrans_audit.py` | Audit L4 : fil sans « ? »/_meta, libellé « À valider », bandeau, colonnes DE/ES, gouttières, modale, graphe cadré, mobile | — | — |
 | `tests/ui/scenario_barre_haute.py` | Barre haute : aucun élément hors fenêtre à 1366, 1280 et 1024 px (discussion et complète, fr et de, pire cas), libellés des pastilles « À moi » | INV-BARRE-1 | — |
+| `tests/ui/scenario_accueil_rangee.py` | Accueil sur une rangée : barre haute ≤ 48 px sans tâche ouverte, pas de rangée « En direct », filtre de statut sur la ligne du titre, première ligne du tableau dans le premier quart ; fiche : un titre long reste lisible | INV-DISCUSSION-1 | — |
 | `tests/ui/scenario_discussion.py` | Mode discussion : conversation ≥ 70 % de l'écran, rail de l'arbre (survol, clic, clavier), menu, notes en intercalaire, « Tout afficher », choix mémorisés | INV-DISCUSSION-1 | — |
 | `tests/ui/scenario_deroulant.py` | Déroulant unique : délai d'intention, clic, Échap, clic extérieur, épingle, clavier, toucher, feuille du bas ; mode discussion sans zone permanente | INV-DEROULANT-1 | — |
 | `tests/ui/scenario_reactivite.py` | Budget de réactivité sur vault chargé : premier affichage, ouverture d'une tâche, intercalaires, frappe, défilement, événement d'une autre tâche, requêtes en double. | INV-REACTIVITE-1 | — |
