@@ -28,7 +28,7 @@ function gestesDe(d) {
 function texteDe(d) {
   if (d.genre === 'validation') return d.resultat || d.fait || t('decisions.non_indique');
   if (d.proposition) return [description(d.proposition), d.proposition.motif].filter(Boolean).join(' — ');
-  return d.question || '';
+  return d.question || d.sujet || d.motif || ''; // une tâche « muette » n'a pas de question : son sujet dit de quoi il s'agit
 }
 
 export function triRapide(liste, fin = () => {}) {
