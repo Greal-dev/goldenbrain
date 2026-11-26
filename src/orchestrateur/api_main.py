@@ -9,6 +9,8 @@ Invariants portés : INV-MAIN-5 (geste humain seul, un clic envoie la tâche en 
 
 from __future__ import annotations
 
+import asyncio
+
 from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
@@ -87,5 +89,10 @@ def routes(moteur) -> APIRouter:
     @r.get("/api/main")
     async def main():
         return {k: v for k, v in etat_main.toutes(moteur).items()}
+
+    @r.get("/api/main/a-moi")
+    async def a_moi():
+        """« À moi » en trois listes, la plus ancienne d'abord : de quoi dérouler chaque pastille (INV-MAIN-4)."""
+        return await asyncio.to_thread(etat_main.par_categorie, moteur)
 
     return r

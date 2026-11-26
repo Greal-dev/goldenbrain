@@ -78,6 +78,21 @@ def noter(ecran, cle, val):
     RESULTATS.setdefault(ecran, {})[cle] = round(val, 1) if isinstance(val, float) else val
 
 
+@pytest.mark.parametrize("ecran", ["bureau"])
+def test_premier_chargement_apres_demarrage_reste_sous_1_5_s(navigateur, tmp_path, ecran):
+    """Symptôme (25/11) : après chaque redémarrage, le premier chargement prenait 3,5 s ; le préchauffage (INV-FROID-1) le ramène au budget."""
+    for s in demarrer(tmp_path, ttl=2, avant=charge.peupler, sonde_vault=False):
+        ctx = contexte(navigateur, ecran)
+        p = nouvelle(ctx)
+        t0 = time.perf_counter()
+        p.goto(s.url + "/", wait_until="commit")
+        p.wait_for_selector("#volet-gauche .ligne", timeout=60000)
+        ms = (time.perf_counter() - t0) * 1000
+        noter(ecran, "premier_chargement_a_froid_ms", ms)
+        ctx.close()
+        assert ms <= 1500 * MARGE, f"premier chargement après démarrage {ms:.0f} ms"
+
+
 @pytest.mark.parametrize("ecran", ECRANS)
 def test_premier_affichage_utile_et_poids_du_chargement(navigateur, srv, ecran):
     ctx = contexte(navigateur, ecran)

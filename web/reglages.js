@@ -9,6 +9,7 @@
 //        la page entière ne se reconstruit qu'à l'ouverture ou au changement de mode, et garde alors sections ouvertes,
 //        recherche, champ en cours de saisie et focus.
 import { sectionRangement } from './lignes.js';
+import { sectionLecteur } from './lecteur-reglages.js';
 import { h, remplacer } from './dom.js';
 import { S, on, erreur } from './store.js';
 import { FAMILLES, changerInterface, simple, ouvert } from './interface.js';
@@ -72,7 +73,8 @@ const GROUPES = [
       ['etoile', null, null, sectionEtoile()]] },
   { id: 'fonctions', titre: t('reglages.fonctions'), aide: t('reglages.fonctions_aide'),
     resume: () => t('reglages.resume_fonctions', { n: FAMILLES.filter(ouvert).length, total: FAMILLES.length }),
-    sous: () => [['familles', null, null, h('ul', { class: 'rg-liste' }, FAMILLES.map(interrupteur))]] },
+    sous: () => [['familles', null, null, h('ul', { class: 'rg-liste' }, FAMILLES.map(interrupteur))],
+      ['lecteur', t('reglages.lecteur'), t('reglages.lecteur_aide'), sectionLecteur()]] },
   { id: 'agents', titre: t('reglages.agents'), aide: t('reglages.agents_aide'),
     resume: () => parts('simultanes', 'economie', 'compactage', 'apprendre', 'reflexes'),
     sous: () => [
@@ -107,7 +109,7 @@ const GROUPES = [
       ['accueil', t('accueil.titre'), null, h('div', null, ...sectionAccueil().slice(1))]] },
 ];
 // Sous-section → groupe, pour l'ancre #reglages/<sous-section>.
-const ANCRES = { mode: 'affichage', theme: 'affichage', familles: 'fonctions', simultanes: 'agents', economie: 'agents', compactage: 'agents', apprendre: 'agents', reflexes: 'agents', rangement: 'agents',
+const ANCRES = { mode: 'affichage', theme: 'affichage', familles: 'fonctions', lecteur: 'fonctions', simultanes: 'agents', economie: 'agents', compactage: 'agents', apprendre: 'agents', reflexes: 'agents', rangement: 'agents',
   moteurs: 'agents', propositions: 'validation', telegram: 'connexions', appareils: 'connexions', executeurs: 'connexions',
   installation: 'installation', langue: 'affichage', version: 'installation', etoile: 'affichage', evitable: 'validation', integration: 'validation',
   'maj-auto': 'installation', signaler: 'installation', accueil: 'installation', cerveau: 'installation', 'premiers-pas': 'installation' };

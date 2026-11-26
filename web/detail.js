@@ -165,7 +165,7 @@ function dessinerTete() {
     titreEditable(tk, appliquer, repereIA(tk.id)), // INV-RENOMMER-1
     ...(routine ? [] : [pastille(tk.statut), selecteurStatut(tk)]), // INV-ROUTINE-5 : état au lieu du statut
     tk.main ? pastilleMain(tk.main, `etat ${tk.etat_execution}`, () => envoyerIA(tk.id, tk.main, () => rafraichir())) : etat && !tk.pause_ram ? h('span', { class: `etat ${tk.etat_execution}`, title: etat }, tk.etat_execution === 'en_cours' ? h('span', { class: 'tourne' }) : null, etat) : null, // INV-MAIN-1 : une seule pastille d'état
-    phraseMain(tk.main), boutonIA(tk.id, tk.main, () => rafraichir()), // INV-MAIN-5
+    phraseMain(tk.main), boutonIA(tk.id, tk.main, () => rafraichir(), '', true), // INV-MAIN-5 ; INV-MAIN-7 : disponible sur la fiche, jamais suggéré en liste
     alertes.length ? h('button', { class: 'd-alerte', type: 'button', 'data-id': 'alerte', title: alertes.join('\n'), onclick: montrerDetails },
       h('span', { class: 'd-alerte-t' }, alertes[0]), alertes.length > 1 ? h('span', { class: 'd-alerte-n' }, t('detail.alertes_plus', { n: alertes.length - 1 })) : null) : null,
     aValider(tk) ? h('span', { class: 'a-valider', role: 'status', title: t('detail.a_valider') }, b(t('detail.valider'), valider, { cls: 'primaire' }), b(t('detail.renvoyer_btn'), renvoyer)) : null,

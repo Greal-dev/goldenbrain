@@ -17,7 +17,7 @@ from pathlib import Path
 from .config_compactage import ConfigCompactage  # noqa: F401  (réexport)
 from .config_distant import ConfigDistant, ConfigExecuteurs  # noqa: F401  (réexport)
 from .apprendre import ConfigApprendre
-from .config_rangement import ConfigRangement
+from .config_lecteur import ConfigLecteur; from .config_rangement import ConfigRangement  # noqa: E702
 from .consigne_tri import TRI
 from .etoile import ConfigEtoile
 
@@ -56,9 +56,7 @@ class ConfigMoteur:
     controle_duree_s: int = 1800  # INV-CONTROLE-1 : au-delà, le contrôle est tué et échoue
     harnais_defaut: str = "claude"
 
-
 MODES_SIMULTANES = ("fixe", "optimiser", "plafond")
-
 
 @dataclass
 class ConfigSimultanes:
@@ -412,6 +410,7 @@ class Config:
     compactage: ConfigCompactage = field(default_factory=ConfigCompactage)
     apprendre: ConfigApprendre = field(default_factory=ConfigApprendre)
     rangement: ConfigRangement = field(default_factory=ConfigRangement)
+    lecteur: ConfigLecteur = field(default_factory=ConfigLecteur)
     moteurs_par_role: dict[str, ConfigRole] = field(default_factory=dict)
     telegram: ConfigTelegram = field(default_factory=ConfigTelegram)
     credits: dict[str, list[str]] = field(default_factory=lambda: {k: list(v) for k, v in CREDITS_DEFAUT.items()})
@@ -493,6 +492,7 @@ def charger(chemin: Path | str | None = None) -> Config:
         compactage=ConfigCompactage(**brut.get("compactage", {})),
         apprendre=ConfigApprendre(**brut.get("apprendre", {})),
         rangement=ConfigRangement(**brut.get("rangement", {})),
+        lecteur=ConfigLecteur(**brut.get("lecteur", {})),
         moteurs_par_role=_roles(brut.get("moteurs_par_role", {})),
         credits=_credits(brut.get("credits", {})),
         telegram=ConfigTelegram(**brut.get("telegram", {})),

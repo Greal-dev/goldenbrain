@@ -129,7 +129,7 @@ const hashCourant = () => (S.selection ? `#t=${enc(S.selection)}` : S.vue === 'e
   : S.vue === 'recherche' && S.requete ? `#q=${enc(S.requete)}` : S.vue === 'graphe' ? (S.centre ? `#g=${enc(S.centre)}` : '#g') : '');
 function pousserUrl(initial) {
   const hs = hashCourant();
-  if (dec(location.hash) === dec(hs)) return;
+  if (dec(location.hash) === dec(hs) || location.hash.startsWith('#f=')) return; // #f= : lecteur de fichiers, propriétaire de son adresse (lecteur.js)
   history[initial ? 'replaceState' : 'pushState'](null, '', hs || location.pathname + location.search);
 }
 let premier = true, tourEcran = 0, ancreInitiale = null; // ancreInitiale : section de réglages de l'adresse d'arrivée, appliquée avant le premier dessin
@@ -209,6 +209,7 @@ function depuisUrl() {
 function differes() {
   const sûr = (p) => p.catch((e) => erreur(e.message));
   sûr(detailPret());
+  sûr(charger('lecteur', (m) => m.initLecteur()));
   sûr(charger('version', (m) => m.initVersion()));
   sûr(charger('maj-auto', (m) => m.initMajAuto()));
   sûr(charger('maj', (m) => m.initMaj()));

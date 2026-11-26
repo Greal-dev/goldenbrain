@@ -18,6 +18,12 @@
 .apercu-liste .ap-titre { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .apercu-liste .ap-sous { flex: none; max-width: 45%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--texte-2); font-size: 12px; }
 .apercu-liste .ap-sous.retard { color: var(--danger); }
+/* « À valider » : une case devant chaque ligne, le bouton de validation en pied (INV-MAIN-4) */
+.apercu-liste > li:has(> .ap-case) { display: flex; align-items: center; gap: 4px; }
+.apercu-liste > li > .ap-case { flex: none; margin: 0 0 0 6px; width: 16px; height: 16px; }
+.apercu-liste > li:has(> .ap-case) > button { flex: 1 1 auto; width: auto; min-width: 0; }
+.ap-pied { display: flex; justify-content: flex-end; padding: 6px 6px 2px; }
+.ap-valider .lot-etat { display: flex; align-items: center; gap: 8px; margin: 4px 6px; font-size: 12px; }
 .panneau.apercu { width: 420px; }
 
 /* Pastille d'état : les bandeaux d'information y vivent, dépliés, l'un sous l'autre. */

@@ -30,6 +30,7 @@ async function ouvrirItem(tk, x) {
   if (x.type === 'note') { if (x.existe) { fermerVolet(); ouvrirNote(x.cible); } }
   else if (x.type === 'url' || x.type === 'publie') window.open(x.cible, '_blank', 'noopener,noreferrer');
   else if (x.type === 'fichier') {
+    if (await import('./lecteur.js').then((m) => m.ouvrirFichier(x.cible))) return;
     try { erreur((await post(`/taches/${enc(tk.id)}/livrables/ouvrir`, { cible: x.cible })).message, 'info'); } catch (e) { erreur(e.message); }
   } else {
     try { await navigator.clipboard.writeText(x.cible); erreur(t('livrables.copie', { valeur: x.cible }), 'info'); } catch { erreur(x.cible, 'info'); }

@@ -34,7 +34,7 @@ export const STATUTS_COURTS = [
 ];
 export const cleStatut = (n) => (n.statut === RETOUR ? 'a-moi' : n.a_valider ? 'a-valider' : groupeStatut(n.statut));
 export const libelleCourt = (n) => n.routine ? libelleRoutine(n) : STATUTS_COURTS.find(([k]) => k === cleStatut(n))?.[1] || n.statut || '—';
-export const badgeStatut = (n) => n.routine ? badgeRoutine(n) : n.main ? h('span', { class: `badge-st bs-${cleStatut(n)} bm-${n.main.cle}`, 'data-statut': cleStatut(n), 'data-main': n.main.cle, title: `${libelleMain(n.main)} — ${infoMain(n.main)}` }, t(`main.court.${n.main.cle}`)) : h('span', { class: `badge-st bs-${cleStatut(n)}`, 'data-statut': cleStatut(n) }, libelleCourt(n)); // INV-MAIN-1
+export const badgeStatut = (n) => n.routine ? badgeRoutine(n) : n.main ? h('span', { class: `badge-st bs-${cleStatut(n)} bm-${n.main.cle}`, 'data-statut': cleStatut(n), 'data-main': n.main.cle, title: `${libelleMain(n.main)} — ${infoMain(n.main)}` }, t(`main.court.${['veille', 'groupe'].includes(n.main.motif) ? n.main.motif : n.main.cle}`)) : h('span', { class: `badge-st bs-${cleStatut(n)}`, 'data-statut': cleStatut(n) }, libelleCourt(n)); // INV-MAIN-1
 
 const ECHEANCES = [['', t('filtres.toutes')], ['retard', t('filtres.en_retard')], ['semaine', t('filtres.cette_semaine')]];
 const GROUPES = [['', t('filtres.g_arbre')], ['statut', t('filtres.g_statut')], ['priorite', t('filtres.g_priorite')], ['projet', t('filtres.g_projet')], ['echeance', t('filtres.g_echeance')]];

@@ -64,7 +64,7 @@ function lienMd(txt, url, ctx) {
   if (ctx.depuis === undefined || /^[a-z][a-z0-9+.-]*:/i.test(u) || u.startsWith('#')) return txt;
   const chemin = joindre(ctx.depuis, u);
   if (!chemin) return txt;
-  return /\.md$/i.test(chemin) ? lienNote(chemin, txt) : ext(echapper(urlFichier(chemin)), txt);
+  return /\.md$/i.test(chemin) ? lienNote(chemin, txt) : `<a class="wl" href="#f=${encodeURIComponent(chemin)}" data-fichier="${echapper(chemin)}">${txt}</a>`; // lecteur intégré (INV-LECTEUR-1)
 }
 function imageMd(alt, url, ctx) {
   const u = desech(url.replace(/^&lt;|&gt;$/g, ''));

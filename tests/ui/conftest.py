@@ -35,12 +35,16 @@ def serveur(tmp_path_factory):
     yield from demarrer(tmp_path_factory.mktemp("ui"))
 
 
-def demarrer(dossier: Path, supplement: str = "", cerveau_fait: bool = True, ttl: float = 0):
+def demarrer(dossier: Path, supplement: str = "", cerveau_fait: bool = True, ttl: float = 0, avant=None, sonde_vault: bool = True):
     """Vrai serveur sur un univers neuf ; `supplement` s'ajoute à la fin de son config.toml. `cerveau_fait` : le second cerveau est
-    réglé (INV-CERVEAU-1) ; faux = poste neuf, le parcours « Configurer votre second cerveau » ouvre l'interface."""
+    réglé (INV-CERVEAU-1) ; faux = poste neuf, le parcours « Configurer votre second cerveau » ouvre l'interface.
+    `avant(vault)` peuple le vault avant le lancement ; `sonde_vault=False` attend le serveur par `/`, sans chauffer le vault
+    (mesure à froid, INV-FROID-1)."""
     port = port_libre()
     faux_tg = FauxTelegram()
     config = univers.construire(dossier, port, faux_tg.url)
+    if avant:
+        avant(dossier / "vault")
     if cerveau_fait:
         (dossier / "etat").mkdir(exist_ok=True)
         (dossier / "etat" / "cerveau.json").write_text('{"etat": "fait"}', encoding="utf-8")
@@ -65,7 +69,7 @@ def demarrer(dossier: Path, supplement: str = "", cerveau_fait: bool = True, ttl
             if proc.poll() is not None:
                 pytest.fail(f"le serveur s'est arrêté : {journal.read_text('utf-8', 'replace')}")
             try:
-                urllib.request.urlopen(f"{url}/api/arbre", timeout=1).close()
+                urllib.request.urlopen(f"{url}/api/arbre" if sonde_vault else f"{url}/", timeout=30).close()
                 break
             except OSError:
                 time.sleep(0.2)

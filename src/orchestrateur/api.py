@@ -18,13 +18,13 @@ from fastapi.responses import JSONResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
-from . import (api_styles, api_compagnon, api_apprendre, api_accueil, api_lignes, api_livrables, modeles, api_appareils, api_arbre, api_codespace, api_executeurs, api_installation, api_retour, api_compactage, api_decisions,
+from . import (api_lecteur, api_styles, api_compagnon, api_apprendre, api_accueil, api_lignes, api_livrables, modeles, api_appareils, api_arbre, api_codespace, api_executeurs, api_installation, api_retour, api_compactage, api_decisions,
                api_economie, api_etoile, api_executant, api_execution, api_feux, api_interface, api_maj, api_notes, api_pilotage, api_poste,
                api_rapprochement, api_resultat, api_routines, api_simultanes, api_manager, api_telegram, api_temps, api_titre,
                api_reflexes, api_travaux, api_validation, api_vigie, api_chaines, api_lots)
 from .api_temps import CorpsTache
 from . import (appareils, codespace, conseil, console, decisions, depot, etat_main, executant, geste, guide, langues, liens, recherche, regroupement,
-               reprise, temps, transformations, version, vigie)
+               prechauffage, reprise, temps, transformations, version, vigie)
 from .alignement import Aligneur
 from .catalogue import Catalogue
 from .config import RACINE_DEPOT, Config
@@ -43,7 +43,6 @@ ENTETES = {"X-Frame-Options": "DENY", "X-Content-Type-Options": "nosniff", "Cach
 # INV-API-1 : seule exception, un fichier du vault (PDF) s'incorpore dans l'interface elle-même.
 ENTETES_FICHIER = {**ENTETES, "X-Frame-Options": "SAMEORIGIN",
                    "Content-Security-Policy": "default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; frame-ancestors 'self'"}
-
 
 class CorpsMessage(BaseModel):
     texte: str
@@ -150,6 +149,7 @@ def creer_app(config: Config, moteur: Moteur | None = None) -> FastAPI:
         moteur.demarrer_reveils()
         app.state.maj_auto.demarrer()  # INV-MAJ-3
         connecteur.demarrer()  # INV-TELEGRAM-1 : seulement si activé dans les Réglages
+        await asyncio.to_thread(prechauffage.chauffer, moteur)  # INV-FROID-1 : premier écran chaud avant la première requête
         yield
         for x in fond: x.cancel()
         moteur.vigie.fermer()
@@ -184,7 +184,7 @@ def creer_app(config: Config, moteur: Moteur | None = None) -> FastAPI:
             if reponse.status_code == 404 and request.url.path.startswith("/api/"):
                 reponse = await app.state.version.marquer_404(reponse)  # INV-VERSION-1
         # INV-API-1 : l'interface ne peut être encadrée par une page tierce (clickjacking).
-        reponse.headers.update(ENTETES_FICHIER if request.url.path == "/api/vault/fichier" else {**ENTETES, "Cache-Control": "no-store"} if request.url.path.startswith("/api/compagnon/") else ENTETES)  # INV-PWA-2 : l'instantané n'entre pas dans le cache HTTP
+        reponse.headers.update(api_lecteur.entetes(request.url.path, reponse.headers.get("content-security-policy")) or (ENTETES_FICHIER if request.url.path == "/api/vault/fichier" else {**ENTETES, "Cache-Control": "no-store"} if request.url.path.startswith("/api/compagnon/") else ENTETES))  # INV-PWA-2 : l'instantané n'entre pas dans le cache HTTP
         return reponse
 
     @app.exception_handler(ErreurOrch)
@@ -494,7 +494,7 @@ def creer_app(config: Config, moteur: Moteur | None = None) -> FastAPI:
     app.include_router(api_manager.routes(connecteur))  # INV-MANAGER-1
     for m in (guide, modeles): app.include_router(m.routes())  # INV-GUIDE-1, INV-MODELES-1
     app.include_router(api_reflexes.routes_traces(vault, moteur.publier, tache))  # INV-TRACE-1
-    for r in (api_executant.routes(moteur, tache), api_lots.routes(moteur), api_styles.routes(WEB)): app.include_router(r)  # INV-EXECUTANT-1, INV-REACTIVITE-1 (styles avant le montage des fichiers)
+    for r in (api_executant.routes(moteur, tache), api_lots.routes(moteur), api_lecteur.routes(config, moteur), api_styles.routes(WEB)): app.include_router(r)  # INV-EXECUTANT-1, INV-REACTIVITE-1 (styles avant le montage des fichiers)
     if WEB.is_dir():
         app.mount("/", StaticFiles(directory=WEB, html=True), name="web")
     return app

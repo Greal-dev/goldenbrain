@@ -492,7 +492,7 @@ class Moteur(retour.MixinRetour, MixinVerrou, MixinControle, MixinCompactage, Mi
                 **self.file_publique(),  # INV-ORDO-1, INV-ORDO-2 : rang, motif, prérequis attendus
                 "mandats_sans_tour": [i for i in self.mandats.sans_tour()
                                       if self.etat_de(i) not in ("en_cours", "en_file")],
-                "a_moi": etat_main.compter_humain(self),  # INV-MAIN-4
+                **etat_main.compteurs(self),  # INV-MAIN-4 : a_moi et ses trois catégories
                 "en_retard": temps.nb_retard(self.vault),
                 "propositions": sum(p["etat"] == "en_attente" for p in self.propositions.liste),
                 "a_valider": sum(self.vault.a_valider(t) for t in taches.values()),

@@ -4,7 +4,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from conftest import ecrire, tache_md
-from orchestrateur import api, decisions
+from orchestrateur import api, decisions, etat_main
 from orchestrateur.moteur import Moteur
 from orchestrateur.vault import Invalide
 from test_api import BASE, H
@@ -180,14 +180,16 @@ def test_decision_reportee_masquee_jusqu_a_sa_date_par_toutes_les_voies(monde):
     """Symptôme (23/11) : un report ne retirait pas la décision. Voies : POST /temps et geste Telegram ; retour à la date."""
     from orchestrateur import telegram_assistant, temps
     assert {"q-comm", "q-pas", "a-valider", "en-retard"} <= set(par_tache(decisions.rassembler(monde)))
-    avant = monde.etat_global()["a_moi"]
+    avant = set(etat_main.humain_par_id(monde))
     temps.poser(monde.vault, "q-comm", "2099-01-01", None)  # voie de l'interface (POST /taches/{id}/temps)
     telegram_assistant.appliquer(monde, "oui", {"tache": "a-valider", "cle": "echeance", "valeur": "2099-01-01"})
     telegram_assistant.appliquer(monde, "oui", {"tache": "en-retard", "cle": "echeance", "valeur": "2099-01-01"})
     res = decisions.rassembler(monde)
     assert not {"q-comm", "a-valider", "en-retard"} & set(par_tache(res))
     assert "q-pas" in par_tache(res) and decisions.compter(monde) == res["total"] == 3
-    assert monde.etat_global()["a_moi"] == avant - 3  # la pastille « À moi » suit (INV-MAIN-4 : trois tâches reportées sortent de « Action humaine »)
+    apres = set(etat_main.humain_par_id(monde))
+    assert not {"q-comm", "a-valider", "en-retard"} & apres and monde.etat_global()["a_moi"] == len(apres)  # INV-MAIN-4 : les reportées sortent de « À moi »
+    assert (avant - apres) <= {"q-comm", "a-valider", "en-retard"}
     monde.vault.modifier("q-comm", {"echeance": "2020-01-01", "reporte_jusqu_au": "2020-01-01"})  # date atteinte
     assert "q-comm" in par_tache(decisions.rassembler(monde))
     temps.poser(monde.vault, "q-pas", "2099-01-01", None)

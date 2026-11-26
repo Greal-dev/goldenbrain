@@ -8,6 +8,7 @@ Invariants portés : INV-SIMULT-1 (une reprise forcée exempte le tour de toute 
 
 from __future__ import annotations
 
+import json
 import re
 from dataclasses import asdict
 from pathlib import Path
@@ -33,6 +34,8 @@ class CorpsSimultanes(BaseModel):
 
 
 def _valeur(v) -> str:
+    if isinstance(v, list):
+        return json.dumps(v, ensure_ascii=False)  # tableau TOML de textes (chemins Windows compris)
     return f'"{v}"' if isinstance(v, str) else str(v).lower() if isinstance(v, bool) else repr(v)
 
 

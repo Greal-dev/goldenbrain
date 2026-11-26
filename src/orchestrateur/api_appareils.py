@@ -30,7 +30,7 @@ ROUTE_ECHANGE = "/api/appareils/echange"
 LIBRES = {"/appairer.html", "/appairer.js", "/favicon.svg", "/style.css", "/icone-192.png", "/icone-512.png",  # page d'appairage, servie sans jeton
           "/langues.js", *(f"/langues/{c}.json" for c in ("fr", "en", "de", "es"))}  # INV-LANGUE-1 : ses textes (dictionnaires publics)
 POSTE_SEUL = ("/api/appareils", "/api/installation", "/api/executeurs/jetons", "/api/executeurs/appairage",
-              "/api/executeurs/reparations")
+              "/api/executeurs/reparations", "/api/lecteur/ouvrir", "/api/lecteur/dossier", "/api/lecteur/reglages")
 POSTE_SEUL_RE = re.compile(r"/api/taches/[^/]+/(natif|console|resultat(/ouvrir)?|livrables/ouvrir)")  # terminal, fichiers et navigateur du poste
 RISQUE_RE = re.compile(r"/api/(redemarrer|mise-a-jour|lots(/[^/]+/annuler)?|taches/[^/]+/(arret|vigie/arreter-enfant))")
 TAILSCALE = "https://tailscale.com/download"

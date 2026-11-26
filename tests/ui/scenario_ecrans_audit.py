@@ -55,8 +55,8 @@ def test_fil_d_ariane_sans_interrogation_ni_meta(navigateur, srv):
 
 def test_statut_a_valider_meme_libelle_partout(navigateur, srv):
     p = ouvrir(navigateur, srv, "/#t=valider")
-    p.click("#btn-amoi")  # INV-DEROULANT-1 : l'aperçu déroule, « Filtrer l'arbre » pose le filtre
-    p.click("#panneau-amoi [data-tout-voir]")
+    p.click("#btn-avalider")  # INV-DEROULANT-1 : l'aperçu déroule, « Filtrer l'arbre » pose le filtre
+    p.click("#panneau-avalider [data-tout-voir]")
     badge = p.get_attribute('.badge-st[data-statut="a-valider"]', "data-main")  # la pastille dit « à qui la main » (INV-MAIN-1) ; le sélecteur garde le libellé du statut
     sel = p.eval_on_selector('select[aria-label]', "e => e.options[e.selectedIndex].text")
     assert badge == "humain" and sel.strip(), f"sélecteur « {sel} », pastille « {badge} »"
@@ -103,8 +103,8 @@ def test_colonnes_recherche_et_manager_non_tronques(navigateur, srv):
 
 def test_chip_a_moi_dans_son_cadre(navigateur, srv):
     p = ouvrir(navigateur, srv, "/")
-    p.click("#btn-amoi")  # INV-DEROULANT-1 : l'aperçu déroule, « Filtrer l'arbre » pose le filtre
-    p.click("#panneau-amoi [data-tout-voir]")
+    p.click("#btn-avalider")  # INV-DEROULANT-1 : l'aperçu déroule, « Filtrer l'arbre » pose le filtre
+    p.click("#panneau-avalider [data-tout-voir]")
     p.wait_for_timeout(300)
     chip = p.query_selector("#chip-filtre")
     assert chip and chip.is_visible()

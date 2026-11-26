@@ -192,7 +192,7 @@ The vault is your **second brain**: ordinary notes (Markdown files) that GoldenB
 
 - **What it is for**: no task waits silently. Every open task carries one computed badge, with a sentence saying why: "The AI is working", "Queued" (the reason is stated: memory, simultaneous agents, reserved workstation, quota or assistant unavailable, routine, named dependency, pause; and when it resumes), "Human action needed" (what is expected of you, in one sentence, with the gesture on the spot) or "Done".
 - **How**: on a task awaiting human action or never started, the "Hand to the AI" (or "Send back to the AI") button opens an optional instruction, then sends the task to the queue. Same gesture in lists, in Today and, for several tasks at once, in the bulk-edit bar ("Hand to the AI", preview first).
-- **Good to know**: "Mine" and the top-bar counter count exactly the tasks in "Human action needed". An agent must conclude every turn (done, or one precise request): otherwise GoldenBrain sends it back "conclude" at most twice, then the task returns to you with "the agent did not conclude". A delivery awaiting merge reads "integration under way", not a wait on you. Only you hand a task to the AI: an agent cannot. Vault statuses remain the underlying data; nothing is changed on its own. On a phone, tapping the badge in the task header does the same as the button.
+- **Good to know**: The top-bar counter is split into three dropdown chips: "To validate", "Questions" and "Yours to do" (oldest first). In "To validate", tick several tasks then "Validate the selection": one undoable gesture; hovering a row shows its result and how to try it. A task you carry out yourself (call, lawyer, bank, signature) reads "yours to do": "Hand to the AI" stays available on its page but is never suggested in lists. Tasks the AI never started can be handed over in one click but do not count; a permanent task or a group with no work of its own reads "Done for now" (a group says "3 for you, 2 for the AI"). After a restart, the first screen is prepared before requests are accepted. An agent must conclude every turn (done, or one precise request): otherwise GoldenBrain sends it back "conclude" at most twice, then the task returns to you with "the agent did not conclude". A delivery awaiting merge reads "integration under way", not a wait on you. Only you hand a task to the AI: an agent cannot. Vault statuses remain the underlying data; nothing is changed on its own. On a phone, tapping the badge in the task header does the same as the button.
 
 ### Today {#aujourd-hui}
 
@@ -219,6 +219,12 @@ The vault is your **second brain**: ordinary notes (Markdown files) that GoldenB
 - **How to do it**: left pane, “Notes” tab (Advanced mode). “New note”; “Edit” (the `e` key, Ctrl+S saves); “Rename / move…” rewrites the links.
 - **Good to know**: if the note has changed elsewhere (Obsidian, an agent), saving is refused and both versions are offered to you. Dataview blocks are not run.
 - **Graph**: “Graph” button of the “Notes” tab (global graph: notes, tasks, folders and their links, filters by role, project, type, tag, period); “Graph” button of a task or “Local graph” of a note (adjustable depth). A click on an item opens the note or the task.
+
+### File reader {#lecteur-de-fichiers}
+
+- **What it is for**: reading a file without leaving GoldenBrain, from any link (thread, card, lines, traces, deliverables, notes).
+- **How**: click the link. Markdown, text, logs, CSV tables, JSON/YAML/XML, code, HTML, images and PDF open in a panel (Esc closes, “Full screen”, “Copy path”, “View source” for Markdown). Other formats (Word, Excel, archives, media…) open in their own application, with a confirmation. The `#f=<path>` address can be shared.
+- **Good to know**: HTML is shown in an isolated frame, with no script and no access to GoldenBrain, and no external resource until you tick “Allow external resources”. Only the vault, task work folders, declared deliverables and folders added in Settings › Features › File reader can be read. From a remote device: vault and deliverables only, and never opening an application.
 
 ### Routines {#routines}
 

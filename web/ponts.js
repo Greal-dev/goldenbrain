@@ -36,6 +36,7 @@ export function initPonts(creerNote) {
     if (d.note) ouvrirNote(d.note);
     else if (d.chemin) ouvrirLien(d.chemin);
     else if (d.lien) ouvrirLien(d.lien);
+    else if (d.fichier) import('./lecteur.js').then((m) => m.ouvrirFichier(d.fichier));
     else if (d.creer) creerNote(d.creer);
   });
 }

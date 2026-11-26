@@ -23,3 +23,4 @@ travaux.js | btn petit danger | classe CSS (bouton), jamais montrée
 cerveau.js | btn petit primaire | classes CSS (boutons), jamais montrées
 discussion.js | btn petit primaire | classes CSS (bouton), jamais montrées
 dom.js | Assistant Telegram | clé de reconnaissance du titre de la tâche, traduit avant affichage
+apercus.js | btn primaire petit | classes CSS (bouton), jamais montrées

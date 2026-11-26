@@ -7,7 +7,7 @@ from fastapi.testclient import TestClient
 
 from orchestrateur import api, etat_main
 from orchestrateur.moteur import Moteur
-from conftest import RENDU, scenario_ok
+from conftest import RENDU, ecrire, scenario_ok, tache_md
 
 EN_COURS = "<fiche>\nstatut: en_cours\nfait: un morceau\nreste: la suite\nprochain_pas:\n</fiche>"
 TERMINE = "<fiche>\nstatut: terminee\nfait: tout\nresultat: livré\nprochain_pas:\n</fiche>"
@@ -74,15 +74,50 @@ def test_geste_humain_remet_le_compteur_de_renvois_a_zero(config, vault, faux):
     assert asyncio.run(geste())
 
 
-def test_tache_jamais_lancee_se_lit_action_humaine_avec_le_geste_confier(config, vault, faux):
+def test_tache_jamais_lancee_se_lit_a_confier_sans_compter_dans_a_moi(config, vault, faux):
+    """Symptôme (25/11) : « À moi » passait de 59 à 207 parce que les jamais lancées de l'IA comptaient comme humaines."""
+    m = moteur(config, vault, faux)
+    lu = etat_main.lire(m, vault.tache("petit"))
+    assert lu["cle"] == "humain" and lu["geste"] == "confier" and lu["categorie"] == "confier" and lu["suggere"] is not False
+    assert "petit" not in etat_main.humain_par_id(m) and m.etat_global()["a_moi"] == 0
+
+
+def test_groupe_dit_ses_enfants_et_ne_compte_pas(config, vault, faux):
+    """Symptôme (25/11) : un groupe (« Développement ») sans travail propre se lisait « action humaine » ; il synthétise ses enfants (INV-MAIN-6)."""
     m = moteur(config, vault, faux)
     lu = etat_main.lire(m, vault.tache("mere"))
-    assert lu["cle"] == "humain" and lu["geste"] == "confier" and not vault.tache("mere").fm.get("session")
+    assert lu["cle"] == "termine" and lu["motif"] == "groupe" and "mere" not in etat_main.humain_par_id(m)
+
+
+def test_permanente_est_en_veille_hors_a_moi(config, vault, faux):
+    """Symptôme (25/11) : « Intégrer les branches terminées » se lisait « action humaine » alors qu'elle n'a rien à faire (INV-MAIN-6)."""
+    m = moteur(config, vault, faux)
+    vault.modifier("petit", {"nature": "permanente"})
+    lu = etat_main.lire(m, vault.tache("petit"))
+    assert lu["cle"] == "termine" and lu["motif"] == "veille" and "petit" not in etat_main.humain_par_id(m)
+
+
+def test_executant_humain_est_a_faire_par_vous_sans_confier_suggere(config, vault, faux):
+    """Symptôme (25/11) : un appel à l'avocat se voyait proposer « Renvoyer à l'IA » ; l'exécutant humain se lit « à faire par vous » (INV-MAIN-7)."""
+    m = moteur(config, vault, faux)
+    vault.modifier("petit", {"executant": "humain"})
+    lu = etat_main.lire(m, vault.tache("petit"))
+    assert lu["cle"] == "humain" and lu["categorie"] == "faire" and lu["suggere"] is False
+    assert m.etat_global()["moi_faire"] == 1 == m.etat_global()["a_moi"]
+    assert [x["id"] for x in etat_main.par_categorie(m)["faire"]] == ["petit"]
+
+
+def test_demarche_dans_le_titre_est_a_faire_par_vous(config, vault, faux):
+    m = moteur(config, vault, faux)
+    ecrire(vault.racine, "Projets/C1-Alpha/taches/petit.md", tache_md(extra="parent: enfant\n", titre="Appeler l'avocat pour le bail"))
+    assert etat_main.lire(m, vault.tache("petit"))["categorie"] == "faire"
 
 
 def test_compteur_a_moi_egale_les_taches_en_action_humaine(config, vault, faux):
     m = moteur(config, vault, faux)
-    assert m.etat_global()["a_moi"] == len(etat_main.humain_par_id(m)) > 0
+    vault.modifier("petit", {"executant": "humain"})
+    e = m.etat_global()
+    assert e["a_moi"] == len(etat_main.humain_par_id(m)) == e["moi_valider"] + e["moi_questions"] + e["moi_faire"] > 0
 
 
 def test_geste_confier_refuse_a_un_agent(client):

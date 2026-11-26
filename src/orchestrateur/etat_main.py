@@ -3,17 +3,20 @@
 Rôle : dire, pour une tâche, qui doit agir — `ia` (un agent travaille), `file` (elle attend son tour, avec le
 motif et la reprise), `humain` (une action est nécessaire, en une phrase et avec le geste pour la faire) ou
 `termine`. Une lecture seule : les statuts du vault (a-faire, en-cours, retour, bloque, fait…) restent la donnée
-de fond, rien n'est migré ni écrit. Sert la pastille de l'en-tête, l'arbre, les listes, le compteur « À moi » et
-le rapport de reprise de l'existant (`rapport`).
+de fond, rien n'est migré ni écrit. Sert la pastille de l'en-tête, l'arbre, les listes, les trois compteurs
+« À moi » (à valider, questions, à faire par vous) et le rapport de reprise de l'existant.
 Frontières : lecture du moteur et du vault ; ne lance aucun tour et n'écrit rien (le renvoi à l'IA est
-`attente_muette`) ; la tâche tenue par l'humain, la tâche permanente et la conversation d'un conteneur
-(INV-PILOTAGE-1) n'ont pas de lecture (None) sauf « Moi » qui est une action humaine.
+`attente_muette`) ; la conversation d'un conteneur (INV-PILOTAGE-1) n'a pas de lecture (None).
 Invariants portés : INV-MAIN-1 (quatre états et pas un de plus, motif et geste dits), INV-MAIN-4 (« À moi » =
-exactement les tâches en `humain`).
+les tâches en `humain` hors « à confier », en trois catégories), INV-MAIN-6 (une tâche permanente ou un groupe
+sans travail propre est « terminé pour l'instant », jamais une alerte ; un groupe dit ses enfants), INV-MAIN-7
+(l'exécutant humain d'une tâche : « à faire par vous », « Confier à l'IA » jamais suggéré).
 """
 
 from __future__ import annotations
 
+import re
+import unicodedata
 from collections import defaultdict
 
 from . import decisions, depot, echecs, langues, liens, reseau, temps
@@ -21,7 +24,11 @@ from .vault import Tache
 
 ETATS = ("ia", "file", "humain", "termine")
 FERMEES = ("cloture", "abandonne")
-SANS_LECTURE = ("permanente",)  # INV-EXEC-7 : une tâche qui ne se termine jamais n'attend personne
+SANS_FIN = ("permanente", "recurrente", "routine")  # INV-EXEC-7 : une tâche qui ne se termine jamais n'attend personne
+LIBRES = ("a-faire", "en-cours", "confier-agent")  # statuts où l'absence de travail propre n'est pas une demande
+CATEGORIES = {"valider": "valider", "repondre": "question", "lever": "question", "confier": "confier"}  # le reste : « à faire »
+DEMARCHES = ("avocat", "banque", "bancaire", "notaire", "huissier", "appeler", "telephoner", "rendez vous", "rdv", "signer",
+             "signature", "recontacter")  # une démarche que l'IA ne fait pas à la place de l'utilisateur (INV-MAIN-7)
 
 
 class Contexte:
@@ -37,11 +44,36 @@ class Contexte:
         routines = getattr(moteur, "routines", None)
         self.routines = routines._routines() if routines else {}
         self._etat: dict[str, str] = {}
+        self._lu: dict[str, dict | None] = {}
+        self._syn: dict[str, dict] = {}
+        # Une tâche que d'autres alimentent (l'intégration) ne se termine jamais : INV-LIEN-2.
+        self.alimentees = {c for t in self.taches.values() for c in liens.ids(t.fm, "alimente")}
 
     def etat(self, ident: str) -> str:
         if ident not in self._etat:
             self._etat[ident] = self.m.etat_de(ident)
         return self._etat[ident]
+
+    def sans_fin(self, t: Tache) -> bool:
+        return str(t.fm.get("nature") or "") in SANS_FIN or t.id in self.alimentees
+
+    def synthese(self, m, ident: str) -> dict:
+        """Ce que ses descendants attendent : `humain` (à vous, hors « à confier ») et `ia` (à l'IA : travaille, file, à confier)."""
+        if ident in self._syn:
+            return self._syn[ident]
+        n = self._syn[ident] = {"humain": 0, "ia": 0}  # posé d'abord : un cycle de parenté ne boucle pas
+        for k in self.enfants.get(ident, ()):
+            e = lire(m, self.taches[k], self)
+            if not e:
+                continue
+            if e["motif"] == "groupe":
+                for c, v in self.synthese(m, k).items():
+                    n[c] += v
+            elif e["cle"] == "humain" and e["categorie"] != "confier":
+                n["humain"] += 1
+            elif e["cle"] in ("ia", "file") or e["categorie"] == "confier":
+                n["ia"] += 1
+        return n
 
     def travaille_sous(self, ident: str) -> list[str]:
         """Sous-tâches dont un agent travaille ou dont le tour attend : l'agent de la mère les attend."""
@@ -50,7 +82,21 @@ class Contexte:
 
 def _etat(cle: str, motif: str, phrase: str, geste: str = "", reprise: str = "", muette: bool = False) -> dict:
     return {"cle": cle, "motif": motif, "phrase": " ".join(phrase.split()), "geste": geste,
-            "reprise": reprise, "muette": muette}
+            "reprise": reprise, "muette": muette, "categorie": "", "libelle": "", "suggere": True, "depuis": ""}
+
+
+def _norme(texte: str) -> str:
+    return " " + re.sub(r"[^a-z0-9]+", " ", unicodedata.normalize("NFD", texte.casefold()).encode("ascii", "ignore").decode()).strip()
+
+
+def a_faire_par_vous(t: Tache) -> bool:
+    """INV-MAIN-7 : l'exécutant est l'utilisateur — posé (`executant: humain`), ou une démarche (avocat, banque,
+    appel, rendez-vous, signature) jamais lancée, sauf `executant: ia`. `decideur` ne dit rien ici : il porte presque
+    toutes les tâches, y compris celles que l'IA fait seule."""
+    qui = str(t.fm.get("executant") or "").strip().lower()
+    if qui:
+        return qui == "humain"
+    return t.statut == "a-faire" and not t.fm.get("session") and any(f" {m}" in _norme(t.titre) for m in DEMARCHES)
 
 
 def _premiere_phrase(texte, n: int = 220) -> str:
@@ -110,10 +156,42 @@ def _en_file(m, t: Tache) -> dict:
 
 
 def lire(m, t: Tache, ctx: Contexte | None = None, profond: bool = False) -> dict | None:
-    """L'état de la main d'une tâche (voir le module) ; None hors périmètre."""
-    if t.pilotage or str(t.fm.get("nature") or "") in SANS_LECTURE:
+    """L'état de la main d'une tâche (voir le module) ; None hors périmètre. Un état complété : catégorie « À moi »,
+    libellé propre, ancienneté, geste suggéré ou non."""
+    if t.pilotage:
         return None
     ctx = ctx or Contexte(m)
+    if not profond and t.id in ctx._lu:
+        return ctx._lu[t.id]
+    e = _lire(m, t, ctx, profond)
+    if e and e["cle"] == "humain":
+        e["categorie"] = CATEGORIES.get(e["motif"], "faire")
+        e["depuis"] = str(t.fm.get("updated") or t.fm.get("created") or "")
+        if e["motif"] == "moi":
+            e.update(suggere=False, libelle=langues.t("serveur.main.libelle_moi"))
+        elif e["categorie"] == "confier":
+            e["libelle"] = langues.t("serveur.main.libelle_confier")
+    if not profond:
+        ctx._lu[t.id] = e
+    return e
+
+
+def _veille(motif: str, phrase: str, libelle: str = "") -> dict:
+    e = _etat("termine", motif, phrase)
+    e["libelle"] = libelle or langues.t("serveur.main.libelle_veille")
+    return e
+
+
+def _groupe(m, ctx: Contexte, t: Tache) -> dict:
+    n = ctx.synthese(m, t.id)
+    morceaux = [langues.t(c, n=n[k]) for k, c in (("humain", "serveur.main.groupe_vous"), ("ia", "serveur.main.groupe_ia")) if n[k]]
+    if not morceaux:
+        return _veille("veille", langues.t("serveur.main.veille"))
+    texte = ", ".join(morceaux)
+    return _veille("groupe", texte, texte)
+
+
+def _lire(m, t: Tache, ctx: Contexte, profond: bool) -> dict | None:
     v, s = m.vault, t.statut
     if s in FERMEES:
         return _etat("termine", "clos", langues.t("serveur.main.termine"))
@@ -139,12 +217,14 @@ def lire(m, t: Tache, ctx: Contexte | None = None, profond: bool = False) -> dic
         if m.reprise_auto.attendue(t.id):
             return _etat("file", "reprise", langues.t("serveur.main.file_reprise"))
         return _etat("humain", "interrompu", langues.t("serveur.main.interrompu"), "renvoyer")
-    if temps.reportee(t):
+    if temps.reportee(t) or t.id in ctx.routines:
         return en_attente_legitime(m, ctx, t)
-    if str(t.fm.get("executant") or "") == "humain":
+    if s in LIBRES and ctx.sans_fin(t):  # INV-MAIN-6 : permanente sans rien à faire = terminé pour l'instant
+        return _veille("veille", langues.t("serveur.main.veille"))
+    if s in LIBRES and ctx.enfants.get(t.id):  # INV-MAIN-6 : un groupe dit l'état de ses enfants
+        return _groupe(m, ctx, t)
+    if a_faire_par_vous(t):  # INV-MAIN-7
         return _etat("humain", "moi", langues.t("serveur.main.moi"), "confier")
-    if t.id in ctx.routines:
-        return en_attente_legitime(m, ctx, t)
     lance = bool(t.fm.get("session"))
     geste = "renvoyer" if lance else "confier"
     epuise = m.attente_muette.epuise(t.id)
@@ -190,14 +270,32 @@ def toutes(m, profond: bool = False) -> dict[str, dict]:
 
 
 def humain_par_id(m) -> dict[str, dict]:
-    """Tâches en « Action humaine nécessaire » (INV-MAIN-4), avec leur lecture ; une décision reportée n'y est pas (INV-DECISIONS-3)."""
+    """Tâches de « À moi » (INV-MAIN-4) : en action humaine, hors « à confier » (elles se filtrent, elles ne comptent pas) ;
+    une décision reportée n'y est pas (INV-DECISIONS-3)."""
     ctx = Contexte(m)
-    return {k: e for k, t in ctx.taches.items() if not temps.reportee(t) and (e := lire(m, t, ctx)) and e["cle"] == "humain"}
+    return {k: e for k, t in ctx.taches.items() if not temps.reportee(t)
+            and (e := lire(m, t, ctx)) and e["cle"] == "humain" and e["categorie"] != "confier"}
 
 
-def compter_humain(m) -> int:
-    """Le compteur « À moi » de la barre haute : exactement les tâches de la vue « À moi »."""
-    return len(humain_par_id(m))
+def par_categorie(m) -> dict[str, list[dict]]:
+    """« À moi » en trois listes, la plus ancienne d'abord : à valider, questions, à faire par vous (INV-MAIN-4)."""
+    sortie: dict[str, list[dict]] = {"valider": [], "question": [], "faire": []}
+    taches = m.vault.index()[0]
+    for k, e in humain_par_id(m).items():
+        t = taches[k]
+        ligne = {"id": k, "titre": t.titre, "statut": t.statut, "phrase": e["phrase"], "geste": e["geste"], "suggere": e["suggere"],
+                 "depuis": e["depuis"], "resultat": _premiere_phrase(t.fiche.get("resultat"), 400),
+                 "essai": _premiere_phrase(t.fiche.get("essai"), 300)}
+        sortie[e["categorie"]].append(ligne)
+    for liste in sortie.values():
+        liste.sort(key=lambda x: (x["depuis"] or "9999", x["titre"]))
+    return sortie
+
+
+def compteurs(m) -> dict[str, int]:
+    """Les trois compteurs de la barre haute et leur somme `a_moi` (INV-MAIN-4)."""
+    n = {c: len(l) for c, l in par_categorie(m).items()}
+    return {"moi_valider": n["valider"], "moi_questions": n["question"], "moi_faire": n["faire"], "a_moi": sum(n.values())}
 
 
 def annoter(m, noeuds: list[dict], taches: dict | None = None) -> None:

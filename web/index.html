@@ -26,8 +26,16 @@
         <div id="panneau-decisions" class="panneau apercu" hidden></div>
       </div>
       <div class="rel">
-        <button id="btn-amoi" class="btn-compte" type="button" aria-pressed="false" title="Filtrer l’arbre sur les tâches en attente ou terminées à valider" data-t-title="index.filtrer_l_arbre_sur_les"><span data-t="index.a_moi">À moi</span> <span class="n" id="n-amoi">0</span></button>
-        <div id="panneau-amoi" class="panneau apercu" hidden></div>
+        <button id="btn-avalider" class="btn-compte" type="button" aria-pressed="false" title="Tâches terminées par un agent, à valider (en lot si vous voulez)" data-t-title="index.a_valider_titre"><span data-t="index.a_valider">À valider</span> <span class="n" id="n-avalider">0</span></button>
+        <div id="panneau-avalider" class="panneau apercu" hidden></div>
+      </div>
+      <div class="rel">
+        <button id="btn-questions" class="btn-compte" type="button" aria-pressed="false" title="Tâches qui attendent votre réponse" data-t-title="index.questions_titre"><span data-t="index.questions">Questions</span> <span class="n" id="n-questions">0</span></button>
+        <div id="panneau-questions" class="panneau apercu" hidden></div>
+      </div>
+      <div class="rel">
+        <button id="btn-afaire" class="btn-compte" type="button" aria-pressed="false" title="Tâches dont vous êtes l’exécutant, ou que l’IA n’a pas pu conclure" data-t-title="index.a_faire_vous_titre"><span data-t="index.a_faire_vous">À faire par vous</span> <span class="n" id="n-afaire">0</span></button>
+        <div id="panneau-afaire" class="panneau apercu" hidden></div>
       </div>
       <div class="rel prop-zone">
         <button id="btn-props" class="btn-compte" type="button" aria-expanded="false" aria-controls="panneau-props"><span data-t="index.propositions">Propositions</span> <span class="n" id="n-props">0</span></button>

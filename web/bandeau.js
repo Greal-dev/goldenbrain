@@ -57,7 +57,10 @@ function dessinerReseau(r) {
 export function dessinerBandeau() {
   const e = S.etat;
   $('#n-tours').textContent = e.tours.length;
-  $('#n-amoi').textContent = e.a_moi;
+  for (const [cle, n] of [['avalider', e.moi_valider], ['questions', e.moi_questions], ['afaire', e.moi_faire]]) { // INV-MAIN-4 : trois pastilles
+    $(`#n-${cle}`).textContent = n || 0;
+    $(`#btn-${cle}`).classList.toggle('alerte', n > 0);
+  }
   $('#n-retard').textContent = e.en_retard || 0;
   $('#btn-aujourdhui').setAttribute('aria-pressed', String(!S.selection && S.vue === 'aujourdhui'));
   $('#btn-aujourdhui').classList.toggle('alerte', (e.en_retard || 0) > 0);
@@ -65,11 +68,9 @@ export function dessinerBandeau() {
   $('#n-decisions').textContent = e.decisions || 0;
   $('#btn-decisions').setAttribute('aria-pressed', String(!S.selection && S.vue === 'decisions'));
   $('#btn-decisions').classList.toggle('alerte', (e.decisions || 0) > 0);
-  $('#btn-amoi').setAttribute('aria-pressed', String(S.filtreAMoi));
   $('#btn-equipe').setAttribute('aria-pressed', String(!S.selection && S.vue === 'equipe'));
   $('#btn-guide').setAttribute('aria-pressed', String(!S.selection && S.vue === 'guide'));
   $('#btn-props').classList.toggle('alerte', e.propositions > 0);
-  $('#btn-amoi').classList.toggle('alerte', e.a_moi > 0);
   dessinerPoste(e.poste);
   dessinerAlertes($('#vigie-alertes'), e.alertes_vigie);
   dessinerReseau(e.reseau);
