@@ -101,6 +101,11 @@ code, pre { font-family: var(--mono); font-size: 12px; }
 .ligne.sel { background: var(--sel); border-left-color: var(--accent); }
 .ligne:focus-visible { outline-offset: -2px; }
 .ligne .titre { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* INV-ARBRE-3 : pied de liste « ＋ … », ligne à part sous la liste survolée ; jamais sans survol (téléphone). */
+.pied { display: none; gap: 10px; height: 24px; align-items: center; }
+@media (hover: hover) { .pied.vu { display: flex; } }
+.btn-pied { border: 0; background: none; padding: 0 2px; color: var(--texte-2); font: inherit; font-size: 12px; cursor: pointer; }
+.btn-pied:hover, .btn-pied:focus-visible { color: var(--accent); text-decoration: underline; }
 .t-casquette { margin-top: 6px; font-weight: 700; }
 .t-casquette .titre { text-transform: uppercase; letter-spacing: .03em; font-size: 12px; }
 .t-operation { font-weight: 600; }
@@ -346,7 +351,9 @@ code, pre { font-family: var(--mono); font-size: 12px; }
 .eq-act .btn:not(.danger) { color: var(--texte); }
 
 /* Dialogues larges et confirmations */
-.dlg { max-height: 92vh; overflow: auto; }
+/* Ancré en haut et borné à la hauteur visible (dvh : barre du navigateur déduite) : un dialogue qui grandit
+   (rapprochements, « Nouveau projet ») ne descend plus hors de l'écran ; le pied « Annuler / Créer » reste collé en bas. */
+.dlg { margin: 8px auto auto; max-height: calc(100dvh - 16px); overflow: auto; }
 .dlg.large { width: 700px; }
 .dlg-texte { margin: 0; color: var(--texte-2); }
 .dlg-actions { position: sticky; bottom: 0; background: var(--panneau); padding-top: 6px; }

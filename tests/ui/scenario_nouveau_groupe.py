@@ -1,4 +1,4 @@
-"""Nouvelle tâche : « ＋ Nouveau groupe… » crée le projet qui manque et y range la tâche."""
+"""Nouvelle tâche : « ＋ Nouveau projet… » crée le projet qui manque et y range la tâche."""
 
 import univers
 from aides_arbre import nettoyer_vault  # noqa: F401  (fixture autouse)
@@ -14,7 +14,7 @@ def test_nouveau_groupe_a_la_creation(page, serveur):
     page.click("#btn-nouvelle")
     page.fill("input[name=titre]", "Écrire le plan du roman NG")
     assert page.locator("[data-id=nouveau-groupe]").is_hidden()
-    page.select_option("select[name=conteneur]", label="＋ Nouveau groupe…")
+    page.select_option("select[name=conteneur]", label="＋ Nouveau projet…")
     page.wait_for_selector("[data-id=nouveau-groupe]:not([hidden])")
     page.fill("input[name=groupe_nom]", "Roman NG")
     page.select_option("select[name=groupe_dans]", "Casquettes/C3-NG/Livres-ng")

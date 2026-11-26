@@ -24,7 +24,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from . import arbre, fiches, langues, references
-from .vault import Conflit, Invalide, aujourdhui, casquette_normalisee, slugifier
+from .vault import Conflit, Invalide, NonTrouve, aujourdhui, casquette_normalisee, slugifier
 
 log = logging.getLogger(__name__)
 
@@ -162,13 +162,28 @@ def _defaire(vault, rel: str) -> None:
             pass
 
 
+def _lieu(vault, dans: str) -> tuple[str, str]:
+    """Dossier et casquette où naît un projet : un conteneur, ou le dossier d'une casquette (jamais
+    un conteneur : les motifs de tâches ne le couvrent pas), désigné par un seul segment sain."""
+    try:
+        c = vault.conteneur(dans)
+        return c.id, c.casquette
+    except NonTrouve:
+        tete, _, nom = (dans or "").rpartition("/")
+        if tete != vault.cfg.casquettes or nom in ("", ".", "..") or "\\" in nom \
+                or not (vault.racine / tete / nom).is_dir():
+            raise
+        return dans, casquette_normalisee(nom) or "?"
+
+
 def creer_conteneur(vault, dans: str, nom: str) -> str:
     """Projet vide (`contexte.md` + `taches/`) né dans le dossier du conteneur `dans`, dont il
-    hérite la casquette ; tout ou rien. Rend le rel du nouveau conteneur."""
+    hérite la casquette, ou dans le dossier d'une casquette (« ＋ Nouveau projet » de l'arbre) ;
+    tout ou rien. Rend le rel du nouveau conteneur."""
     if not (nom := (nom or "").strip()):
         raise Invalide(langues.t("serveur.transformations.nom_vide"))
-    c = vault.conteneur(dans)
-    rel = posixpath.join(c.id, slugifier(nom, minuscules=False))
+    base, casquette = _lieu(vault, dans)
+    rel = posixpath.join(base, slugifier(nom, minuscules=False))
     if not _couvert(f"{rel}/taches/x.md", vault.cfg.taches):
         raise Conflit(langues.t("serveur.transformations.projet_invisible", chemin=f"{rel}/taches"))
     dossier = vault.racine / rel
@@ -178,7 +193,7 @@ def creer_conteneur(vault, dans: str, nom: str) -> str:
     try:
         jour = aujourdhui()
         fm = {"type": "contexte", "nom": nom, "projet": rel.rsplit("/", 1)[-1],
-              "casquette": c.casquette if c.casquette != "?" else None,
+              "casquette": casquette if casquette != "?" else None,
               "created": jour, "updated": jour}
         lignes = [f"{k}: {fiches.valeur_yaml(v)}" for k, v in fm.items() if v is not None]
         vault._index = None

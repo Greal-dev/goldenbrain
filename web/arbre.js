@@ -1,8 +1,11 @@
 // Rôle : volet gauche — arbre repliable, filtres, clavier, glisser-déposer.
-// Frontières : lit S.arbre ; les déplacements passent par l'API puis demandent un rechargement.
+// Pied de liste : « ＋ Nouveau projet » (casquette, projet) et « ＋ Nouvelle tâche » (projet, tâche-groupe), INV-ARBRE-3.
+// Frontières : lit S.arbre (plus les projets neufs encore vides) ; les déplacements et créations passent par l'API, appelée au clic
+// seulement (aucune requête au premier affichage) ; la tâche passe par le dialogue « Nouvelle tâche » (bandeau.js, évènement `nouvelle`).
+// Invariants portés : INV-ARBRE-2, INV-ARBRE-3.
 import { t, tn } from './langues.js';
 import { h, $, remplacer, ajouter, nomLisible } from './dom.js';
-import { S, on, emit, ouvrir, ouvrirVue, fixerToutes, chemin, cleNoeud } from './store.js';
+import { S, on, emit, ouvrir, ouvrirVue, fixerToutes, chemin, cleNoeud, erreur, parcourir } from './store.js';
 import { brancher, actionsLigne } from './glisser.js';
 import { repereIA, compteIA, surOccupees } from './verrou.js';
 import { rendreChangeable } from './statut.js';
@@ -10,6 +13,8 @@ import { pastilleMoi } from './executant.js';
 import { pastilleNature, compteLignes } from './lignes.js';
 import { pastilleRetard } from './integration.js';
 import { appliquer, actif as filtreActif, badgeStatut, libelleCourt, compteur, initFiltres } from './filtres.js';
+import { api, post } from './api.js';
+import { formulaire } from './dialogue.js';
 
 // Les deux premières étiquettes en puces, le reste en « +n » : arbre et listes.
 function puces(mots, max = 2) {
@@ -22,6 +27,8 @@ function puces(mots, max = 2) {
 const CLE = 'orch.arbre.ouverts';
 let ouverts = (() => { try { return JSON.parse(localStorage.getItem(CLE) || '{}'); } catch { return {}; } })();
 let visibles = [];
+const peres = new Map(); // clé d'un nœud → clé de la liste qui le porte (null : casquette)
+let liste = null; // INV-ARBRE-3 : liste survolée ou focalisée, dont le pied se montre
 let cleFocus = null;
 let cont;
 
@@ -40,17 +47,31 @@ function filtrer(ns, match, complet) {
   return r;
 }
 function arbreFiltre() {
-  let a = appliquer(S.arbre);
+  let a = appliquer(greffer(S.arbre));
   const q = norm(S.recherche.trim());
   if (q) a = filtrer(a, (n) => norm(`${n.titre} ${(n.etiquettes || []).map((m) => `#${m}`).join(' ')}`).includes(q), true);
   return a;
 }
-function aplatir(ns, niveau, out) {
+// INV-ARBRE-3 : le pied d'une liste est une ligne à part (`pied`), hors des nœuds (navigation, compteurs, glisser).
+function aplatir(ns, niveau, out, pere = null) {
   for (const n of ns) {
     out.push({ n, niveau });
-    if ((n.enfants || []).length && estOuvert(n)) aplatir(n.enfants, niveau + 1, out);
+    peres.set(cle(n), pere);
+    if ((n.enfants || []).length && estOuvert(n)) {
+      aplatir(n.enfants, niveau + 1, out, cle(n));
+      if (!forcer()) out.push({ n, niveau: niveau + 1, pied: true }); // filtre ou recherche : pas de pied
+    }
   }
   return out;
+}
+function montrerPied(el) {
+  const p = el?.closest?.('.pied');
+  const r = el?.closest?.('.ligne');
+  const k = p ? p.dataset.pour : r ? (peres.get(r.dataset.cle) ?? r.dataset.cle) : null;
+  if (k === liste) return;
+  liste = k;
+  cont.querySelector('.pied.vu')?.classList.remove('vu');
+  if (k) cont.querySelector(`.pied[data-pour="${CSS.escape(k)}"]`)?.classList.add('vu');
 }
 const compterTaches = (ns) => ns.reduce((k, n) => k + (n.type === 'tache' ? 1 : 0) + compterTaches(n.enfants || []), 0);
 const sauver = () => localStorage.setItem(CLE, JSON.stringify(ouverts));
@@ -98,17 +119,82 @@ function ligne({ n, niveau }) {
   n.type === 'groupe' ? null : actionsLigne(n));
 }
 
+const GESTES = { casquette: ['projet'], conteneur: ['projet', 'tache'], tache: ['tache'] };
+const neufs = new Map(); // clé du parent → projets créés ici, vides donc absents de l'arbre du serveur
+
+// INV-ARBRE-3 : l'arbre du serveur omet un conteneur sans tâche ; le projet neuf reste visible jusqu'à sa première tâche.
+function greffer(arbre) {
+  if (!neufs.size) return arbre;
+  const vus = new Set([...parcourir(arbre)].map(cleNoeud));
+  for (const [k, l] of neufs) {
+    const reste = l.filter((n) => !vus.has(cleNoeud(n)));
+    if (reste.length) neufs.set(k, reste); else neufs.delete(k);
+  }
+  const g = (ns) => ns.map((n) => {
+    const plus = neufs.get(cleNoeud(n));
+    return plus || n.enfants?.length ? { ...n, enfants: [...g(n.enfants || []), ...(plus || [])] } : n;
+  });
+  return g(arbre);
+}
+
+const estNeuf = (n) => !!n?.neuf;
+
+function pied(n, niveau, vu) {
+  const gestes = GESTES[n.type];
+  if (!gestes || n.neuf) return null;
+  return h('div', { class: `pied${vu ? ' vu' : ''}`, 'data-pour': cleNoeud(n), style: `padding-left:${26 + niveau * 14}px` },
+    gestes.map((g) => h('button', { type: 'button', class: 'btn-pied', 'data-ajout': g,
+      onclick: () => (g === 'projet' ? nouveauProjet(n) : nouvelleTache(n)) }, t(`arbre.ajout_${g}`))));
+}
+
+function nouvelleTache(n) {
+  emit('nouvelle', n.type === 'tache' ? { parent: { id: n.id, titre: nomLisible(n.titre) } } : { conteneur: n.id });
+}
+
+// Le dossier d'une casquette n'est pas un conteneur : il se lit dans les projets qu'elle porte déjà.
+// ponytail: dossier le plus fréquent ; une casquette sans projet sous « Casquettes/ » ne s'y crée pas d'ici.
+async function dossierCasquette(n) {
+  const code = n.id.replace(/^casquette:/, '');
+  const conts = await api('/conteneurs');
+  const ids = new Set(conts.map((c) => c.id));
+  const compte = new Map();
+  for (const c of conts) {
+    const s = c.id.split('/');
+    const d = s.slice(0, 2).join('/');
+    if (c.casquette === code && s.length > 2 && !ids.has(d)) compte.set(d, (compte.get(d) || 0) + 1);
+  }
+  const d = [...compte].sort((a, b) => b[1] - a[1])[0]?.[0];
+  if (!d) throw new Error(t('arbre.casquette_sans_dossier'));
+  return d;
+}
+
+async function nouveauProjet(n) {
+  const v = await formulaire({ titre: t('arbre.projet_titre', { lieu: nomLisible(n.titre) }), valider: t('bandeau.creer'),
+    champs: [{ nom: 'nom', label: t('bandeau.groupe_nom'), requis: true }] });
+  const nom = v?.nom.trim();
+  if (!nom) return;
+  try {
+    const dans = n.type === 'casquette' ? await dossierCasquette(n) : n.id;
+    const { id } = await post('/conteneurs', { nom, dans });
+    const k = cleNoeud(n);
+    neufs.set(k, [...(neufs.get(k) || []), { id, type: 'conteneur', titre: nom, enfants: [], ouvertes: 0, neuf: true }]);
+    emit('deplier', k);
+  } catch (e) { erreur(e.message); }
+}
+
 export function dessiner() {
   const top = cont.scrollTop;
   const actif = cont.contains(document.activeElement) ? document.activeElement.dataset.cle : null;
   const vu = arbreFiltre();
   compteur(compterTaches(vu));
-  visibles = aplatir(vu, 0, []);
+  peres.clear();
+  const rangs = aplatir(vu, 0, []);
+  visibles = rangs.filter((r) => !r.pied);
   if (!visibles.some((v) => cle(v.n) === cleFocus)) {
     cleFocus = (visibles.find((v) => v.n.type === 'tache' && v.n.id === S.selection) || visibles[0])?.n;
     cleFocus = cleFocus ? cle(cleFocus) : null;
   }
-  remplacer(cont, visibles.map(ligne));
+  remplacer(cont, rangs.map((r) => (r.pied ? pied(r.n, r.niveau, cle(r.n) === liste) : ligne(r))));
   if (!visibles.length) ajouter(cont, h('p', { class: 'vide' }, S.recherche || filtreActif() ? t('arbre.aucun_resultat') : t('arbre.aucune_tache')));
   cont.scrollTop = top;
   if (actif) cont.querySelector(`[data-cle="${CSS.escape(actif)}"]`)?.focus({ preventScroll: true });
@@ -159,7 +245,7 @@ function surTouche(e) {
       return;
     case 'Enter': case ' ':
       e.preventDefault();
-      if (n.type === 'tache') ouvrir(n.id); else if (e.key === 'Enter' && n.type !== 'groupe') ouvrirVue('cascade', cle(n)); else basculer(n);
+      if (estNeuf(n)) nouvelleTache(n); else if (n.type === 'tache') ouvrir(n.id); else if (e.key === 'Enter' && n.type !== 'groupe') ouvrirVue('cascade', cle(n)); else basculer(n);
   }
 }
 
@@ -173,6 +259,9 @@ export function initArbre() {
     e.target.setAttribute('tabindex', '0');
     cleFocus = k;
   });
+  cont.addEventListener('focusin', (e) => montrerPied(e.target));
+  cont.addEventListener('mouseover', (e) => { if (!e.buttons) montrerPied(e.target); }); // bouton enfoncé : un glisser, la mise en page ne bouge pas
+  cont.addEventListener('mouseleave', () => montrerPied(cont.contains(document.activeElement) ? document.activeElement : null));
   cont.addEventListener('click', (e) => {
     const row = e.target.closest('.ligne');
     const n = noeudDe(row);
@@ -180,7 +269,7 @@ export function initArbre() {
     cleFocus = cle(n);
     const puce = e.target.closest('.etiq[data-etiquette]'); // INV-ETIQUETTE-4 : clic sur une puce = vue de l'étiquette
     if (puce) { ouvrirVue('etiquette', puce.dataset.etiquette); return; }
-    if (e.target.classList.contains('chev')) basculer(n); else if (n.type === 'tache') ouvrir(n.id); else if (n.type === 'groupe') basculer(n); else ouvrirVue('cascade', cle(n));
+    if (estNeuf(n)) nouvelleTache(n); else if (e.target.classList.contains('chev')) basculer(n); else if (n.type === 'tache') ouvrir(n.id); else if (n.type === 'groupe') basculer(n); else ouvrirVue('cascade', cle(n));
     row.focus?.();
   });
   brancher(cont, cont);

@@ -126,7 +126,7 @@ function listeProches(completer) {
   return { zone, maj };
 }
 
-// « ＋ Nouveau groupe… » : le projet qui manque naît sous un conteneur choisi, la tâche s'y range.
+// « ＋ Nouveau projet… » : le projet qui manque naît sous un conteneur choisi, la tâche s'y range.
 const NOUVEAU = '\u0001nouveau-groupe'; // jamais un id de conteneur
 function champsGroupe(options) {
   const nom = champ({ nom: 'groupe_nom', label: t('bandeau.groupe_nom'), requis: true }, 'g');
@@ -139,8 +139,10 @@ function champsGroupe(options) {
   return { zone, montrer, valeurs: () => ({ nom: ctrls[0].value.trim(), dans: ctrls[1].value }) };
 }
 
-// `pre` : valeurs de départ { titre, description, conteneur } (barre de chat d'une note) ; rien n'est créé avant « Créer ».
+// `pre` : valeurs de départ { titre, description, conteneur } (barre de chat d'une note, emplacement pré-choisi de l'arbre)
+// et `parent` {id, titre} pour une sous-tâche (« ＋ Nouvelle tâche » de l'arbre) ; rien n'est créé avant « Créer ».
 export async function nouvelleTache(pre = {}) {
+  const parent = pre.parent || null;
   let conteneurs = [];
   const galerie = galerieModeles((m, carte) => {  // un modèle pré-remplit, rien n'est créé (INV-MODELES-1)
     const f = carte.closest('form');
@@ -170,7 +172,8 @@ export async function nouvelleTache(pre = {}) {
     champs: [
       { nom: 'titre', label: t('bandeau.titre'), requis: true, valeur: pre.titre, sous: proches.zone, surSaisie: proches.maj },
       { nom: 'description', label: t('bandeau.description'), type: 'textarea', valeur: pre.description, aide: t('bandeau.description_aide') },
-      { nom: 'conteneur', label: simple() ? t('bandeau.projet') : t('bandeau.emplacement'), type: 'select', options, valeur: pre.conteneur, sous: groupe.zone, surSaisie: (x) => groupe.montrer(x === NOUVEAU) },
+      parent ? { nom: 'sous', label: t('bandeau.sous_tache'), lecture: true, valeur: parent.titre }
+        : { nom: 'conteneur', label: simple() ? t('bandeau.projet') : t('bandeau.emplacement'), type: 'select', options, valeur: pre.conteneur, sous: groupe.zone, surSaisie: (x) => groupe.montrer(x === NOUVEAU) },
       { nom: 'echeance', label: t('bandeau.echeance'), type: 'date' },
       { nom: 'priorite', label: t('bandeau.priorite'), type: 'select', options: [{ valeur: '', libelle: t('bandeau.aucune') }, ...PRIORITES.map(([valeur, libelle]) => ({ valeur, libelle }))] },
       { nom: 'lancer', label: t('bandeau.lancer'), type: 'checkbox' },
@@ -181,7 +184,8 @@ export async function nouvelleTache(pre = {}) {
   try {
     const corps = { titre: v.titre.trim(), lancer: v.lancer };
     if (v.description.trim()) corps.description = v.description.trim();
-    if (v.conteneur === NOUVEAU) corps.nouveau_groupe = groupe.valeurs();
+    if (parent) corps.parent = parent.id;
+    else if (v.conteneur === NOUVEAU) corps.nouveau_groupe = groupe.valeurs();
     else if (v.conteneur) corps.conteneur = v.conteneur;
     if (v.echeance) corps.echeance = v.echeance;
     if (v.priorite) corps.priorite = v.priorite;
@@ -244,7 +248,8 @@ export function initBandeau() {
   $('#btn-revue').addEventListener('click', lancerRevue);
   chargerRevue();
   $('#marque').addEventListener('click', () => ouvrir(null));
-  $('#btn-nouvelle').addEventListener('click', nouvelleTache);
+  $('#btn-nouvelle').addEventListener('click', () => nouvelleTache());
+  on('nouvelle', nouvelleTache);
   $('#btn-routine').addEventListener('click', () => nouvelleRoutine());
   $('#btn-chaines').addEventListener('click', () => ouvrirChaines());
   $('#btn-equipe').addEventListener('click', () => ouvrirVue('equipe'));

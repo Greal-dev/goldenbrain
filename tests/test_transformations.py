@@ -238,3 +238,23 @@ def test_post_conteneurs_cree_le_groupe_seul(config, vault, faux, racine):
         assert any(x["id"] == "Projets/Vide/Livres" for x in c.get("/api/conteneurs").json())
     assert (racine / "Projets/Vide/Livres/taches").is_dir()
     assert "casquette: C3" in fiches.lire(racine / "Projets/Vide/Livres/contexte.md")
+
+
+def test_post_conteneurs_cree_un_projet_sous_le_dossier_de_casquette(config, vault, faux, racine):
+    config.vault.taches.append("Casquettes/*/*/taches/*.md")
+    (racine / "Casquettes/C4-Ecrits").mkdir(parents=True)
+    with _client(config, vault, faux) as c:
+        r = c.post("/api/conteneurs", headers=H, json={"nom": "Roman", "dans": "Casquettes/C4-Ecrits"})
+        assert r.status_code == 201 and r.json() == {"id": "Casquettes/C4-Ecrits/Roman"}
+    assert vault.conteneur("Casquettes/C4-Ecrits/Roman").casquette == "C4"
+
+
+@pytest.mark.parametrize("dans", ["Casquettes/Absente", "Casquettes/..", "Casquettes", "Autre/C4-Ecrits"])
+def test_post_conteneurs_refuse_un_dossier_hors_casquette(config, vault, faux, racine, dans):
+    config.vault.taches.append("Casquettes/*/*/taches/*.md")
+    (racine / "Casquettes/C4-Ecrits").mkdir(parents=True)
+    (racine / "Autre/C4-Ecrits").mkdir(parents=True)
+    avant = sorted(p.as_posix() for p in racine.rglob("*"))
+    with _client(config, vault, faux) as c:
+        assert c.post("/api/conteneurs", headers=H, json={"nom": "Roman", "dans": dans}).status_code == 404
+    assert sorted(p.as_posix() for p in racine.rglob("*")) == avant
