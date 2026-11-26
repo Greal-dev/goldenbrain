@@ -57,6 +57,8 @@ navigateur du téléphone refuse le service worker (script qui gère le hors-lig
 
 Cinq codes faux d'affilée verrouillent l'appairage une minute.
 
+**Sans passer devant le PC** : dans la discussion Telegram autorisée, écrire `/appairer` (ou `/appairer Tablette` pour nommer l'appareil). Le serveur répond par un code QR et le lien d'appairage (valables 2 min, un seul usage) ; ouvrir le lien sur l'appareil, connecté à Tailscale. Trois demandes au plus par 10 min ; chacune figure au journal (Réglages → Appareils). INV-APPAIRAGE-2.
+
 ## 4. Ce que le téléphone peut faire
 
 - **Accueil** (bouton de la barre basse, `#compagnon`) : à décider, en cours, arbre allégé, en lecture seule, sauf « Valider » / « Renvoyer » sur une tâche terminée par son agent (en ligne, après confirmation) ; la PWA installée s'ouvre sur cet Accueil (`start_url` du manifeste), et le raccourci « Décisions » de l'icône mène à `#decisions`.

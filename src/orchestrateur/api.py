@@ -162,7 +162,7 @@ def creer_app(config: Config, moteur: Moteur | None = None) -> FastAPI:
     app.state.jardinier = jardinier
     app.state.telegram = connecteur
     app.state.aligneur, app.state.version = aligneur, version.Version()  # INV-VERSION-1 : empreinte au démarrage
-    app.state.appareils = registre = appareils.Appareils(config.donnees)  # INV-DISTANT-6
+    app.state.appareils = connecteur.appareils = registre = appareils.Appareils(config.donnees)  # INV-DISTANT-6, INV-APPAIRAGE-2
     hotes = {f"{h}:{config.port}" for h in ("127.0.0.1", "localhost", config.executeurs.ecoute,  # INV-DISTANT-1
                                             config.distant.nom_hote if config.executeurs.ecoute else "") if h}
 

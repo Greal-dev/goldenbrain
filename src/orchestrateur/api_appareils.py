@@ -128,6 +128,8 @@ def routes(config, registre) -> APIRouter:
     @r.post("/appairage")
     async def appairer(corps: CorpsCode, request: Request):
         au_poste(request)
+        if request.headers.get("x-orch-tache"):  # INV-APPAIRAGE-2 : jamais le geste d'un agent (garde B4)
+            raise Reserve(langues.t("serveur.api_appareils.poste_seul"))
         base = adresse(config)
         if not base or not config.distant.appareils:
             raise ErreurOrch(langues.t("serveur.api_appareils.acces_non_ouvert"))

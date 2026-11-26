@@ -12,8 +12,8 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import pytest
 from fastapi.testclient import TestClient
 
-from orchestrateur import api, coffre, telegram
-from orchestrateur.config import ConfigTelegram
+from orchestrateur import api, appareils, coffre, telegram, telegram_appairage
+from orchestrateur.config import ConfigDistant, ConfigExecuteurs, ConfigTelegram
 from orchestrateur.moteur import Moteur
 from test_moteur import executer, finir, moteur
 
@@ -32,6 +32,8 @@ class FauxTelegram:
         self.webhook = ""  # adresse du webhook actif (ancien pipeline), vide = aucun
         self.pannes = 0  # nombre de prochaines requêtes qui échouent (coupure)
         self.n = 100
+        self.photos: list[bytes] = []
+        self.refus_photo = False
         faux = self
 
         class Gestion(BaseHTTPRequestHandler):
@@ -59,6 +61,10 @@ class FauxTelegram:
                 jeton, methode = self.path.split("/")[1][3:], self.path.split("/")[2]
                 if jeton != JETON:
                     return self._repondre(401, {"ok": False, "description": "Unauthorized"})
+                if methode == "sendPhoto":
+                    faux.photos.append(corps)
+                    return self._repondre(200, {"ok": not faux.refus_photo, "result": {"message_id": 1}}
+                                          if not faux.refus_photo else {"ok": False, "description": "no"})
                 params = json.loads(corps or b"{}")
                 faux.requetes.append((methode, params))
                 if methode == "getUpdates":
@@ -459,3 +465,80 @@ def test_cli_telegram_validation_demande_les_boutons(monkeypatch, capsys):
     assert cli.main(["telegram", "Pièce enregistrée", "--validation"]) == 0
     assert journal == [("/telegram/question", {"tache": "t9", "texte": "Pièce enregistrée", "boutons": True})]
     assert "Valider / Renvoyer" in capsys.readouterr().out
+
+
+# --- INV-APPAIRAGE-2 : /appairer depuis la discussion autorisée --------------------------------
+
+def connecteur_appairage(config, vault, faux, ouvert=True):
+    config.executeurs = ConfigExecuteurs(ecoute="100.64.0.5" if ouvert else "")
+    config.distant = ConfigDistant(appareils=ouvert)
+
+    async def scenario():
+        m = moteur(config, vault, faux)
+        c = telegram.Connecteur(m)
+        c.appareils = appareils.Appareils(config.donnees)
+        return c, m
+    return executer(scenario())
+
+
+def test_appairer_envoie_le_code_en_image_sans_toucher_l_assistant(config, vault, faux, tg):
+    c, m = connecteur_appairage(config, vault, faux)
+    tg.message(1, text="/appairer Tablette")
+    executer(c.relever())
+    assert len(tg.photos) == 1 and b"\x89PNG" in tg.photos[0]
+    corps = tg.photos[0].decode("latin-1")
+    assert "appairer.html#" in corps and "Tablette" in corps and "2 min" in corps
+    assert len(c.appareils._codes) == 1 and not faux.lances and not c.etat.get("tache_tri")
+    j = c.appareils.journal[-1]
+    assert j["ip"] == "telegram" and j["detail"] == "Tablette"
+    code = corps.split("appairer.html#")[1].split()[0]
+    assert code not in json.dumps(c.appareils.journal) and code not in json.dumps(c.etat)
+    assert not any(code in json.dumps(r) for _, r in tg.requetes)  # le code ne passe que par l'image
+
+
+def test_appairer_repli_en_lien_si_image_refusee(config, vault, faux, tg):
+    tg.refus_photo = True
+    c, _ = connecteur_appairage(config, vault, faux)
+    tg.message(1, text="/appairer")
+    executer(c.relever())
+    assert "appairer.html#" in tg.envoyes[-1]["text"] and len(c.appareils._codes) == 1
+
+
+def test_appairer_hors_liste_blanche_ou_transfere_n_ouvre_rien(config, vault, faux, tg):
+    c, _ = connecteur_appairage(config, vault, faux)
+    tg.message(1, chat="777", text="/appairer")
+    tg.message(2, text="/appairer", **TRANSFERE)
+    executer(c.relever())
+    assert not c.appareils._codes and not tg.photos
+
+
+def test_appairer_limite_les_demandes_et_journalise(config, vault, faux, tg):
+    c, _ = connecteur_appairage(config, vault, faux)
+    for i in range(1, 5):
+        tg.message(i, text="/appairer")
+    executer(c.relever())
+    assert len(tg.photos) == telegram_appairage.APPAIRER_MAX and len(c.appareils._codes) == telegram_appairage.APPAIRER_MAX
+    assert "Trop de codes" in tg.envoyes[-1]["text"] and c.appareils.journal[-1]["genre"] == "refus"
+
+
+def test_appairer_sans_acces_distant_ne_donne_aucun_code(config, vault, faux, tg):
+    c, _ = connecteur_appairage(config, vault, faux, ouvert=False)
+    tg.message(1, text="/appairer")
+    executer(c.relever())
+    assert not c.appareils._codes and not tg.photos and "pas ouvert" in tg.envoyes[-1]["text"]
+
+
+def test_route_d_appairage_refuse_un_agent(poste_api):
+    from fastapi.testclient import TestClient
+    with TestClient(poste_api, base_url="http://127.0.0.1:8399") as cl:
+        r = cl.post("/api/appareils/appairage", json={"nom": "x"},
+                    headers={"X-Orchestrateur": "1", "X-Orch-Tache": "une-tache"})
+        assert r.status_code == 403
+        assert cl.post("/api/appareils/appairage", json={"nom": "x"}, headers={"X-Orchestrateur": "1"}).status_code == 200
+
+
+@pytest.fixture
+def poste_api(config, vault, faux):
+    config.executeurs = ConfigExecuteurs(ecoute="100.64.0.5")
+    config.distant = ConfigDistant(appareils=True)
+    return api.creer_app(config, moteur(config, vault, faux))

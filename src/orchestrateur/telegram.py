@@ -10,10 +10,11 @@ Frontières : API HTTP de Telegram par urllib (aucune dépendance) ; agit sur le
 (`creer`, `soumettre`) et, pour Valider, par `vault.poser_statut` (geste humain) ; n'écrit dans le
 vault que sous le dossier de réception ; l'état (décalage, envois, routes, question en attente) vit
 dans `<donnees>/etat/telegram.json`.
+Commande `/appairer` : code d'appareil ouvert par le connecteur seul (INV-APPAIRAGE-2).
 Invariants portés : INV-TELEGRAM-1 (désactivé par défaut, un seul lecteur, liste blanche),
 INV-TELEGRAM-2 (jeton jamais écrit en clair ni journalisé), INV-TELEGRAM-3 (un message ou un bouton
 n'est jamais un ordre de paiement ; seul un bouton humain change une tâche), INV-TELEGRAM-4 (nature
-posée par le code).
+posée par le code), INV-APPAIRAGE-2.
 """
 
 from __future__ import annotations
@@ -30,7 +31,7 @@ import urllib.error
 import urllib.request
 from pathlib import Path
 
-from . import coffre, fiches, langues, manager, telegram_connexion
+from . import coffre, fiches, langues, manager, telegram_appairage, telegram_connexion
 from . import telegram_assistant as assistant
 from .vault import Conflit, Invalide, NonTrouve
 
@@ -137,6 +138,7 @@ class Connecteur:
         self.etat = self._lire()
         self.tache: asyncio.Task | None = None
         self.vues: dict[str, dict] = {}  # INV-TELEGRAM-5 : discussions lues par la boucle (« Me reconnaître »)
+        self.appareils, self._appairages = None, []  # registre posé par `api.creer` ; INV-APPAIRAGE-2
         self.erreur = ""
         self.fil = manager.Fil(self)  # INV-MANAGER-1 : fil commun avec le volet de l'interface
 
@@ -244,6 +246,9 @@ class Connecteur:
             self.fil.ajouter("vous", texte, "telegram")
             r = self.fil.ajouter("manager", assistant.nouveau_fil(self), "telegram")["texte"]
             await self.envoyer(chat, r, self.tache_tri(), m.get("message_id"))
+            return
+        if texte.split(None, 1)[:1] == [telegram_appairage.APPAIRER] and not assistant.transfere(m):
+            await telegram_appairage.appairer(self, chat, texte, m.get("message_id"))  # INV-APPAIRAGE-2
             return
         pieces, transcrits = await dans_un_fil(self._ranger_pieces, client, m)
         etiquettes = assistant.etiqueter(m, texte, pieces, transcrits)  # INV-TELEGRAM-4

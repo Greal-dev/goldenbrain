@@ -226,3 +226,24 @@ def svg(texte: str, marge: int = 4) -> str:
     d = "".join(f"M{x + marge} {y + marge}h1v1h-1z" for y, r in enumerate(m) for x, c in enumerate(r) if c)
     return (f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {n} {n}" shape-rendering="crispEdges">'
             f'<rect width="{n}" height="{n}" fill="#fff"/><path d="{d}" fill="#000"/></svg>')
+
+
+def png(texte: str, marge: int = 4, echelle: int = 8) -> bytes:
+    """Code QR en PNG (niveaux de gris, 8 bits), pour l'envoi en image (Telegram) ; calculé sur le poste."""
+    import struct
+    import zlib
+    m = matrice(texte)
+    n = (len(m) + 2 * marge) * echelle
+    blanc = [255] * (marge * echelle)
+    lignes = []
+    for y in range(-marge, len(m) + marge):
+        r = m[y] if 0 <= y < len(m) else None
+        pixels = bytes(blanc + [0 if c else 255 for c in (r or []) for _ in range(echelle)]
+                       + blanc) if r else bytes([255] * n)
+        lignes += [b"\x00" + pixels] * echelle
+
+    def bloc(type_: bytes, donnees: bytes) -> bytes:
+        return struct.pack(">I", len(donnees)) + type_ + donnees + struct.pack(">I", zlib.crc32(type_ + donnees))
+
+    return (b"\x89PNG\r\n\x1a\n" + bloc(b"IHDR", struct.pack(">IIBBBBB", n, n, 8, 0, 0, 0, 0))
+            + bloc(b"IDAT", zlib.compress(b"".join(lignes))) + bloc(b"IEND", b""))

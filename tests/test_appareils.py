@@ -251,3 +251,13 @@ def test_csp_autorise_les_codes_qr_en_data():
     from orchestrateur import api
     for entetes in (api.ENTETES, api.ENTETES_FICHIER):
         assert "img-src 'self' data:" in entetes["Content-Security-Policy"]
+
+
+def test_qr_png_valide():
+    import struct, zlib
+    p = qr.png("https://exemple.test/appairer.html#abc")
+    assert p[:8] == b"\x89PNG\r\n\x1a\n"
+    larg, haut = struct.unpack(">II", p[16:24])
+    assert larg == haut and larg % 8 == 0
+    i = p.index(b"IDAT")
+    assert len(zlib.decompress(p[i + 4:p.index(b"IEND") - 8])) == haut * (larg + 1)
