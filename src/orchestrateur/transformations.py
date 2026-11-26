@@ -1,6 +1,7 @@
 """Transformations assistées : promotion sur place avec découpage, réduction avec contraction.
 
-Rôle : élever une tâche en projet dans le dossier de son conteneur (mandat de découpage),
+Rôle : créer un projet vide sous un conteneur (`creer_conteneur`, « Nouveau groupe »), élever
+une tâche en projet dans le dossier de son conteneur (mandat de découpage),
 réduire un projet en une tâche (archivage, mandat de contraction), mémoriser les mandats en
 attente (`etat/mandats.json`) et, en fin de tour, créer les tickets rendus dans `<decoupage>`.
 Frontières : écrit dans le vault par `Vault` et `Aligneur` seulement (déplacements, archivage,
@@ -149,21 +150,30 @@ def _couvert(rel: str, motifs: list[str]) -> bool:
                for m in motifs)
 
 
-def creer_projet(vault, ident: str, nom: str) -> str:
-    """Projet né à la place de la tâche, dans le dossier de son conteneur ; tout ou rien."""
-    t = vault.tache(ident)
-    nom = (nom or "").strip() or t.titre
-    c = vault.conteneur(t.conteneur)
+def _defaire(vault, rel: str) -> None:
+    # Échec : on retire ce qu'on a créé ; un dossier non vide (tiers) n'est jamais effacé.
+    vault._index = None
+    dossier = vault.racine / rel
+    (dossier / vault.cfg.contexte).unlink(missing_ok=True)
+    for d in (dossier / "taches", dossier):
+        try:
+            d.rmdir()
+        except OSError:
+            pass
+
+
+def creer_conteneur(vault, dans: str, nom: str) -> str:
+    """Projet vide (`contexte.md` + `taches/`) né dans le dossier du conteneur `dans`, dont il
+    hérite la casquette ; tout ou rien. Rend le rel du nouveau conteneur."""
+    if not (nom := (nom or "").strip()):
+        raise Invalide(langues.t("serveur.transformations.nom_vide"))
+    c = vault.conteneur(dans)
     rel = posixpath.join(c.id, slugifier(nom, minuscules=False))
     if not _couvert(f"{rel}/taches/x.md", vault.cfg.taches):
         raise Conflit(langues.t("serveur.transformations.projet_invisible", chemin=f"{rel}/taches"))
     dossier = vault.racine / rel
     if dossier.exists():
         raise Conflit(langues.t("serveur.transformations.dossier_existe", chemin=rel))
-    taches = vault.index()[0]
-    noms = [taches[k].chemin.name for k in vault.descendance(ident)]
-    if len(set(noms)) != len(noms):  # collision vérifiée avant de créer quoi que ce soit
-        raise Conflit(langues.t("serveur.transformations.meme_nom_fichier", chemin=rel))
     (dossier / "taches").mkdir(parents=True)
     try:
         jour = aujourdhui()
@@ -173,19 +183,31 @@ def creer_projet(vault, ident: str, nom: str) -> str:
         lignes = [f"{k}: {fiches.valeur_yaml(v)}" for k, v in fm.items() if v is not None]
         vault._index = None
         # Aucune clé `parent:` : le parent implicite (lot 5) le range sous le conteneur d'origine.
-        fiches.ecrire_atomique(dossier / vault.cfg.contexte, "---\n" + "\n".join(lignes)
-                               + f"\n---\n\n# {nom}\n\nIssu de la tâche [[{ident}]]\n")
+        fiches.ecrire_atomique(dossier / vault.cfg.contexte,
+                               "---\n" + "\n".join(lignes) + f"\n---\n\n# {nom}\n")
+    except Exception:
+        _defaire(vault, rel)
+        raise
+    return rel
+
+
+def creer_projet(vault, ident: str, nom: str) -> str:
+    """Projet né à la place de la tâche, dans le dossier de son conteneur ; tout ou rien."""
+    t = vault.tache(ident)
+    nom = (nom or "").strip() or t.titre
+    taches = vault.index()[0]
+    noms = [taches[k].chemin.name for k in vault.descendance(ident)]
+    if len(set(noms)) != len(noms):  # collision vérifiée avant de créer quoi que ce soit
+        raise Conflit(langues.t("serveur.transformations.meme_nom_fichier", chemin=posixpath.join(
+            t.conteneur, slugifier(nom, minuscules=False))))
+    rel = creer_conteneur(vault, t.conteneur, nom)
+    try:
+        ctx = vault.racine / rel / vault.cfg.contexte
+        fiches.ecrire_atomique(ctx, fiches.lire(ctx) + f"\nIssu de la tâche [[{ident}]]\n")
         sans_parent = {k: {"parent": None} for k in [ident, *vault.enfants(ident)]}
         vault._deplacer(vault.descendance(ident), rel, sans_parent)
     except Exception:
-        # Échec : on retire ce qu'on a créé ; un dossier non vide (tiers) n'est jamais effacé.
-        vault._index = None
-        (dossier / vault.cfg.contexte).unlink(missing_ok=True)
-        for d in (dossier / "taches", dossier):
-            try:
-                d.rmdir()
-            except OSError:
-                pass
+        _defaire(vault, rel)
         raise
     return rel
 

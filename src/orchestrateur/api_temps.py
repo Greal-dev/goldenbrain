@@ -15,6 +15,11 @@ from . import temps
 from .vault import Vault
 
 
+class CorpsGroupe(BaseModel):
+    nom: str
+    dans: str  # id du conteneur sous lequel le projet naît
+
+
 class CorpsTache(BaseModel):
     titre: str
     description: str = ""
@@ -32,6 +37,7 @@ class CorpsTache(BaseModel):
     genre: str | None = None  # nature de la tâche (INV-NATURE-1) ; absente : déduite du titre
     etiquettes: list[str] = []  # INV-ETIQUETTE-1 : posées à la création (un agent : existantes seulement)
     groupe: str | None = None  # titre d'un regroupement à créer sous le parent pour y ranger la tâche (INV-PLAFOND-1)
+    nouveau_groupe: CorpsGroupe | None = None  # projet à créer d'abord, où la tâche se range
 
 
 class CorpsTemps(BaseModel):

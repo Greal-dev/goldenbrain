@@ -189,3 +189,52 @@ def test_proposition_projet_acceptee_promeut_et_mandate(config, vault, faux):
     executer(scenario())
     assert vault.tache("mere").conteneur == PROJET
     assert "élevée en projet « Lancement »" in faux.lances[0]["message"]
+
+
+# --- nouveau groupe ----------------------------------------------------------------------
+def _client(config, vault, faux):
+    return TestClient(api.creer_app(config, Moteur(config, vault, {"faux": faux})),
+                      base_url="http://127.0.0.1:8399")
+
+
+def test_creer_tache_dans_un_nouveau_groupe(config, vault, faux, racine):
+    with _client(config, vault, faux) as c:
+        r = c.post("/api/taches", headers=H, json={"titre": "Plan du livre", "nouveau_groupe": {
+            "nom": "Mon Livre", "dans": "Projets/C1-Alpha"}})
+        assert r.status_code == 201 and r.json()["conteneur"] == "Projets/C1-Alpha/Mon-Livre"
+        assert r.json()["fil_ariane"][-1] == "Mon Livre"
+    ctx = fiches.lire(racine / "Projets/C1-Alpha/Mon-Livre/contexte.md")
+    assert "type: contexte" in ctx and "nom: Mon Livre" in ctx and "projet: Mon-Livre" in ctx
+    assert "casquette: C1\n" in ctx and "created: " in ctx and "updated: " in ctx
+    assert vault.conteneur("Projets/C1-Alpha/Mon-Livre").casquette == "C1"
+
+
+def test_nouveau_groupe_ignore_le_plafond_du_rangement(config, vault, faux, racine):
+    for i in range(12):
+        ecrire(racine, f"Projets/C1-Alpha/taches/t{i}.md", tache_md(titre=f"Affaire {i}"))
+    with _client(config, vault, faux) as c:
+        r = c.post("/api/taches", headers=H, json={"titre": "Quelque chose", "nouveau_groupe": {
+            "nom": "Neuf", "dans": "Projets/C1-Alpha"}})
+        assert r.status_code == 201, r.text
+
+
+@pytest.mark.parametrize("groupe, code", [({"nom": "  ", "dans": "Projets/C1-Alpha"}, 400),
+                                          ({"nom": "G", "dans": "Projets/Inconnu"}, 404),
+                                          ({"nom": "taches", "dans": "Projets/C1-Alpha"}, 409)])
+def test_nouveau_groupe_refuse(config, vault, faux, racine, groupe, code):
+    avant = sorted(p.as_posix() for p in racine.rglob("*"))
+    with _client(config, vault, faux) as c:
+        r = c.post("/api/taches", headers=H, json={"titre": "Plan", "nouveau_groupe": groupe})
+        assert r.status_code == code and r.json()["detail"]
+    assert sorted(p.as_posix() for p in racine.rglob("*")) == avant
+
+
+def test_post_conteneurs_cree_le_groupe_seul(config, vault, faux, racine):
+    with _client(config, vault, faux) as c:
+        r = c.post("/api/conteneurs", headers=H, json={"nom": "Livres", "dans": "Projets/Vide"})
+        assert r.status_code == 201 and r.json() == {"id": "Projets/Vide/Livres"}
+        r = c.post("/api/conteneurs", headers=H, json={"nom": "Livres", "dans": "Projets/Vide"})
+        assert r.status_code == 409
+        assert any(x["id"] == "Projets/Vide/Livres" for x in c.get("/api/conteneurs").json())
+    assert (racine / "Projets/Vide/Livres/taches").is_dir()
+    assert "casquette: C3" in fiches.lire(racine / "Projets/Vide/Livres/contexte.md")

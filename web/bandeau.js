@@ -5,7 +5,7 @@ import { h, $, depuis, heure, remplacer, filLisible, libelleStatut } from './dom
 import { S, on, emit, ouvrir, ouvrirVue, erreur, parcourir } from './store.js';
 import { ouvert, simple } from './interface.js';
 import { post, api } from './api.js';
-import { formulaire } from './dialogue.js';
+import { formulaire, champ } from './dialogue.js';
 import { nouvelleRoutine } from './routines.js';
 import { ouvrirChaines } from './chaines.js';
 import { listePropositions, enAttente } from './propositions.js';
@@ -126,6 +126,19 @@ function listeProches(completer) {
   return { zone, maj };
 }
 
+// « ＋ Nouveau groupe… » : le projet qui manque naît sous un conteneur choisi, la tâche s'y range.
+const NOUVEAU = '\u0001nouveau-groupe'; // jamais un id de conteneur
+function champsGroupe(options) {
+  const nom = champ({ nom: 'groupe_nom', label: t('bandeau.groupe_nom'), requis: true }, 'g');
+  const dans = champ({ nom: 'groupe_dans', label: t('bandeau.groupe_dans'), type: 'select', requis: true,
+    options: [{ valeur: '', libelle: t('bandeau.groupe_choisir') }, ...options] }, 'g');
+  const ctrls = [nom, dans].map((c) => c.querySelector('input, select'));
+  const zone = h('div', { class: 'nouveau-groupe', 'data-id': 'nouveau-groupe', hidden: true }, nom, dans);
+  const montrer = (oui) => { zone.hidden = !oui; for (const c of ctrls) c.required = oui; }; // requis seulement visibles
+  montrer(false);
+  return { zone, montrer, valeurs: () => ({ nom: ctrls[0].value.trim(), dans: ctrls[1].value }) };
+}
+
 async function nouvelleTache() {
   let conteneurs = [];
   const galerie = galerieModeles((m, carte) => {  // un modèle pré-remplit, rien n'est créé (INV-MODELES-1)
@@ -135,8 +148,9 @@ async function nouvelleTache() {
     f.elements.description.focus();
   });
   try { conteneurs = await api('/conteneurs'); } catch (e) { erreur(e.message); }
-  const options = [{ valeur: '', libelle: t('bandeau.arrivee') },
-    ...conteneurs.map((c) => ({ valeur: c.id, libelle: c.titre, groupe: [c.casquette, simple() ? '' : c.operation].filter(Boolean).join(' › ') }))];
+  const lieux = conteneurs.map((c) => ({ valeur: c.id, libelle: c.titre, groupe: [c.casquette, simple() ? '' : c.operation].filter(Boolean).join(' › ') }));
+  const options = [{ valeur: '', libelle: t('bandeau.arrivee') }, ...lieux, { valeur: NOUVEAU, libelle: t('bandeau.nouveau_groupe'), fin: true }];
+  const groupe = champsGroupe(lieux);
   let complete = null; // tâche complétée à la place d'une création
   const completer = async (c, bouton) => {
     const form = bouton.closest('form');
@@ -155,7 +169,7 @@ async function nouvelleTache() {
     champs: [
       { nom: 'titre', label: t('bandeau.titre'), requis: true, sous: proches.zone, surSaisie: proches.maj },
       { nom: 'description', label: t('bandeau.description'), type: 'textarea', aide: t('bandeau.description_aide') },
-      { nom: 'conteneur', label: simple() ? t('bandeau.projet') : t('bandeau.emplacement'), type: 'select', options },
+      { nom: 'conteneur', label: simple() ? t('bandeau.projet') : t('bandeau.emplacement'), type: 'select', options, sous: groupe.zone, surSaisie: (x) => groupe.montrer(x === NOUVEAU) },
       { nom: 'echeance', label: t('bandeau.echeance'), type: 'date' },
       { nom: 'priorite', label: t('bandeau.priorite'), type: 'select', options: [{ valeur: '', libelle: t('bandeau.aucune') }, ...PRIORITES.map(([valeur, libelle]) => ({ valeur, libelle }))] },
       { nom: 'lancer', label: t('bandeau.lancer'), type: 'checkbox' },
@@ -166,7 +180,8 @@ async function nouvelleTache() {
   try {
     const corps = { titre: v.titre.trim(), lancer: v.lancer };
     if (v.description.trim()) corps.description = v.description.trim();
-    if (v.conteneur) corps.conteneur = v.conteneur;
+    if (v.conteneur === NOUVEAU) corps.nouveau_groupe = groupe.valeurs();
+    else if (v.conteneur) corps.conteneur = v.conteneur;
     if (v.echeance) corps.echeance = v.echeance;
     if (v.priorite) corps.priorite = v.priorite;
     let nt;

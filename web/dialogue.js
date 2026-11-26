@@ -3,7 +3,8 @@
 import { h, ajouter } from './dom.js';
 import { t } from './langues.js';
 
-function champ(c, i) {
+// `fin` sur une option : placée après tous les groupes (geste « ＋ … » en dernier).
+export function champ(c, i) {
   const id = `f-${c.nom}-${i}`;
   const v = c.valeur;
   if (c.type === 'checkbox') {
@@ -17,9 +18,9 @@ function champ(c, i) {
   if (c.type === 'textarea') ctrl = h('textarea', { id, name: c.nom, rows: c.lignes || 4, required: c.requis ? true : null, placeholder: c.aide || null }, v || '');
   else if (c.type === 'select') {
     const groupes = new Map();
-    for (const o of c.options) { const g = o.groupe || ''; if (!groupes.has(g)) groupes.set(g, []); groupes.get(g).push(o); }
+    for (const o of c.options.filter((x) => !x.fin)) { const g = o.groupe || ''; if (!groupes.has(g)) groupes.set(g, []); groupes.get(g).push(o); }
     const opt = (o) => h('option', { value: o.valeur, selected: o.valeur === v ? true : null }, o.libelle);
-    ctrl = h('select', { id, name: c.nom }, [...groupes].map(([g, os]) => (g ? h('optgroup', { label: g }, os.map(opt)) : os.map(opt))));
+    ctrl = h('select', { id, name: c.nom }, [...groupes].map(([g, os]) => (g ? h('optgroup', { label: g }, os.map(opt)) : os.map(opt))), c.options.filter((x) => x.fin).map(opt));
   } else ctrl = h('input', { id, name: c.nom, type: c.type === 'date' ? 'date' : 'text', value: v || '', required: c.requis ? true : null, autocomplete: 'off', readonly: c.lecture ? true : null, pattern: c.motif || null, title: c.motif ? c.aide : null, placeholder: c.aide || null });
   // `sous` : nœud affiché sous le champ ; `surSaisie(valeur)` : appelée à chaque frappe (suggestions).
   if (c.requis) { // A12 : message natif en anglais remplacé par le nôtre, effacé dès la saisie

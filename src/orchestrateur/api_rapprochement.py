@@ -1,7 +1,8 @@
-"""Routes du rapprochement avant création : tâches proches, compléter une tâche, mesure.
+"""Routes du rapprochement avant création : tâches proches, compléter une tâche, mesure, groupe.
 
 Rôle : brancher `rapprochement` sur l'API ; `creer` est le corps de POST /api/taches (garde de
-rapprochement, puis création) ; `api.py` est plafonné à 500 lignes.
+rapprochement, puis création, au besoin dans un groupe neuf) ; POST /api/conteneurs crée un
+groupe seul ; `api.py` est plafonné à 500 lignes.
 Frontières : aucune ressemblance calculée ici (module `rapprochement`) ; la création reste `Moteur.creer`.
 Invariants portés : INV-RAPPROCHEMENT-1 (409 + `candidates` sur correspondance forte, sauf `forcer`),
 INV-RAPPROCHEMENT-2 (un complément est une création évitée), INV-INTEG-2 (lien d'office vers l'intégration),
@@ -14,7 +15,8 @@ from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
-from . import etiquettes, langues, liens, rangement, rapprochement
+from . import etiquettes, langues, liens, rangement, rapprochement, transformations
+from .api_temps import CorpsGroupe
 from .vault import Invalide, NonTrouve, exiger_description
 
 
@@ -39,8 +41,9 @@ def creer(moteur, tache, c, source: str | None):
     if agent and (inconnue := next((m for m in mots if m not in etiquettes.connues(
             moteur.vault.index()[0], moteur.etiquettes)), None)):  # INV-ETIQUETTE-2 : refus avant toute création
         raise Invalide(langues.t("serveur.etiquettes.agent_inconnue_creation", mot=inconnue))
+    ng = c.nouveau_groupe
     if not c.forcer:
-        cands = rapprochement.proches(moteur.vault, c.titre, c.description, c.conteneur,
+        cands = rapprochement.proches(moteur.vault, c.titre, c.description, ng.dans if ng else c.conteneur,
                                       exclure=(c.parent, source, c.de), etiquettes=mots)
         if rapprochement.forte(cands):
             mesure.refus(c.titre, cands)
@@ -51,7 +54,8 @@ def creer(moteur, tache, c, source: str | None):
     genre = rangement.valide(c.genre) or rangement.deduire(c.titre, c.description)  # INV-NATURE-1
     # B3 : pour un agent, `forcer` (--nouvelle) ne lève que la proximité ; le rangement se dérogue par
     # `hors_rangement`. L'interface (ni `de` ni en-tête) garde un `forcer` complet : dérogation humaine.
-    if not (c.hors_rangement if agent else c.forcer) and not c.groupe:  # INV-PLAFOND-1, INV-NATURE-1
+    # INV-PLAFOND-1, INV-NATURE-1 ; un groupe neuf (`ng`) est vide : rien à y ranger autrement.
+    if not (c.hors_rangement if agent else c.forcer) and not c.groupe and not ng:
         rang = rangement.propositions(moteur.vault, moteur.config.rangement, c.titre, c.description,
                                       c.conteneur, c.parent, genre)
         if rang:
@@ -60,6 +64,9 @@ def creer(moteur, tache, c, source: str | None):
                                     ouvertes=rang["ouvertes"], plafond=rang["plafond"]), "rangement": rang})
     if agent:  # créée par un agent (corps `de` ou en-tête de `orch`)
         c.description = exiger_description(c.description, "tâche")
+    if ng:  # ponytail: si la création de la tâche échoue ensuite, le groupe vide reste (inoffensif, réutilisable)
+        c.conteneur, c.parent = transformations.creer_conteneur(moteur.vault, ng.dans, ng.nom), None
+        moteur.publier("arbre")
     parent, conteneur = c.parent, c.conteneur
     if c.groupe:  # le regroupement demandé naît sous le parent ; la tâche s'y range
         parent = moteur.creer(c.groupe, langues.t("serveur.rangement.groupe_description", titre=c.titre),
@@ -82,6 +89,13 @@ def creer(moteur, tache, c, source: str | None):
 def routes(moteur) -> APIRouter:
     r = APIRouter(prefix="/api/rapprochement")
     vault = moteur.vault
+    racine = APIRouter()
+
+    @racine.post("/api/conteneurs", status_code=201)
+    async def nouveau_groupe(c: CorpsGroupe):
+        rel = transformations.creer_conteneur(vault, c.dans, c.nom)
+        moteur.publier("arbre")
+        return {"id": rel}
 
     @r.get("/proches")
     async def lister(titre: str = "", description: str = "", conteneur: str | None = None, etiquettes: str = ""):
@@ -101,4 +115,5 @@ def routes(moteur) -> APIRouter:
         rapprochement.Mesure(moteur.config.donnees).complement(ident, c.titre)  # INV-RAPPROCHEMENT-2
         return {"etat_execution": etat}
 
-    return r
+    racine.include_router(r)
+    return racine
