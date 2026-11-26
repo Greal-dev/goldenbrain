@@ -23,7 +23,6 @@
   --ombre: 0 8px 28px light-dark(rgba(0, 0, 0, .10), rgba(0, 0, 0, .55));
   --ombre-legere: none;
   --r: 2px; --r-2: 3px; --r-pastille: 2px;
-  --serif: ui-serif, "Iowan Old Style", Charter, Georgia, "DejaVu Serif", serif;
   --esp-1: 4px; --esp-2: 8px; --esp-3: 12px;
   --duree: 120ms; /* transitions courtes ; nulles sous prefers-reduced-motion */
   --mono: ui-monospace, "Cascadia Mono", Consolas, monospace;

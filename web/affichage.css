@@ -23,7 +23,7 @@ a { color: var(--accent); }  /* liens (guide, notes) : l'accent plutôt que le b
 :root #bandeau :is(.panneau, .rech-liste) :is(.btn, .btn-compte):not(.primaire), :root body.barre-fine #bandeau .b-menu .btn { background: transparent; border-color: var(--bord); color: var(--texte); }
 :root #bandeau :is(.panneau, .rech-liste) .n { background: transparent; border-color: var(--bord-fort); color: var(--texte); }
 /* Marque en romain */
-:root .marque { font-family: var(--serif); font-size: 17px; font-weight: 600; letter-spacing: 0; }
+:root .marque { font-size: 15px; font-weight: 600; letter-spacing: 0; }
 :root .btn-compte, :root .btn, :root .bascule button, :root .chip { border-color: var(--bord); background: transparent; }
 :root .btn-compte[aria-pressed="true"] { background: transparent; border-color: var(--accent); color: var(--accent); }
 :root .n { background: transparent; border-color: var(--bord-fort); font-weight: 600; }
@@ -45,10 +45,11 @@ a { color: var(--accent); }  /* liens (guide, notes) : l'accent plutôt que le b
 :root .msg.user { background: transparent; border-left: 2px solid var(--accent); padding-left: 14px; }
 :root .msg.systeme.remontee, :root .msg.systeme.regroupe { background: var(--panneau-2); border: 1px solid var(--bord); padding: 10px 14px; margin: 8px 0; }
 :root .msg.systeme.echec { border: 1px solid var(--c-bloque); padding: 10px 14px; margin: 8px 0; }
-:root .msg header { text-transform: uppercase; letter-spacing: .06em; font-size: 10.5px; }
+/* Polices (26/11) : tout en sans empattement, celle du système ; en-têtes de message en casse normale, sans capitales espacées. */
+:root .msg header { text-transform: none; letter-spacing: 0; font-size: 11.5px; }
 :root .fiche, :root .corps { border-color: var(--bord); border-radius: 0; border-width: 1px 0; padding-left: 0; padding-right: 0; }
-:root .fiche h3, :root .conv-titre { font-family: var(--serif); text-transform: none; letter-spacing: 0; font-size: 15px; font-weight: 600; color: var(--texte); }
-:root h1, :root h2, :root .conv-tete h2 { font-family: var(--serif); font-weight: 600; letter-spacing: 0; }
+:root .fiche h3, :root .conv-titre { text-transform: none; letter-spacing: 0; font-size: 15px; font-weight: 600; color: var(--texte); }
+:root h1, :root h2, :root .conv-tete h2 { font-weight: 600; letter-spacing: 0; }
 /* Champs et compositeur : filet bas, focus en accent */
 :root .composer { border-top-color: var(--bord); }
 :root .composer textarea { background: transparent; border-color: var(--bord-fort); border-radius: 2px; }
@@ -58,7 +59,7 @@ a { color: var(--accent); }  /* liens (guide, notes) : l'accent plutôt que le b
 :root .dc-liste { border-width: 1px 0; border-radius: 0; }
 :root .dc:not(.dc-proposition) { padding: 12px 2px; }
 :root .dc-titre { font-weight: 600; }
-:root .dc-groupe > summary { font-family: var(--serif); font-size: 15px; }
+:root .dc-groupe > summary { font-size: 15px; }
 :root .rg-groupe { border-width: 0 0 1px; border-radius: 0; background: transparent; margin: 0; }
 :root .rg-groupe > summary { border-radius: 0; padding: 14px 2px; }
-:root .rg-titre { font-family: var(--serif); font-size: 15px; }
+:root .rg-titre { font-size: 15px; }
