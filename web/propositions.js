@@ -37,6 +37,7 @@ export function description(p, court = false) { // court : la phrase seule, le d
     case 'operation': return garnir(t('propositions.operation'), { tache, valeur: gras(p.valeur) });
     case 'echeance': return garnir(t('propositions.echeance', { valeur: p.valeur }), { tache });
     case 'fermer': return garnir(p.valeur === 'abandonne' ? t('propositions.fermer_abandonne') : t('propositions.fermer_cloture'), { tache });
+    case 'etiquette': return garnir(t('propositions.etiquette'), { tache, valeur: gras(p.valeur) });
     case 'renommer': return garnir(t('propositions.renommer'), { tache, valeur: gras(p.valeur) });
     case 'tache': return garnir(t('propositions.tache'), { valeur: gras(p.valeur), tache });
     case 'perimetre': {

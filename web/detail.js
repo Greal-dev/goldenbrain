@@ -59,6 +59,7 @@ function squelette() {
   r.fiche = h('section', { class: 'fiche' });
   r.lignes = h('div', { class: 'liens f-lignes' });
   r.liens = h('div', { class: 'liens f-liens' });
+  r.etiq = h('div', { class: 'f-etiquettes' }); // INV-ETIQUETTE-1 : dans « Détails », jamais sur la ligne du titre
   r.revues = h('div', { class: 'liens f-equipe' });
   r.corps = h('details', { class: 'corps' }, h('summary', null, t('detail.corps')), (r.corpsMd = h('div', { class: 'md' })));
   r.conv = h('div', { class: `conv${etapesAffichees() ? '' : ' masque'}` });
@@ -71,7 +72,7 @@ function squelette() {
     title: t('detail.etapes_titre') }, h('span', { class: 'sw', 'aria-hidden': 'true' }), t('detail.etapes'));
   // INV-DETAIL-1 : une seule ligne d'en-tête ; tout le reste vit dans « Détails », replié par défaut, choix mémorisé.
   r.detMeta = h('div', { class: 'd-det-meta' });
-  r.details = h('div', { class: 'd-details', 'data-id': 'details', id: 'details', hidden: true }, r.detMeta, r.vie, r.fiche, r.lignes, r.liens, r.revues, r.corps);
+  r.details = h('div', { class: 'd-details', 'data-id': 'details', id: 'details', hidden: true }, r.detMeta, r.vie, r.fiche, r.lignes, r.liens, r.etiq, r.revues, r.corps);
   r.bascule = h('button', { class: 'btn petit d-bascule', type: 'button', 'data-id': 'details-bascule', title: t('detail.details_titre') }, t('detail.details'));
   r.der = deroulant({ bouton: r.bascule, panneau: r.details, garder: true, epingle: detOuvert, surEpingle: epinglerDetails });
   r.tete = h('div', { class: 'd-tete' }, r.une, r.details);
@@ -242,6 +243,7 @@ function dessiner() {
   dessinerTete(); dessinerFiche();
   remplacer(r.lignes, carteLignes(tache, () => rafraichir()));
   remplacer(r.liens, carteLiens(tache, appliquer));
+  import('./etiquettes.js').then((m) => remplacer(r.etiq, m.carteEtiquettes(tache, appliquer))); // chargé à la demande : budget du premier affichage
   remplacer(r.revues, carteRevues(tache));
   rendreMd(r.corpsMd, tache.corps || '');
   r.corps.hidden = !(tache.corps || '').trim();

@@ -176,6 +176,15 @@ Der Vault ist Ihr **zweites Gehirn**: gewöhnliche Notizen (Markdown-Dateien), d
 - **Weitere Handlungen**: „Verknüpfen …“ (Voraussetzung, speist, siehe auch), „Daraus erstellen“ (benachbarte Aufgabe), „Zum Projekt hochstufen“, „Anfragen …“ (Meinung eines Experten des Teams).
 - **Gut zu wissen**: Status: Nicht begonnen → In Arbeit → Wartet (ein Mensch wird gebraucht) oder Abgeschlossen → Bestätigt. „Blockiert“ meldet das technische Scheitern einer Arbeitssitzung. Ein Projekt kann eine Prüfung verlangen (`controle:` in seiner `contexte.md`), bevor eine Aufgabe auf „Abgeschlossen“ wechselt. Im Vault wird „Wartet“ als `statut: retour-humain` geschrieben; ein Vault, der einen anderen Namen verwendet, deklariert ihn in `config.toml`: `[vault]`, dann `statut_retour = "<nom>"`.
 
+### Labels {#etiquettes}
+
+- **Wozu**: kurze, von Hand an eine Aufgabe gesetzte Wörter (`#bank`, `#kunde-x`), die der KI sagen, welche Aufgaben zusammengehören. Getrennt von den Vault-Tags (geschlossenes Vokabular, nie angetastet): der Schlüssel `etiquettes:` der Notiz.
+- **Setzen**: in den „Details“ der Aufgabe, Karte „Labels“: Wort tippen, Eingabe zum Hinzufügen (Vervollständigung aus bereits verwendeten Labels), Klick auf einen Chip entfernt ihn. Der Baum zeigt die ersten zwei. Sammelweise setzen/entfernen: Leiste „n ausgewählt“, Felder „+ Label“ und „− Label“.
+- **Filtern und suchen**: „Filter und Gruppierung“ → Label (kombinierbar mit dem Status) und „Nach Label“; die Suche findet `#Wort`; der Graph filtert sie wie Tags.
+- **Die KI lenken**: Der Agent erhält die Labels seiner Aufgabe, ihre Anweisung und die anderen Aufgaben mit demselben Label; der Abgleich vor dem Anlegen gewichtet ein gemeinsames Label; eine vorgeschlagene Verknüpfung zweier etikettierter Aufgaben ohne gemeinsames Label wird abgelehnt. Ein Agent legt kein Label an: er schlägt es vor (Entscheidungen), Sie akzeptieren.
+- **Anweisungen, umbenennen, zusammenführen**: Einstellungen → Agenten und Ressourcen → Labels. Die Anweisung (600 Zeichen) wird dem Kontext jedes Agenten beigefügt, der an einer etikettierten Aufgabe arbeitet. Umbenennen auf ein vorhandenes Wort führt zusammen; „Rückgängig“ stellt die Notizen wieder her.
+- **Regeln**: Kleinbuchstaben, ohne Akzent und Leerzeichen (`-`), 30 Zeichen, 12 pro Aufgabe. Terminal: `orch etiqueter <id> +Wort -Wort`, `orch etiquettes`.
+
 ### Gesprächsmodus {#mode-discussion}
 
 - **Wozu**: Sobald eine Aufgabe geöffnet ist, nimmt das Gespräch den Großteil des Bildschirms ein (über 70 % eines 1366×768-Bildschirms). Nichts wird entfernt: Alles bleibt einen Handgriff entfernt.
@@ -323,6 +332,8 @@ Zu lesen von jedem Agenten — Claude Code, Codex, OpenCode, Antigravity oder an
 | `arbre` | Baum der offenen Aufgaben |
 | `chercher "<Wörter>"` | verwandte Aufgaben |
 | `lire <id>` | Bericht, Pfad, Platz, Status, Ausführung einer Aufgabe |
+| `etiqueter <id> +Wort -Wort` | Labels setzen oder entfernen (Agent: nur vorhandene, kein Entfernen) |
+| `etiquettes` | bekannte Labels, Nutzung und Anweisung |
 | `conteneurs` | Container, in die eine Aufgabe abgelegt werden kann |
 | `rapprochement ["<Titel>"]` | Aufgaben, die einem Titel nahekommen; ohne Titel: vermiedene Erstellungen |
 | `creer "<Titel>" --description "<mindestens ein Satz>"` | eine Aufgabe erstellen (`--conteneur`, `--parent`, `--lancer`, `--mission`); abgelehnt, wenn eine sehr ähnliche offene Aufgabe existiert: sie ergänzen (`dire`) oder erzwingen (`--nouvelle`) |

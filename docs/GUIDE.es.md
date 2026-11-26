@@ -176,6 +176,15 @@ El vault es su **segundo cerebro**: notas corrientes (archivos Markdown) que Gol
 - **Otros gestos**: «Vincular…» (requisito previo, alimenta, ver también), «Crear a partir de esta» (tarea vecina), «Promover a proyecto», «Consultar…» (opinión de un experto del equipo).
 - **Conviene saber**: estados: Sin empezar → En curso → En espera (hace falta una persona) o Terminada → Validada. «Bloqueada» señala el fallo técnico de una sesión de trabajo. Un proyecto puede exigir una comprobación (`controle:` en su `contexte.md`) antes de que una tarea pase a «Terminada». En el vault, «En espera» se escribe `statut: retour-humain`; un vault que emplee otro nombre lo declara en `config.toml`: `[vault]` y luego `statut_retour = "<nombre>"`.
 
+### Etiquetas {#etiquettes}
+
+- **Para qué**: palabras cortas puestas a mano en una tarea (`#banco`, `#cliente-x`) que dicen a la IA qué tareas van juntas. Distintas de las etiquetas del vault (vocabulario cerrado, nunca tocado): la clave `etiquettes:` de la ficha.
+- **Poner**: en los «Detalles» de la tarea, tarjeta «Etiquetas»: escribe una palabra, Intro para añadir (autocompletado con las ya usadas), clic en una burbuja para quitarla. El árbol muestra las dos primeras. Poner/quitar en bloque: barra «n seleccionadas», campos «+ etiqueta» y «− etiqueta».
+- **Filtrar y buscar**: «Filtros y agrupación» → Etiqueta (combinable con el estado) y «Por etiqueta»; la búsqueda encuentra `#palabra`; el grafo las filtra como etiquetas del vault.
+- **Dirigir la IA**: el agente recibe las etiquetas de su tarea, su consigna y las demás tareas que comparten una; el acercamiento antes de crear pondera una etiqueta común; un vínculo propuesto entre dos tareas etiquetadas sin etiqueta común se rechaza. Un agente no crea etiquetas: las propone (Decisiones), usted las acepta.
+- **Consignas, renombrar, fusionar**: Ajustes → Agentes y recursos → Etiquetas. La consigna (600 caracteres) se une al contexto de todo agente que trabaja en una tarea etiquetada. Renombrar hacia una palabra existente fusiona; «Deshacer» restaura las fichas.
+- **Reglas**: minúsculas, sin acento ni espacio (`-`), 30 caracteres, 12 por tarea. Terminal: `orch etiqueter <id> +palabra -palabra`, `orch etiquettes`.
+
 ### Modo conversación {#mode-discussion}
 
 - **Para qué sirve**: en cuanto se abre una tarea, la conversación ocupa la mayor parte de la pantalla (más del 70 % de una pantalla de 1366×768). No se elimina nada: todo queda a un gesto.
@@ -323,6 +332,8 @@ Para leer por todo agente —Claude Code, Codex, OpenCode, Antigravity u otro—
 | `arbre` | árbol de las tareas abiertas |
 | `chercher "<palabras>"` | tareas relacionadas |
 | `lire <id>` | ficha, ruta, ubicación, estado, ejecución de una tarea |
+| `etiqueter <id> +palabra -palabra` | poner o quitar etiquetas (agente: solo existentes, sin quitar) |
+| `etiquettes` | etiquetas conocidas, su uso y consigna |
 | `conteneurs` | contenedores donde ordenar una tarea |
 | `rapprochement ["<título>"]` | tareas cercanas a un título; sin título, creaciones evitadas |
 | `creer "<título>" --description "<una frase como mínimo>"` | crear una tarea (`--conteneur`, `--parent`, `--lancer`, `--mission`); rechazada si existe una tarea abierta muy parecida: completarla (`dire`) o forzar (`--nouvelle`) |

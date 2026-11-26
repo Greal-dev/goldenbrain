@@ -28,7 +28,7 @@ import urllib.error
 import urllib.parse
 import urllib.request
 
-from . import cli_chaines, cli_lignes, cli_reflexes
+from . import cli_chaines, cli_etiquettes, cli_lignes, cli_reflexes
 from .cli_divers import _agents_cc, _m365, natif  # noqa: F401  (réexportés : `orch natif`, `m365`, `agents-cc`)
 from .cli_erreurs import ErreurCli, ParseurFr
 
@@ -90,7 +90,7 @@ def rendre_arbre(noeuds: list[dict], niveau: int = 0) -> list[str]:
             etat = n.get("etat_execution")
             suffixe = f" ({etat})" if etat and etat != "inactif" else ""
             lignes.append(f"{'  ' * niveau}- {n['id']} [{n.get('statut') or '?'}] {n['titre']}{suffixe}"
-                          f"{_echeance(n)}")
+                          f"{_echeance(n)}" + "".join(f" #{m}" for m in n.get("etiquettes") or []))
         else:
             lignes.append(f"{'  ' * niveau}{n['titre']} ({n['type']}, {n['ouvertes']} ouvertes)")
         lignes += rendre_arbre(n["enfants"], niveau + 1)
@@ -218,7 +218,7 @@ def main(argv: list[str] | None = None) -> int:
     d.add_argument("message")
     d.add_argument("--rouvrir", action="store_true", help="la tâche est close : la rouvrir en lui écrivant (sinon refusé)")
     sous.add_parser("chercher", help="tâches dont le titre, la fiche ou la place contiennent tous les mots").add_argument("mots")
-    for m in (cli_reflexes, cli_chaines, cli_lignes): m.ajouter(sous)  # reflexes, tracer, chaine, ligne : INV-REFLEXES-1, INV-TRACE-1, INV-CHAINE-3
+    for m in (cli_reflexes, cli_chaines, cli_lignes, cli_etiquettes): m.ajouter(sous)  # reflexes, tracer, chaine, ligne : INV-REFLEXES-1, INV-TRACE-1, INV-CHAINE-3
     de = sous.add_parser("deleguer", help="confier un travail à une tâche enfant, lancée par GoldenBrain")
     de.add_argument("titre")
     de.add_argument("brief", help="objectif, contexte utile, livrable attendu")
@@ -232,10 +232,12 @@ def main(argv: list[str] | None = None) -> int:
     cr.add_argument("--nouvelle", dest="forcer", action="store_true", help="créer malgré une tâche proche (sinon : orch dire)")
     cr.add_argument("--hors-rangement", dest="hors_rangement", action="store_true",
                     help="créer malgré un parent plein (10 ouvertes) ou d'une autre nature : à n'employer qu'après avoir écarté les rangements proposés")
+    cr.add_argument("--etiquette", action="append", default=[], help="étiquette à poser (existante : orch etiquettes)")
     cr.add_argument("--lancer", action="store_true", help="lancer la tâche aussitôt (premier tour)")
     cr.add_argument("--mission", default="", help="consigne du premier tour (avec --lancer)")
     ra0 = sous.add_parser("rapprochement", help="tâches proches d'un titre ; sans titre : créations évitées")
     ra0.add_argument("titre", nargs="?", default="")
+    ra0.add_argument("--etiquette", action="append", default=[], help="étiquette de la demande (une commune pèse fortement)")
     so = sous.add_parser("solliciter", help="avis d'un persona de l'équipe sur la tâche courante")
     so.add_argument("persona")
     so.add_argument("question")
@@ -265,11 +267,11 @@ def main(argv: list[str] | None = None) -> int:
     rn = sous.add_parser("renommer", help="changer le titre d'une tâche (identifiant et fichier inchangés)")
     rn.add_argument("id"), rn.add_argument("titre")
     pr = sous.add_parser("proposer", help="proposer un changement de structure")
-    pr.add_argument("type", choices=["deplacer", "ticket", "projet", "lier", "operation", "tache", "perimetre", "echeance", "fermer", "renommer", "rattacher"])
+    pr.add_argument("type", choices=["deplacer", "ticket", "projet", "lier", "operation", "tache", "perimetre", "echeance", "fermer", "renommer", "rattacher", "etiquette"])
     pr.add_argument("id")
     pr.add_argument("valeur", nargs="+", help="conteneur, titre, nom, texte ; pour lier : "
                                               "<alimente|prerequis|voir_aussi> <cible> (prerequis : <cible> "
-                                              "doit être terminée avant que <id> démarre) ; pour echeance : AAAA-MM-JJ ; pour fermer : cloture ou abandonne ; pour renommer : le titre explicite proposé")
+                                              "doit être terminée avant que <id> démarre) ; pour echeance : AAAA-MM-JJ ; pour fermer : cloture ou abandonne ; pour renommer : le titre explicite proposé ; pour etiquette : le mot (existant de préférence)")
     pr.add_argument("--motif", default="", help="pourquoi, en une ligne")
     pr.add_argument("--aussi", nargs="+", default=[], metavar="ID", help="rattacher : autres tâches du lot ; valeur = parent ou racine")
     fv = sous.add_parser("feu-vert", help="feu vert du contrôleur lié à une version (sha)")
@@ -344,12 +346,17 @@ def main(argv: list[str] | None = None) -> int:
     except ValueError:
         sauts = 1
     try:
-        if m := next((m for m in (cli_reflexes, cli_chaines, cli_lignes) if a.commande in m.COMMANDES), None):
+        if m := next((m for m in (cli_reflexes, cli_chaines, cli_lignes, cli_etiquettes) if a.commande in m.COMMANDES), None):
             sortie = m.executer(a, appeler, _q, source)
         elif a.commande == "arbre":
             sortie = rendre_arbre(appeler("GET", "/arbre")["noeuds"]) or ["(aucune tâche ouverte)"]
+            if source:  # INV-ETIQUETTE-3 : à la suite de l'arbre, ce que partage la tâche courante
+                try:
+                    sortie += cli_etiquettes.rendre(appeler("GET", f"/taches/{_q(source)}"))
+                except ErreurCli:  # tâche courante illisible : l'arbre se sert quand même
+                    pass
         elif a.commande == "lire":
-            sortie = rendre_tache(appeler("GET", f"/taches/{_q(a.id)}"))
+            sortie = rendre_tache(t := appeler("GET", f"/taches/{_q(a.id)}")) + cli_etiquettes.rendre(t)
         elif a.commande == "dire":
             close = False
             try:  # B5 : écrire à une tâche close la rouvre ; on le dit avant, on ne le fait pas en silence
@@ -377,6 +384,8 @@ def main(argv: list[str] | None = None) -> int:
                 corps["parent"] = a.parent
             if a.forcer:
                 corps["forcer"] = True
+            if a.etiquette:
+                corps["etiquettes"] = a.etiquette
             if a.lancer:
                 corps.update({"lancer": True, "mission": a.mission})
             r = appeler("POST", "/taches", corps)  # 400 lisible sans description (INV-DECISIONS-1)
@@ -391,7 +400,7 @@ def main(argv: list[str] | None = None) -> int:
             sortie = [f"{a.id} renommée : {appeler('POST', f'/taches/{_q(a.id)}/renommer', {'titre': a.titre})['titre']}"]
         elif a.commande == "rapprochement":
             if a.titre:
-                q = urllib.parse.urlencode({"titre": a.titre})
+                q = urllib.parse.urlencode({"titre": a.titre, "etiquettes": ",".join(a.etiquette)})
                 sortie = rendre_proches({"candidates": appeler("GET", f"/rapprochement/proches?{q}")["candidates"]}
                                         ).lstrip("\n").split("\n") or []
                 sortie = sortie if sortie != [""] else ["(aucune tâche proche)"]

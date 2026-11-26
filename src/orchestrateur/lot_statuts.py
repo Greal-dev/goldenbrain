@@ -1,6 +1,6 @@
 """Modification en bloc des tâches : statut, échéance, parent — tout ou rien, annulable.
 
-Rôle : appliquer un changement à un lot de tâches choisies par l'utilisateur ; valider tout le lot AVANT la première
+Rôle : appliquer un changement (statut, échéance, parent, étiquettes) à un lot de tâches choisies par l'utilisateur ; valider tout le lot AVANT la première
 écriture (mêmes validations qu'à l'unité), écrire, restaurer en cas d'échec en cours de route ; garder l'état d'avant
 (`donnees/lots/<lot>.json`) pour l'annulation en un geste ; tracer le changement dans le journal de chaque tâche
 (`donnees/journal/statuts/<tâche>.jsonl`).
@@ -16,7 +16,7 @@ import json
 import uuid
 from pathlib import Path
 
-from . import langues, rattachement, temps
+from . import etiquettes as etiq, langues, rattachement, temps
 from .vault import Conflit, Invalide
 
 MAX_LOT = 200
@@ -40,17 +40,19 @@ def _trace(moteur, ident: str, ligne: dict) -> None:
 
 def _etat(t) -> dict:
     return {"statut": t.statut, "echeance": str(t.fm.get("echeance") or ""),
-            "parent": t.parent_brut or rattachement.RACINE}
+            "parent": t.parent_brut or rattachement.RACINE, "etiquettes": etiq.de(t.fm)}
 
 
-def _plan(moteur, ids, statut, echeance, parent) -> tuple[list, list]:
+def _plan(moteur, ids, statut, echeance, parent, etiquettes=None) -> tuple[list, list]:
     """(à changer, exclues). Lève avant toute écriture : mêmes refus qu'à l'unité."""
     vault = moteur.vault
-    if statut is None and echeance is None and parent is None:
+    if statut is None and echeance is None and parent is None and not etiquettes:
         raise Invalide(langues.t("serveur.lot.rien"))
     if statut is not None and statut not in vault.statuts:
         raise Invalide(langues.t("serveur.vault.statut_inconnu", statut=statut))
     maj = temps.valider(echeance, None) if echeance is not None else None
+    for mot in [*(etiquettes or {}).get("ajouter", []), *(etiquettes or {}).get("retirer", [])]:
+        etiq.normaliser(mot)  # INV-ETIQUETTE-1 : mot illisible refusé avant toute écriture
     ids = rattachement.normaliser(ids)
     if len(ids) > MAX_LOT:
         raise Invalide(langues.t("serveur.lot.trop", max=MAX_LOT))
@@ -64,17 +66,17 @@ def _plan(moteur, ids, statut, echeance, parent) -> tuple[list, list]:
     return [(t, maj) for t in gardes], exclues
 
 
-def apercu(moteur, ids, statut=None, echeance=None, parent=None) -> dict:
+def apercu(moteur, ids, statut=None, echeance=None, parent=None, etiquettes=None) -> dict:
     """Ce que ferait le lot, sans rien écrire : tâches retenues, exclues, récapitulatif par statut d'origine."""
-    plan, exclues = _plan(moteur, ids, statut, echeance, parent)
+    plan, exclues = _plan(moteur, ids, statut, echeance, parent, etiquettes)
     de: dict[str, int] = {}
     for t, _ in plan:
         de[t.statut] = de.get(t.statut, 0) + 1
     return {"retenues": [t.id for t, _ in plan], "exclues": exclues, "de": de}
 
 
-def appliquer(moteur, ids, statut=None, echeance=None, parent=None) -> dict:
-    plan, exclues = _plan(moteur, ids, statut, echeance, parent)
+def appliquer(moteur, ids, statut=None, echeance=None, parent=None, etiquettes=None, renommage=None) -> dict:
+    plan, exclues = _plan(moteur, ids, statut, echeance, parent, etiquettes)
     vault = moteur.vault
     avant = {t.id: _etat(t) for t, _ in plan}
     faits: list[str] = []
@@ -84,6 +86,8 @@ def appliquer(moteur, ids, statut=None, echeance=None, parent=None) -> dict:
                 vault.poser_statut(t.id, statut, humain=True)
             if maj is not None:
                 vault.poser_temps(t.id, maj)
+            if etiquettes:
+                etiq.appliquer(vault, t.id, etiquettes.get("ajouter", []), etiquettes.get("retirer", []))
             faits.append(t.id)
         if parent is not None:
             rattachement.appliquer(vault, moteur.config.rangement, moteur.occupation, [t.id for t, _ in plan], parent)
@@ -98,7 +102,8 @@ def appliquer(moteur, ids, statut=None, echeance=None, parent=None) -> dict:
             moteur.liberer(i)  # INV-EXEC-11 : geste humain, comme à l'unité
         _trace(moteur, i, {"quand": maintenant, "lot": lot, "avant": avant[i], "apres": apres[i]})
     (_dossier(moteur, "lots") / f"{lot}.json").write_text(
-        json.dumps({"lot": lot, "quand": maintenant, "avant": avant, "apres": apres, "annule": False}, ensure_ascii=False),
+        json.dumps({"lot": lot, "quand": maintenant, "avant": avant, "apres": apres, "annule": False,
+                    **({"renommage": renommage} if renommage else {})}, ensure_ascii=False),
         encoding="utf-8")
     moteur.publier("arbre")
     return {"lot": lot, "changees": list(avant), "exclues": exclues}
@@ -113,6 +118,8 @@ def _restaurer(moteur, avant: dict) -> list[str]:
             if vault.tache(i).statut != e["statut"]:
                 vault.poser_statut(i, e["statut"], humain=True)
             vault.poser_temps(i, temps.valider(e["echeance"], None))
+            if (voulues := e.get("etiquettes")) is not None:  # lots d'avant les étiquettes : rien à remettre
+                vault.modifier(i, {etiq.CLE: voulues or None})  # liste d'avant, dans son ordre
             lots.setdefault(e["parent"], []).append(i)
             rendues.append(i)
         except Exception:  # noqa: BLE001 — la restauration va au bout du possible
@@ -145,6 +152,8 @@ def annuler(moteur, lot: str) -> dict:
         else:
             restaurables[i] = e
     rendues = _restaurer(moteur, restaurables)
+    if d.get("renommage") and not ignorees:  # la consigne revient avec les fiches ; sinon l'étiquette reste partagée
+        moteur.etiquettes.restaurer(d["renommage"])
     d["annule"] = True
     chemin.write_text(json.dumps(d, ensure_ascii=False), encoding="utf-8")
     maintenant = dt.datetime.now().isoformat(timespec="seconds")

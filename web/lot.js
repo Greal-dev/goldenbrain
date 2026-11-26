@@ -9,7 +9,7 @@ import { erreur, emit } from './store.js';
 import { deroulant } from './deroulant.js';
 
 const sel = new Set();
-let ancre = null, barre = null, tete = null, visibles = () => [], brouillon = { statut: '', echeance: '' }, recap = null, dernier = null, recapIA = null, consigneIA = '';
+let ancre = null, barre = null, tete = null, visibles = () => [], brouillon = { statut: '', echeance: '', plus: '', moins: '' }, recap = null, dernier = null, recapIA = null, consigneIA = '';
 
 const ids = () => visibles().map((c) => c.dataset.id);
 function pousser() { majLot(); }
@@ -43,20 +43,21 @@ export function caseTout(fournisseur) {
 }
 
 async function apercu() {
-  if (!brouillon.statut && !brouillon.echeance) return erreur(t('lot.rien'), 'info');
+  if (!brouillon.statut && !brouillon.echeance && !brouillon.plus && !brouillon.moins) return erreur(t('lot.rien'), 'info');
   try {
     const r = await api('/lots', { methode: 'POST', corps: { taches: [...sel], ...corpsChangement(), apercu: true } });
     recap = r;
   } catch (e) { return erreur(e.message); }
   majLot();
 }
-const corpsChangement = () => ({ ...(brouillon.statut ? { statut: brouillon.statut } : {}), ...(brouillon.echeance ? { echeance: brouillon.echeance } : {}) });
+const corpsChangement = () => ({ ...(brouillon.statut ? { statut: brouillon.statut } : {}), ...(brouillon.echeance ? { echeance: brouillon.echeance } : {}),
+  ...(brouillon.plus || brouillon.moins ? { etiquettes: { ajouter: brouillon.plus ? [brouillon.plus] : [], retirer: brouillon.moins ? [brouillon.moins] : [] } } : {}) }); // INV-ETIQUETTE-1
 async function appliquer() {
   try {
     const r = await api('/lots', { methode: 'POST', corps: { taches: [...sel], ...corpsChangement() } });
     dernier = { lot: r.lot, n: r.changees.length, exclues: r.exclues, annule: null };
   } catch (e) { return erreur(e.message); }
-  sel.clear(); recap = null; brouillon = { statut: '', echeance: '' }; ancre = null;
+  sel.clear(); recap = null; brouillon = { statut: '', echeance: '', plus: '', moins: '' }; ancre = null;
   for (const c of visibles()) c.checked = false;
   emit('recharger-arbre'); majLot();
 }
@@ -101,7 +102,7 @@ function contenu() {
       h('button', { type: 'button', class: 'btn petit', onclick: () => { recapIA = null; majLot(); } }, t('lot.retour'))];
   }
   if (recap) {
-    const vers = [brouillon.statut ? libelleStatut(brouillon.statut) : null, brouillon.echeance ? t('lot.vers_echeance', { date: brouillon.echeance }) : null].filter(Boolean).join(', ');
+    const vers = [brouillon.statut ? libelleStatut(brouillon.statut) : null, brouillon.echeance ? t('lot.vers_echeance', { date: brouillon.echeance }) : null, brouillon.plus ? `+#${brouillon.plus}` : null, brouillon.moins ? `−#${brouillon.moins}` : null].filter(Boolean).join(', ');
     const de = Object.entries(recap.de).map(([s, k]) => `${k} ${libelleStatut(s)}`).join(', ');
     return [compte, h('span', { class: 'lot-recap', id: 'lot-recap' }, `${tn('lot.n_taches', recap.retenues.length)} : ${de} → ${vers}`),
       recap.exclues.length ? h('span', { class: 'lot-note' }, t('lot.exclues', { liste: noms(recap.exclues) })) : null,
@@ -111,7 +112,9 @@ function contenu() {
   const choix = h('select', { id: 'lot-statut', 'aria-label': t('lot.statut'), onchange: () => { brouillon.statut = choix.value; } },
     h('option', { value: '' }, t('lot.garder')), ORDRE_STATUTS.map((s) => h('option', { value: s, ...(s === brouillon.statut ? { selected: '' } : {}) }, libelleStatut(s))));
   const date = h('input', { type: 'date', id: 'lot-echeance', 'aria-label': t('lot.echeance'), value: brouillon.echeance, onchange: () => { brouillon.echeance = date.value; } });
-  return [compte, choix, date, h('button', { type: 'button', class: 'btn primaire', id: 'lot-appliquer', onclick: apercu }, t('lot.appliquer')),
+  const etiq = (id, cle, cleBrouillon) => h('input', { type: 'text', id, class: 'lot-etiq', list: 'lot-etiq-liste', maxlength: 31, autocomplete: 'off', 'aria-label': t(cle), placeholder: t(cle), value: brouillon[cleBrouillon], onchange: (e) => { brouillon[cleBrouillon] = e.target.value.trim().replace(/^#/, ''); } });
+  return [compte, choix, date, etiq('lot-plus', 'lot.etiq_poser', 'plus'), etiq('lot-moins', 'lot.etiq_retirer', 'moins'), completionTardive('lot-etiq-liste'),
+    h('button', { type: 'button', class: 'btn primaire', id: 'lot-appliquer', onclick: apercu }, t('lot.appliquer')),
     h('button', { type: 'button', class: 'btn', id: 'lot-ia', title: t('lot.ia_titre'), onclick: apercuIA }, t('lot.ia')),
     h('button', { type: 'button', class: 'btn petit', onclick: () => { sel.clear(); recap = recapIA = null; for (const c of visibles()) c.checked = false; majLot(); } }, t('lot.vider'))];
 }
@@ -139,4 +142,9 @@ export function majLot() {
   pastille.textContent = sel.size ? tn('lot.n_selection', sel.size) : t('lot.barre');
   if (rien) { der.fermer(); return; }
   if (!der.ouvert()) der.epingler(true); else der.redessiner();
+}
+function completionTardive(id) {
+  const c = h('span');
+  import('./etiquettes.js').then((m) => c.replaceChildren(m.completion(id)));
+  return c;
 }

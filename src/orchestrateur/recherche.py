@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import unicodedata
 
-from . import temps
+from . import etiquettes, temps
 from .vault import Vault
 
 
@@ -37,9 +37,10 @@ def chercher(vault: Vault, q: str, limite: int = 20) -> list[dict]:
             continue
         fil = vault.fil_ariane(k, parents)
         champs = _champs(t.fiche)
-        if not all(m in normaliser(" ".join([t.titre, *fil, *champs])) for m in mots):
+        marques = [f"#{m}" for m in etiquettes.de(t.fm)]  # INV-ETIQUETTE-3 : « #mot » se cherche comme un mot
+        if not all(m in normaliser(" ".join([t.titre, *fil, *champs, *marques])) for m in mots):
             continue
-        extrait = next((c for c in champs if any(m in normaliser(c) for m in mots)),
+        extrait = next((c for c in [*champs, " ".join(marques)] if any(m in normaliser(c) for m in mots)),
                        t.fiche.get("situation") or "")
         dans_titre = all(m in normaliser(t.titre) for m in mots)
         trouves.append(((not vault.ouverte(t), not dans_titre, t.titre.casefold(), k),

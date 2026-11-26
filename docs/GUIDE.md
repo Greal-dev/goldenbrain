@@ -183,6 +183,15 @@ Le vault est votre **second cerveau** : des notes ordinaires (fichiers Markdown)
 - **Autres gestes** : « Lier… » (prérequis, alimente, voir aussi), « Créer à partir de » (tâche voisine), « Promouvoir en projet », « Solliciter… » (avis d'un expert de l'équipe).
 - **À savoir** : statuts : Non commencée → En cours → En attente (il faut un humain) ou Terminée → Validée. « Bloquée » signale l'échec technique d'une séance de travail. Un projet peut exiger une vérification (`controle:` dans son `contexte.md`) avant qu'une tâche passe « Terminée ». Il peut aussi déclarer sa tâche d'intégration (`integration: <identifiant>` dans son `contexte.md`) : toute tâche créée dans ce projet l'alimente d'office, si bien que ses branches terminées sont fusionnées sans qu'on y pense. Dans le vault, « En attente » s'écrit `statut: retour-humain` ; un vault qui emploie un autre nom le déclare dans `config.toml` : `[vault]` puis `statut_retour = "<nom>"`.
 
+### Étiquettes {#etiquettes}
+
+- **À quoi ça sert** : des mots courts, posés à la main sur une tâche (`#banque`, `#client-x`), qui disent à l'IA quelles tâches se tiennent. Distinctes des tags du vault (vocabulaire fermé, jamais touché) : la clé `etiquettes:` de la fiche.
+- **Poser** : dans « Détails » de la tâche, carte « Étiquettes » : tapez un mot, Entrée pour ajouter (complétion sur les étiquettes déjà utilisées), clic sur une puce pour la retirer. L'arbre montre les deux premières. Pose et retrait en bloc : barre « n sélectionnées », champs « + étiquette » et « − étiquette ».
+- **Filtrer et chercher** : « Filtres et regroupement » → Étiquette (combinable avec le statut) et « Par étiquette » ; la recherche trouve `#mot` ; le graphe les filtre comme des tags.
+- **Diriger l'IA** : l'agent reçoit les étiquettes de sa tâche, leur consigne et les autres tâches qui en partagent une ; le rapprochement avant création pèse une étiquette commune ; un lien proposé entre deux tâches étiquetées sans étiquette commune est refusé. Un agent ne crée pas d'étiquette : il la propose (Décisions), vous l'acceptez.
+- **Consignes, renommer, fusionner** : Réglages → Agents et ressources → Étiquettes. La consigne (600 caractères) est jointe au contexte de tout agent travaillant une tâche étiquetée. Renommer vers un mot existant fusionne ; « Annuler » rétablit les fiches.
+- **Règles** : minuscules, sans accent ni espace (`-`), 30 caractères, 12 par tâche. Terminal : `orch etiqueter <id> +mot -mot`, `orch etiquettes`.
+
 ### Mode discussion {#mode-discussion}
 
 - **À quoi ça sert** : dès qu'une tâche est ouverte, la conversation occupe l'essentiel de l'écran (plus de 70 % d'un écran 1366×768). Rien n'est supprimé : tout reste à un geste.
@@ -334,6 +343,8 @@ Le vault est votre **second cerveau** : des notes ordinaires (fichiers Markdown)
 | `arbre` | arbre des tâches ouvertes |
 | `chercher "<mots>"` | tâches connexes |
 | `lire <id>` | fiche, chemin, place, statut, exécution d'une tâche |
+| `etiqueter <id> +mot -mot` | poser ou retirer des étiquettes (un agent : étiquette existante, sans retrait) |
+| `etiquettes` | étiquettes connues, leur usage et leur consigne |
 | `conteneurs` | conteneurs où ranger une tâche |
 | `rapprochement ["<titre>"]` | tâches proches d'un titre ; sans titre, créations évitées |
 | `tracer <id> "<texte>" [--document <chemin>]…` | consigner dans la fiche (section « Traces ») ce qui a été fait et les documents créés ou modifiés ; un document du vault devient un lien |

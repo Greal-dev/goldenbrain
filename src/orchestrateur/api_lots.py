@@ -20,6 +20,7 @@ class CorpsLot(BaseModel):
     statut: str | None = None
     echeance: str | None = None  # « » retire l'échéance
     parent: str | None = None  # « racine » détache
+    etiquettes: dict | None = None  # {"ajouter": [...], "retirer": [...]} : pose et retrait en bloc (INV-ETIQUETTE-1)
     apercu: bool = False
 
 
@@ -36,8 +37,8 @@ def routes(moteur) -> APIRouter:
         if refus := refuse_agent(request):
             return refus
         if c.apercu:
-            return lot_statuts.apercu(moteur, c.taches, c.statut, c.echeance, c.parent)
-        return lot_statuts.appliquer(moteur, c.taches, c.statut, c.echeance, c.parent)
+            return lot_statuts.apercu(moteur, c.taches, c.statut, c.echeance, c.parent, c.etiquettes)
+        return lot_statuts.appliquer(moteur, c.taches, c.statut, c.echeance, c.parent, c.etiquettes)
 
     @r.post("/{lot}/annuler")
     async def annuler(lot: str, request: Request):

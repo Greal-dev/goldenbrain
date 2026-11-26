@@ -68,7 +68,8 @@ def test_tache_forme_et_404(client):
                       "statut_verrouille", "harnais", "session", "etat_execution", "reprise_auto", "attente_poste", "rang_poste", "pause_ram", "pause",
                       "controle", "attente_prerequis", "rang_file", "execution", "executant", "notes", "signe", "raison_attente", "incident", "fiche",
                       "corps", "main", "enfants", "parent", "liens", "revues", "renvois", "echeance", "priorite",
-                      "retard", "dossier_travail", "dossier_travail_origine"}
+                      "retard", "dossier_travail", "dossier_travail_origine",
+                      "etiquettes", "consignes_etiquettes", "liees_etiquette"}
     assert t["parent"] == "mere" and t["enfants"] == ["petit"]
     r = client.get("/api/taches/inconnue")
     assert r.status_code == 404 and r.json()["detail"]

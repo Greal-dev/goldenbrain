@@ -455,3 +455,18 @@ body.appairage { display: block; height: auto; min-width: 0; overflow: auto; max
 }
 .voir-resultats { list-style: none; margin: 8px 0 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
 .voir-resultats .genre { color: var(--discret, inherit); font-size: .85em; min-width: 4.5em; display: inline-block; }
+
+/* Étiquettes libres (INV-ETIQUETTE-1) : puces discrètes, jetons existants uniquement. */
+.etiq-puces { flex: none; display: inline-flex; gap: 3px; min-width: 0; }
+.etiq { display: inline-block; font-size: 11px; line-height: 1.4; padding: 0 6px; border-radius: var(--r-pastille); background: var(--survol); color: var(--texte-2); border: 1px solid var(--bord); white-space: nowrap; max-width: 12ch; overflow: hidden; text-overflow: ellipsis; }
+.etiq.plus { max-width: none; }
+button.etiq.retirable { cursor: pointer; font: inherit; font-size: 11px; max-width: none; }
+.etiq-carte { padding: 6px 0; }
+.etiq-titre { margin: 0 0 4px; font-size: 12px; font-weight: 600; }
+.etiq-ligne { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
+.etiq-saisie { min-width: 12ch; flex: 1 1 12ch; }
+.etiq-liees { list-style: none; margin: 6px 0 0; padding: 0; font-size: 12px; }
+.etiq-rg-liste { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.etiq-rg-tete, .etiq-rg-actions { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.etiq-consigne { width: 100%; box-sizing: border-box; margin: 4px 0; }
+.lot-etiq { width: 11ch; }

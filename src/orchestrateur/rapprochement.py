@@ -32,8 +32,11 @@ import re
 from datetime import date, datetime, timedelta
 from pathlib import Path
 
+from . import etiquettes as etiq
 from .recherche import normaliser
 
+BONUS_ETIQUETTE = 0.15  # INV-ETIQUETTE-3 : une étiquette commune pèse fortement…
+MALUS_ETIQUETTE = 0.10  # …des étiquettes toutes différentes bornent le périmètre : pas un doublon
 AFFICHE = 0.35
 FORTE = 0.72
 RECENT_J = 30
@@ -82,7 +85,7 @@ def _clos_recemment(t, maintenant: datetime) -> bool:
 
 
 def noter(titre: str, description: str, conteneur: str | None, t, mots_titre: set[str],
-          mots_desc: set[str]) -> tuple[float, int]:
+          mots_desc: set[str], marques: tuple[str, ...] = ()) -> tuple[float, int]:
     """(score, nombre de mots de titre partagés) d'une tâche pour la demande."""
     ct = mots(t.titre)
     communs = mots_titre & ct
@@ -98,16 +101,21 @@ def noter(titre: str, description: str, conteneur: str | None, t, mots_titre: se
         base = 0.7 * dice + 0.3 * couverture
     if conteneur and t.conteneur == conteneur and base >= 0.2:
         base += 0.10
+    ses = etiq.de(t.fm)
+    if marques and ses:  # INV-ETIQUETTE-3
+        base += BONUS_ETIQUETTE if set(marques) & set(ses) else -MALUS_ETIQUETTE
     return min(1.0, base), len(communs)
 
 
 def proches(vault, titre: str, description: str = "", conteneur: str | None = None, *,
-            exclure=(), limite: int = LIMITE, maintenant: datetime | None = None) -> list[dict]:
+            exclure=(), limite: int = LIMITE, maintenant: datetime | None = None,
+            etiquettes=()) -> list[dict]:
     """Candidates classées : ouvertes d'abord, closes de moins de 30 jours ensuite, chacune par score
     décroissant. `forte` : la création doit être refusée (INV-RAPPROCHEMENT-1)."""
     mt = mots(titre)
     if not mt:
         return []
+    marques = tuple(etiquettes_valides(etiquettes))
     md = mots(description) - mt
     maintenant = maintenant or datetime.now()
     exclus = {x for x in exclure if x}
@@ -120,16 +128,21 @@ def proches(vault, titre: str, description: str = "", conteneur: str | None = No
         ouverte = vault.ouverte(t)
         if not ouverte and not _clos_recemment(t, maintenant):
             continue
-        score, partages = noter(titre, description, conteneur, t, mt, md)
+        score, partages = noter(titre, description, conteneur, t, mt, md, marques)
         if score < AFFICHE:
             continue
         seul = len(mt) == 1 and mots(t.titre) == mt
         forte = ouverte and score >= FORTE and (partages >= 2 or seul)
         trouvees.append({"id": k, "titre": t.titre, "statut": t.statut, "ouverte": ouverte,
                          "conteneur": t.conteneur, "fil_ariane": vault.fil_ariane(k, parents),
-                         "score": round(score, 2), "forte": forte})
+                         "score": round(score, 2), "forte": forte, "etiquettes": etiq.de(t.fm)})
     trouvees.sort(key=lambda c: (not c["ouverte"], -c["score"], c["titre"].casefold()))
     return trouvees[:max(1, limite)]
+
+
+def etiquettes_valides(brut) -> list[str]:
+    """Étiquettes de la demande, normalisées ; un mot illisible est ignoré (la recherche ne refuse jamais)."""
+    return etiq.de({"etiquettes": list(brut or [])})
 
 
 def forte(candidates: list[dict]) -> bool:

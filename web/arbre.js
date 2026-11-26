@@ -11,6 +11,14 @@ import { pastilleNature, compteLignes } from './lignes.js';
 import { pastilleRetard } from './integration.js';
 import { appliquer, actif as filtreActif, badgeStatut, libelleCourt, compteur, initFiltres } from './filtres.js';
 
+// Les deux premières étiquettes en puces, le reste en « +n » : arbre et listes.
+function puces(mots, max = 2) {
+  if (!mots?.length) return null;
+  const reste = mots.slice(max);
+  return h('span', { class: 'etiq-puces' }, mots.slice(0, max).map((m) => h('span', { class: 'etiq', 'data-etiquette': m }, `#${m}`)),
+    reste.length ? h('span', { class: 'etiq plus', title: reste.map((m) => `#${m}`).join(' ') }, `+${reste.length}`) : null);
+}
+
 const CLE = 'orch.arbre.ouverts';
 let ouverts = (() => { try { return JSON.parse(localStorage.getItem(CLE) || '{}'); } catch { return {}; } })();
 let visibles = [];
@@ -34,7 +42,7 @@ function filtrer(ns, match, complet) {
 function arbreFiltre() {
   let a = appliquer(S.arbre);
   const q = norm(S.recherche.trim());
-  if (q) a = filtrer(a, (n) => norm(n.titre).includes(q), true);
+  if (q) a = filtrer(a, (n) => norm(`${n.titre} ${(n.etiquettes || []).map((m) => `#${m}`).join(' ')}`).includes(q), true);
   return a;
 }
 function aplatir(ns, niveau, out) {
@@ -76,6 +84,7 @@ function ligne({ n, niveau }) {
   n.type === 'conteneur' ? h('span', { class: 'ico-projet', 'aria-hidden': 'true', title: t('arbre.projet') }) : null,
   h('span', { class: 'titre', title: nomLisible(n.titre) }, nomLisible(n.titre)),
   n.type === 'tache' ? pastilleRetard(n) : null,
+  n.type === 'tache' ? puces(n.etiquettes) : null, // INV-ETIQUETTE-1 : les deux premières, le reste en « +n »
   nl ? h('span', { class: 'repere-liens', title: lib, 'aria-hidden': 'true' }, '⇄') : null,
   // INV-ARBRE-2 : placé par sa clé parent:, pas par son dossier (écart à aligner, ou dossier non déplaçable).
   n.logique ? h('span', { class: 'repere-liens', title: t('arbre.logique_titre') }, '⛓') : null,

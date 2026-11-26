@@ -16,7 +16,7 @@ import json
 import logging
 from collections.abc import Callable
 
-from . import fiches, langues, rangement
+from . import etiquettes, fiches, langues, rangement
 from .config import JOURS
 from .vault import Invalide, NonTrouve
 
@@ -96,14 +96,21 @@ class Jardinier:
         for k, t in self.moteur.vault.index()[0].items():
             d = str(t.fm.get("updated") or t.fm.get("created") or "")[:10]
             if d >= limite and k != self.etat.get("tache") and self.moteur.vault.ouverte(t) and not t.pilotage:
-                vues.append((d, k, t.titre))
+                vues.append((d, k, t.titre + "".join(f" #{m}" for m in etiquettes.de(t.fm))))
         return [f"- {k} — {titre} ({d})" for d, k, titre in sorted(vues, reverse=True)[:RECENTES_MAX]]
 
     def _message(self) -> str:
         base = (self.cfg.message.strip() or self.cfg.titre).replace("{plafond}", str(self.cfg.plafond))
         recentes = self.recentes()
         return (base + (f"\n\nTâches récentes ({self.cfg.recentes_jours} jours) :\n" + "\n".join(recentes)
-                        if recentes else "") + self._excedents())
+                        if recentes else "") + self._excedents() + self._etiquettes())
+
+    def _etiquettes(self) -> str:
+        """INV-ETIQUETTE-3 : le jardinier lie dans le périmètre d'une étiquette et n'en invente pas."""
+        connues = etiquettes.utilisees(self.moteur.vault.index()[0])
+        if not connues:
+            return ""
+        return "\n\n" + langues.t("serveur.jardinage.etiquettes", mots=", ".join(f"#{m}" for m in list(connues)[:30]))
 
     def _excedents(self) -> str:
         """Parents au-dessus du plafond (INV-PLAFOND-1) : le jardinier propose d'y ranger, sans rien déplacer."""

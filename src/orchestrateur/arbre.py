@@ -205,6 +205,7 @@ def rendre(vault, toutes: bool, etat) -> list[dict]:
                 "situation": t.fiche.get("situation") or "",
                 "maj": str(t.fm.get("updated") or ""),
                 "genre": rangement.nature_de(t),  # INV-NATURE-1 : repère et filtre de l'arbre
+                "etiquettes": _etiquettes(t.fm),  # INV-ETIQUETTE-1 : puces de l'arbre, filtre
                 "lignes": [sum(x["fait"] for x in t.fiche["lignes"]), len(t.fiche["lignes"])],  # INV-LIGNES-1
                 "harnais": str(t.fm.get("harnais") or ""),
                 "modele": str(t.fm.get("modele") or ""), "a_valider": vault.a_valider(t),
@@ -373,3 +374,8 @@ def executer(vault, ecritures: dict[Path, dict]) -> None:
         for p, octets in faits:
             p.write_bytes(octets)
         raise V.Conflit(langues.t("serveur.arbre.geste_annule", erreur=e)) from e
+
+
+def _etiquettes(fm: dict) -> list[str]:
+    from . import etiquettes  # import tardif : `etiquettes` dépend de `vault`, qui dépend de ce module
+    return etiquettes.de(fm)

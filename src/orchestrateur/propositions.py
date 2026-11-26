@@ -17,11 +17,11 @@ import json
 import logging
 from pathlib import Path
 
-from . import annulation, fiches, langues, liens, lignes, rangement, rapprochement, rattachement, temps, transformations
+from . import annulation, depot, etiquettes, fiches, langues, liens, lignes, rangement, rapprochement, rattachement, temps, transformations
 from .vault import Conflit, Invalide, NonTrouve, exiger_description, titre_valide
 
 TYPES_PROPOSITION = ("deplacer", "ticket", "projet", "lier", "operation", "tache", "perimetre", "echeance", "fermer",
-                     "renommer", "rattacher")
+                     "renommer", "rattacher", "etiquette")
 FERMETURES = ("cloture", "abandonne")  # statuts qu'une proposition « fermer » peut poser
 log = logging.getLogger(__name__)
 
@@ -84,6 +84,8 @@ class MixinPropositions:
             raise Invalide(langues.t("serveur.propositions.valeur_requise"))
         if type_ == "lier":
             _lien_propose(valeur)
+        if type_ == "etiquette":  # INV-ETIQUETTE-2 : l'agent propose, l'utilisateur accepte
+            valeur = etiquettes.normaliser(valeur)
         if type_ == "echeance":
             temps.valider(str(valeur).strip(), None)  # refus immédiat d'une date illisible
             valeur = str(valeur).strip()
@@ -111,6 +113,7 @@ class MixinPropositions:
         if type_ == "lier":  # B7 : refus à la création, pas à l'acceptation
             if self.vault.tache(_lien_propose(valeur)[1]).id == t.id:
                 raise Conflit(langues.t("serveur.propositions.auto_lien"))
+            self._borner_lien(t, self.vault.tache(_lien_propose(valeur)[1]))  # INV-ETIQUETTE-3
         if q := next((q for q in self.propositions.liste if q["etat"] == "en_attente" and q["type"] == type_
                       and q["tache"] == tache and q["valeur"] == valeur
                       and (q.get("taches") or []) == ((annexe or {}).get("taches") or [])), None):
@@ -224,6 +227,18 @@ class MixinPropositions:
             self.vault.modifier(ident, {"genre": genre})
         liens.relier_integration(self.vault, ident)  # INV-INTEG-2 : sans lien, la branche livrée n'est jamais intégrée
 
+    def _borner_lien(self, a, b) -> None:
+        """INV-ETIQUETTE-3 : une étiquette borne le périmètre ; la tâche d'intégration du projet reste liable."""
+        if not etiquettes.borne(a.fm, b.fm):
+            return
+        try:
+            if depot.integration(self.vault, a.id) == b.id:
+                return
+        except (Invalide, NonTrouve):
+            pass
+        mots = lambda t: ", ".join(f"#{m}" for m in etiquettes.de(t.fm)) or "—"  # noqa: E731
+        raise Conflit(langues.t("serveur.etiquettes.lien_borne", a=a.titre, mots_a=mots(a), b=b.titre, mots_b=mots(b)))
+
     def _deja_fait(self, type_: str, tache: str, valeur: str, taches: list | None = None) -> bool:
         """INV-DEJAFAIT-1 : l'effet de la proposition est-il déjà en place ? (lien présent, déjà rattachée, au bon endroit, déjà ce titre ou ce statut)"""
         try:
@@ -236,6 +251,8 @@ class MixinPropositions:
                 return t.conteneur == valeur and not t.parent_brut
             if type_ == "renommer":
                 return t.titre == valeur
+            if type_ == "etiquette":
+                return valeur in etiquettes.de(t.fm)
             return type_ == "fermer" and t.statut == valeur
         except (NonTrouve, Invalide):
             return False  # le geste lui-même dira pourquoi il échoue
@@ -271,6 +288,9 @@ class MixinPropositions:
             self.vault.poser_statut(tache, valeur, humain=True)
         elif type_ == "renommer":  # geste humain : le titre ne change que sur acceptation
             self.vault.renommer(tache, valeur)
+        elif type_ == "etiquette":  # geste humain : l'étiquette n'existe qu'une fois acceptée
+            self.etiquettes.declarer(valeur)
+            etiquettes.appliquer(self.vault, tache, [valeur])
         elif type_ == "rattacher":  # INV-RATTACHER-1 : tout le lot ou rien, recontrôlé à l'acceptation
             rattachement.appliquer(self.vault, self.config.rangement, self.occupation, taches or [tache], valeur)
         elif type_ == "tache":

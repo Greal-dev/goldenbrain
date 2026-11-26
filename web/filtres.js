@@ -12,7 +12,7 @@ import { badgeRoutine, libelleRoutine } from './routines.js';
 import { deroulant } from './deroulant.js';
 
 const CLE = 'orch.filtres';
-const VIDE = { statuts: [], priorite: '', echeance: '', portee: '', harnais: '', executant: '', nature: '', ia: false, routines: false, amoi: false, groupe: '', tri: 'arbre' };
+const VIDE = { statuts: [], priorite: '', echeance: '', portee: '', harnais: '', executant: '', nature: '', etiquette: '', ia: false, routines: false, amoi: false, groupe: '', tri: 'arbre' };
 let F = { ...VIDE, ...(() => { try { return JSON.parse(localStorage.getItem(CLE) || '{}'); } catch { return {}; } })() };
 F.statuts = Array.isArray(F.statuts) ? F.statuts : [];
 // Lien partageable : ?st=a-faire,bloque l'emporte sur la mémoire du poste (volet et vue principale partagent cet état).
@@ -37,11 +37,11 @@ export const libelleCourt = (n) => n.routine ? libelleRoutine(n) : STATUTS_COURT
 export const badgeStatut = (n) => n.routine ? badgeRoutine(n) : n.main ? h('span', { class: `badge-st bs-${cleStatut(n)} bm-${n.main.cle}`, 'data-statut': cleStatut(n), 'data-main': n.main.cle, title: `${libelleMain(n.main)} — ${infoMain(n.main)}` }, t(`main.court.${['veille', 'groupe'].includes(n.main.motif) ? n.main.motif : n.main.cle}`)) : h('span', { class: `badge-st bs-${cleStatut(n)}`, 'data-statut': cleStatut(n) }, libelleCourt(n)); // INV-MAIN-1
 
 const ECHEANCES = [['', t('filtres.toutes')], ['retard', t('filtres.en_retard')], ['semaine', t('filtres.cette_semaine')]];
-const GROUPES = [['', t('filtres.g_arbre')], ['statut', t('filtres.g_statut')], ['priorite', t('filtres.g_priorite')], ['projet', t('filtres.g_projet')], ['echeance', t('filtres.g_echeance')]];
+const GROUPES = [['', t('filtres.g_arbre')], ['statut', t('filtres.g_statut')], ['priorite', t('filtres.g_priorite')], ['projet', t('filtres.g_projet')], ['echeance', t('filtres.g_echeance')], ['etiquette', t('filtres.g_etiquette')]];
 const TRIS = [['arbre', t('filtres.tri_arbre')], ['priorite', t('filtres.tri_priorite')]];
 
 const semaine = (n) => { if (!n.echeance) return false; const e = ecartJours(n.echeance); return e >= 0 && e <= 7; };
-const filtresActifs = () => F.statuts.length + ['priorite', 'echeance', 'portee', 'harnais', 'executant', 'nature'].filter((k) => F[k]).length + (F.ia ? 1 : 0) + (F.routines ? 1 : 0) + (S.filtreAMoi ? 1 : 0);
+const filtresActifs = () => F.statuts.length + ['priorite', 'echeance', 'portee', 'harnais', 'executant', 'nature', 'etiquette'].filter((k) => F[k]).length + (F.ia ? 1 : 0) + (F.routines ? 1 : 0) + (S.filtreAMoi ? 1 : 0);
 // État de statut partagé par le volet, la vue principale et Aujourd'hui.
 export const statutsActifs = () => F.statuts;
 export const passeStatut = (n) => !F.statuts.length || F.statuts.includes(cleStatut(n));
@@ -64,6 +64,7 @@ function passe(n, chem) {
   if (F.harnais && n.harnais !== F.harnais) return false;
   if (F.executant && (n.executant || 'ia') !== F.executant) return false; // INV-EXECUTANT-1
   if (F.nature && n.genre !== F.nature) return false; // INV-NATURE-1
+  if (F.etiquette && !(n.etiquettes || []).includes(F.etiquette)) return false; // INV-ETIQUETTE-1
   if (F.ia && !(S.etat.occupees || {})[n.id]) return false;
   if (F.routines && !n.routine) return false; // INV-ROUTINE-5
   return true;
@@ -89,6 +90,7 @@ const nomProjet = (chem, arbre) => {
 const GROUPEURS = {
   statut: (n) => [STATUTS_COURTS.findIndex(([c]) => c === cleStatut(n)), libelleCourt(n)],
   priorite: (n) => [rangPriorite(n.priorite), n.priorite ? libellePriorite(n.priorite) : t('filtres.sans_priorite')],
+  etiquette: (n) => [n.etiquettes?.length ? 0 : 1, n.etiquettes?.[0] ? `#${n.etiquettes[0]}` : t('filtres.sans_etiquette')], // la première étiquette range la tâche
   echeance: (n) => (n.retard ? [0, t('filtres.en_retard')] : !n.echeance ? [4, t('filtres.sans_echeance')] : ecartJours(n.echeance) === 0 ? [1, t('filtres.aujourdhui')] : semaine(n) ? [2, t('filtres.cette_semaine')] : [3, t('filtres.plus_tard')]),
 };
 function grouper(arbre) {
@@ -141,6 +143,7 @@ function contenu(corps) {
   const portees = [['', t('filtres.toutes')]];
   for (const x of parcourir(S.arbre)) if (x.type === 'casquette' || x.type === 'conteneur') portees.push([cleNoeud(x), x.titre]);
   const harnais = ['', ...new Set([...parcourir(S.arbre)].filter((x) => x.type === 'tache' && x.harnais).map((x) => x.harnais))].map((k) => [k, k || t('filtres.tous')]);
+  const etiqs = ['', ...new Set([...parcourir(S.arbre)].flatMap((x) => (x.type === 'tache' ? x.etiquettes || [] : [])))].sort().map((k) => [k, k ? `#${k}` : t('filtres.toutes')]);
   const comptes = comptesStatut(S.arbre);
   remplacer(corps,
     h('div', { class: 'f-statuts', role: 'group', 'aria-label': t('filtres.statut') }, STATUTS_COURTS.map(([k, l]) => h('button', {
@@ -155,6 +158,7 @@ function contenu(corps) {
       liste('f-harnais', t('filtres.assistant'), harnais, F.harnais, (v) => changer({ harnais: v })),
       liste('f-executant', t('filtres.executant'), [['', t('filtres.toutes')], ['humain', t('filtres.par_moi')], ['ia', t('filtres.par_ia')]], F.executant, (v) => changer({ executant: v })),
       liste('f-nature', t('lignes.nature'), [['', t('filtres.toutes')], ...NATURES.map((g) => [g, libelleNature(g)])], F.nature, (v) => changer({ nature: v })),
+      ...(etiqs.length > 1 || F.etiquette ? [liste('f-etiquette', t('filtres.etiquette'), etiqs, F.etiquette, (v) => changer({ etiquette: v }))] : []),
       liste('f-groupe', t('filtres.grouper'), GROUPES, F.groupe, (v) => changer({ groupe: v })),
       liste('f-tri', t('filtres.trier'), TRIS, F.tri, (v) => changer({ tri: v }))),
     h('div', { class: 'f-pied' },

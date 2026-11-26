@@ -19,6 +19,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from . import liens as liens_taches
+from .etiquettes import de as etiquettes_de
 from .vault import casquette_normalisee
 
 PLAFOND = 2000
@@ -107,8 +108,9 @@ class Graphe:
             projet = t.conteneur if t else projet_de(rel)
             cas = (casquette_normalisee(t.fm.get("casquette")) if t else None) or (
                 conts[projet].casquette if projet in conts else "") or ""
+            # INV-ETIQUETTE-3 : les étiquettes d'une tâche se filtrent et se comptent comme des tags dans le graphe
             ajouter(Noeud(rel, t.titre if t else titre, "tache" if t else "note", type_, projet,
-                          cas, tags, maj, t.id if t else None))
+                          cas, (*tags, *etiquettes_de(t.fm)) if t else tags, maj, t.id if t else None))
 
         vues: set[tuple[int, int]] = set()
         aretes: list[tuple[int, int, str]] = []

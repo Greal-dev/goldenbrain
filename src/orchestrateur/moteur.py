@@ -23,7 +23,7 @@ from collections import defaultdict, deque
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 
-from . import (apprendre, assistant_absent, attente_muette, etat_main, instrumentation, agents_cc, langues, catalogue, codespace, decisions, depot, echecs, economie, executant, executeurs, fiches, incidents, liens, natif, ordonnancement, pilotage,
+from . import (apprendre, etiquettes, assistant_absent, attente_muette, etat_main, instrumentation, agents_cc, langues, catalogue, codespace, decisions, depot, echecs, economie, executant, executeurs, fiches, incidents, liens, natif, ordonnancement, pilotage,
                quota, regroupement, reprise, reprise_auto, reseau, retour, session_perdue, sessions, simultanes, temps, transformations)
 from .propagation import MixinPropagation
 from .config import RACINE_DEPOT, Config
@@ -105,7 +105,7 @@ class Moteur(retour.MixinRetour, MixinVerrou, MixinControle, MixinCompactage, Mi
         self._init_reveils()  # INV-EXEC-10
         self.revues, self.validation_auto = Revues(self), ValidationAuto(self)
         self.agents_cc = agents_cc.Releve(self)  # INV-AGENTSCC-1
-        self.roles = Roles(config, self.registre); self.mandats = transformations.Mandats(config.donnees / "etat" / "mandats.json")
+        self.roles = Roles(config, self.registre); self.etiquettes = etiquettes.Registre(config.donnees); self.mandats = transformations.Mandats(config.donnees / "etat" / "mandats.json")
         self._init_verrou()
         self.natif = natif.Natifs(self)  # INV-NATIF-1 : tâches ouvertes au terminal
         self.economie = economie.Economie(self)  # INV-ECO-1 : moteur du travail principal
@@ -225,7 +225,7 @@ class Moteur(retour.MixinRetour, MixinVerrou, MixinControle, MixinCompactage, Mi
             contexte=str(self.vault.racine / t.conteneur / self.config.vault.contexte),
             soeurs=", ".join(soeurs) or "aucune", equipe=(self.revues.equipe.consigne() if self.config.interface.actif("equipe")
                     else "aucun persona actif."),
-            orch=f'"{Path(sys.executable).as_posix()}" "{(RACINE_DEPOT / "orch.py").as_posix()}"')) + "\n" + langues.consigne_langue() + self.reprise_auto.consigne(ident) + apprendre.consigne(self.config, t.fm)  # INV-APPRENDRE-1
+            orch=f'"{Path(sys.executable).as_posix()}" "{(RACINE_DEPOT / "orch.py").as_posix()}"')) + "\n" + langues.consigne_langue() + self.reprise_auto.consigne(ident) + apprendre.consigne(self.config, t.fm) + etiquettes.texte_tour(etiquettes.vue(self.vault, self.etiquettes, ident))  # INV-APPRENDRE-1, INV-ETIQUETTE-3
 
     def _journal(self, ident: str):
         # INV-EXEC-4 : un journal brut par tour.

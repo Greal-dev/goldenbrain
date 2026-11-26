@@ -84,6 +84,7 @@ const GROUPES = [
       ['apprendre', t('apprendre.titre'), null, sectionApprendre()[1]],
       ['reflexes', t('reflexes.titre'), t('reflexes.aide'), sectionReflexes()],
       ['rangement', t('lignes.rangement'), t('lignes.rangement_aide'), sectionRangement()],
+      ['etiquettes', t('etiquettes.titre'), t('etiquettes.reglages_aide'), chargerSection('./etiquettes.js', 'sectionEtiquettes')],
       ['moteurs', t('reglages.moteurs'), t('reglages.moteurs_aide'), h('div', { 'data-id': 'moteurs' }, moteursParRole())]] },
   { id: 'validation', titre: t('reglages.validation'), aide: t('reglages.validation_aide'),
     resume: () => (POLITIQUES.find(([v]) => v === (S.interface?.propositions ?? 'montrer')) || POLITIQUES[0])[1],
@@ -269,4 +270,10 @@ export function etatReglages(el) {
   const v = el.querySelector('[data-id=rg-version]');
   if (v) v.textContent = versionTexte();
   majResumes();
+}
+// Section chargée à la demande (hors budget du premier affichage) : un conteneur rempli à l'arrivée du module.
+function chargerSection(module, nom) {
+  const c = h('div');
+  import(module).then((m) => c.replaceChildren(m[nom]()));
+  return c;
 }

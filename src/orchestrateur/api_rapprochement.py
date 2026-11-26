@@ -14,7 +14,7 @@ from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
-from . import langues, liens, rangement, rapprochement
+from . import etiquettes, langues, liens, rangement, rapprochement
 from .vault import Invalide, NonTrouve, exiger_description
 
 
@@ -35,9 +35,13 @@ def creer(moteur, tache, c, source: str | None):
         except NonTrouve:
             pass
     agent = bool(c.de or source)
+    mots = [etiquettes.normaliser(x) for x in c.etiquettes]
+    if agent and (inconnue := next((m for m in mots if m not in etiquettes.connues(
+            moteur.vault.index()[0], moteur.etiquettes)), None)):  # INV-ETIQUETTE-2 : refus avant toute création
+        raise Invalide(langues.t("serveur.etiquettes.agent_inconnue_creation", mot=inconnue))
     if not c.forcer:
         cands = rapprochement.proches(moteur.vault, c.titre, c.description, c.conteneur,
-                                      exclure=(c.parent, source, c.de))
+                                      exclure=(c.parent, source, c.de), etiquettes=mots)
         if rapprochement.forte(cands):
             mesure.refus(c.titre, cands)
             return JSONResponse(status_code=409, content={
@@ -66,6 +70,10 @@ def creer(moteur, tache, c, source: str | None):
                          c.harnais, c.modele, c.echeance, c.priorite, c.mission)
     if genre:
         moteur.vault.modifier(ident, {"genre": genre})
+    if mots:
+        for m in mots if not agent else ():
+            moteur.etiquettes.declarer(m)
+        etiquettes.appliquer(moteur.vault, ident, mots)
     liens.relier_integration(moteur.vault, ident)  # INV-INTEG-2 : UI, `orch creer`, `orch deleguer`
     mesure.creation(c.titre)
     return tache(ident)
@@ -76,8 +84,9 @@ def routes(moteur) -> APIRouter:
     vault = moteur.vault
 
     @r.get("/proches")
-    async def lister(titre: str = "", description: str = "", conteneur: str | None = None):
-        cands = rapprochement.proches(vault, titre, description, conteneur or None)
+    async def lister(titre: str = "", description: str = "", conteneur: str | None = None, etiquettes: str = ""):
+        cands = rapprochement.proches(vault, titre, description, conteneur or None,
+                                      etiquettes=[x for x in etiquettes.split(",") if x.strip()])
         return {"candidates": cands, "forte": rapprochement.forte(cands)}
 
     @r.get("/mesure")

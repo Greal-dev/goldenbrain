@@ -32,7 +32,7 @@ LIVRABLES_DEBUT = "<!-- orchestrateur:livrables -->"  # INV-LIVRABLES-1 : même 
 LIVRABLES_FIN = "<!-- orchestrateur:livrables-fin -->"
 BLOCS_LISTE = {"lignes": (LIGNES_DEBUT, LIGNES_FIN, "Lignes"), "livrables": (LIVRABLES_DEBUT, LIVRABLES_FIN, "Livrables")}
 CLES_GEREES = ("statut", "updated", "harnais", "session", "parent", "projet", "casquette", "tags",
-               "alimente", "prerequis", "voir_aussi", "modele", "echeance", "priorite", "echec_tour", "ou", "controle",
+               "alimente", "prerequis", "voir_aussi", "etiquettes", "modele", "echeance", "priorite", "echec_tour", "ou", "controle",
                "moteur_impose", "moteur_motif", "execution", "validation", "validation_accord",
                "nature", "genre", "programme", "routine", "contexte", "rattrapage",
                "executant", "apprendre", "chaine", "chaine_phase", "reporte_jusqu_au")  # INV-DECISIONS-3, INV-ROUTINE-2, INV-EXECUTANT-1, INV-APPRENDRE-1, INV-CHAINE-1

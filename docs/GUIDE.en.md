@@ -176,6 +176,15 @@ The vault is your **second brain**: ordinary notes (Markdown files) that GoldenB
 - **Other actions**: “Link…” (prerequisite, feeds, see also), “Create from this” (neighbouring task), “Promote to project”, “Ask…” (opinion of a team expert).
 - **Good to know**: statuses: Not started → In progress → Waiting (a human is needed) or Finished → Approved. “Blocked” signals the technical failure of a work session. A project may require a check (`controle:` in its `contexte.md`) before a task can become “Finished”. In the vault, “Waiting” is written `statut: retour-humain`; a vault that uses another name declares it in `config.toml`: `[vault]` then `statut_retour = "<name>"`.
 
+### Labels {#etiquettes}
+
+- **What for**: short words set by hand on a task (`#bank`, `#client-x`) that tell the AI which tasks belong together. Distinct from vault tags (closed vocabulary, never touched): the `etiquettes:` key of the note.
+- **Set**: in the task's "Details", "Labels" card: type a word, Enter to add (completion on labels already in use), click a chip to remove it. The tree shows the first two. Bulk set/remove: the "n selected" bar, "+ label" and "− label" fields.
+- **Filter and search**: "Filters and grouping" → Label (combinable with status) and "By label"; search finds `#word`; the graph filters them like tags.
+- **Steer the AI**: the agent receives its task's labels, their instruction and the other tasks sharing one; the match before creation weighs a shared label; a proposed link between two labelled tasks with no shared label is refused. An agent never creates a label: it proposes it (Decisions), you accept.
+- **Instructions, rename, merge**: Settings → Agents and resources → Labels. The instruction (600 characters) is attached to the context of any agent working on a labelled task. Renaming to an existing word merges; "Undo" restores the notes.
+- **Rules**: lowercase, no accent or space (`-`), 30 characters, 12 per task. Terminal: `orch etiqueter <id> +word -word`, `orch etiquettes`.
+
 ### Discussion mode {#mode-discussion}
 
 - **What it is for**: as soon as a task is open, the conversation takes most of the screen (over 70% of a 1366×768 screen). Nothing is removed: everything stays one gesture away.
@@ -323,6 +332,8 @@ To be read by any agent — Claude Code, Codex, OpenCode, Antigravity or other �
 | `arbre` | tree of open tasks |
 | `chercher "<words>"` | related tasks |
 | `lire <id>` | a task’s summary, path, place, status, execution |
+| `etiqueter <id> +word -word` | set or remove labels (an agent: existing label only, no removal) |
+| `etiquettes` | known labels, their use and instruction |
 | `conteneurs` | containers in which a task can be filed |
 | `rapprochement ["<title>"]` | tasks close to a title; without a title, creations avoided |
 | `creer "<title>" --description "<at least one sentence>"` | create a task (`--conteneur`, `--parent`, `--lancer`, `--mission`); refused if a very similar open task exists: complete it (`dire`) or force (`--nouvelle`) |
