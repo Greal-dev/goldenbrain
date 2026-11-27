@@ -415,6 +415,16 @@ mode = "avance"
 # Propositions d'agent : "montrer" (à valider), "accepter" ou "ignorer" en silence (absent : selon le mode).
 # propositions = "montrer"
 
+[messagerie]
+# Page « Email » : une boîte Gmail par IMAP/SMTP. Se règle dans l'interface (Réglages → Connexions → Messagerie).
+# Le mot de passe d'application n'est JAMAIS écrit ici : variable `mdp_variable`, ou coffre du poste
+# (`orch messagerie-mdp`) dans `mdp_fichier` (vide = <dossier de config.toml>/etat/messagerie.mdp).
+adresse = ""                # adresse Gmail ; vide = messagerie non réglée
+imap = "imap.gmail.com:993"
+smtp = "smtp.gmail.com:465"
+delai_s = 20                # délai borné de chaque échange
+par_page = 50
+
 [telegram]
 # Connecteur Telegram : chaque envoi au bot devient une tâche rangée par l'agent de tri. Désactivé par
 # défaut : un seul programme peut lire un bot. Se règle dans l'interface (Réglages → Telegram).

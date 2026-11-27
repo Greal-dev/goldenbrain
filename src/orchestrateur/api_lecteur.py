@@ -19,6 +19,7 @@ from .config_lecteur import ConfigLecteur
 from .vault import Invalide
 
 CHEMIN = "/api/lecteur/brut"
+ISOLES = (CHEMIN, "/api/mail/html")  # INV-MAIL-3 : le corps HTML d'un mail garde la politique d'isolement de sa route
 
 
 class CorpsChemin(BaseModel):
@@ -33,7 +34,7 @@ class CorpsReglage(BaseModel):
 
 def entetes(chemin: str, csp: str | None) -> dict | None:
     """En-têtes du fichier brut : la politique posée par `lecteur.brut` (isolement) remplace celle de l'interface."""
-    if chemin != CHEMIN or not csp:
+    if chemin not in ISOLES or not csp:
         return None
     return {"X-Frame-Options": "SAMEORIGIN", "X-Content-Type-Options": "nosniff", "Cache-Control": "no-store", "Content-Security-Policy": csp}
 

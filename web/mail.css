@@ -1,0 +1,28 @@
+/* Page « Email » (#mail) : dossiers, liste, lecture. Mêmes variables de thème que style.css. */
+.mail-page { display: flex; flex-direction: column; gap: 8px; min-height: 0; }
+.mail-tete { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.mail-tete h2 { margin: 0; }
+.mail-q { flex: 1; min-width: 180px; }
+.mail-grille { display: grid; grid-template-columns: minmax(120px, 160px) minmax(220px, 1fr) minmax(260px, 1.4fr); gap: 10px; min-height: 0; }
+.mail-dossiers { display: flex; flex-direction: column; gap: 2px; }
+.mail-dossier { text-align: left; border: 0; background: none; padding: 4px 6px; border-radius: 5px; color: var(--texte); cursor: pointer; font: inherit; font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mail-dossier:hover, .mail-dossier.sel { background: var(--sel); }
+.mail-dossier.sel { font-weight: 600; }
+.mail-liste, .mail-lecture { overflow: auto; max-height: calc(100vh - 200px); min-width: 0; }
+.mail-lignes { list-style: none; margin: 0; padding: 0; }
+.mail-ligne { display: grid; grid-template-columns: 1fr auto; gap: 0 8px; width: 100%; text-align: left; border: 0; border-bottom: 1px solid var(--bord); background: none; padding: 6px 4px; cursor: pointer; font: inherit; font-size: 12.5px; color: var(--texte); }
+.mail-ligne:hover, .mail-ligne.sel { background: var(--sel); }
+.mail-ligne.non-lu .mail-de, .mail-ligne.non-lu .mail-objet { font-weight: 700; }
+.mail-de, .mail-objet, .mail-extrait { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mail-date { color: var(--texte-2); font-size: 11.5px; }
+.mail-objet, .mail-extrait { grid-column: 1 / -1; }
+.mail-extrait { color: var(--texte-2); }
+.mail-pages { display: flex; align-items: center; justify-content: space-between; gap: 6px; padding: 6px 0; }
+.mail-entetes { display: grid; grid-template-columns: auto 1fr; gap: 2px 8px; margin: 0 0 8px; font-size: 12.5px; }
+.mail-entetes dt { color: var(--texte-2); }
+.mail-entetes dd { margin: 0; overflow-wrap: anywhere; }
+.mail-gestes { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+.mail-cadre { width: 100%; min-height: 360px; height: calc(100vh - 360px); border: 1px solid var(--bord); border-radius: 6px; background: #fff; }
+.mail-texte { white-space: pre-wrap; overflow-wrap: anywhere; font-family: inherit; font-size: 13px; margin: 0; }
+.mail-pieces { list-style: none; padding: 0; margin: 8px 0 0; display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12.5px; }
+@media (max-width: 1100px) { .mail-grille { grid-template-columns: 1fr; } .mail-dossiers { flex-direction: row; flex-wrap: wrap; } }

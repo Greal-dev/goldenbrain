@@ -31,6 +31,7 @@ function commandes() {
     { libelle: t('palette.nouvelle'), agir: () => $('#btn-nouvelle').click() },
     { libelle: t('palette.decisions'), agir: () => ouvrirVue('decisions') },
     { libelle: t('palette.reglages'), agir: () => ouvrirVue('reglages') },
+    { libelle: t('palette.mail'), agir: () => ouvrirVue('mail') },
     { libelle: t('palette.nouvelle_etiquette'), agir: () => charger('etiquette_trouver').then((m) => m.nouvelleEtiquette(), (e) => erreur(e.message)) }, // INV-ETIQUETTE-5
     ...motsConnus().map((m) => ({ libelle: t('palette.etiquette', { mot: m }), agir: () => ouvrirVue('etiquette', m) })), // INV-ETIQUETTE-4
   ];

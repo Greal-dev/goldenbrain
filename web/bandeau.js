@@ -141,6 +141,8 @@ function champsGroupe(options) {
 
 // `pre` : valeurs de départ { titre, description, conteneur } (barre de chat d'une note, emplacement pré-choisi de l'arbre)
 // et `parent` {id, titre} pour une sous-tâche (« ＋ Nouvelle tâche » de l'arbre) ; rien n'est créé avant « Créer ».
+// Rend {id, lancer} de la tâche créée (ou complétée), sinon rien ; `differer` : « Lancer » est rendu à l'appelant au lieu de partir
+// avec la création (page Email : le mail se range avant le premier tour, INV-MAIL-2).
 export async function nouvelleTache(pre = {}) {
   const parent = pre.parent || null;
   let conteneurs = [];
@@ -179,10 +181,10 @@ export async function nouvelleTache(pre = {}) {
       { nom: 'lancer', label: t('bandeau.lancer'), type: 'checkbox' },
     ],
   });
-  if (complete) { emit('recharger'); ouvrir(complete); return; }
+  if (complete) { emit('recharger'); ouvrir(complete); return { id: complete, lancer: false }; }
   if (!v) return;
   try {
-    const corps = { titre: v.titre.trim(), lancer: v.lancer };
+    const corps = { titre: v.titre.trim(), lancer: v.lancer && !pre.differer };
     if (v.description.trim()) corps.description = v.description.trim();
     if (parent) corps.parent = parent.id;
     else if (v.conteneur === NOUVEAU) corps.nouveau_groupe = groupe.valeurs();
@@ -197,6 +199,7 @@ export async function nouvelleTache(pre = {}) {
     }
     emit('recharger');
     ouvrir(nt.id);
+    return { id: nt.id, lancer: v.lancer && !corps.lancer };
   } catch (e) { erreur(e.message); }
 }
 
@@ -255,6 +258,7 @@ export function initBandeau() {
   $('#btn-equipe').addEventListener('click', () => ouvrirVue('equipe'));
   $('#btn-reglages').addEventListener('click', () => ouvrirVue('reglages'));
   $('#btn-guide').addEventListener('click', () => ouvrirGuide());
+  $('#btn-mail').addEventListener('click', () => ouvrirVue('mail'));
   props = deroulant({ bouton: $('#btn-props'), panneau: $('#panneau-props'), titre: t('apercus.propositions'),
     toutVoir: { libelle: t('apercus.tout_voir'), agir: () => ouvrirVue('decisions') }, remplir: dessinerPanneau });
   const rech = $('#recherche');

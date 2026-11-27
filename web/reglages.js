@@ -96,6 +96,7 @@ const GROUPES = [
     resume: () => parts('telegram', 'appareils', 'executeurs'),
     sous: () => [
       ['telegram', null, null, sectionTelegram()],
+      ['messagerie', t('messagerie.titre'), t('messagerie.aide'), chargerSection('./messagerie.js', 'sectionMessagerie')],
       ['appareils', t('reglages.appareils'), t('reglages.appareils_aide'), sectionAppareils()[1]],
       ['executeurs', t('reglages.executeurs'), t('reglages.executeurs_aide'), sectionExecuteurs()[1]]] },
   { id: 'installation', titre: t('reglages.installation'), aide: t('reglages.installation_aide'),
@@ -111,7 +112,7 @@ const GROUPES = [
 ];
 // Sous-section → groupe, pour l'ancre #reglages/<sous-section>.
 const ANCRES = { mode: 'affichage', theme: 'affichage', familles: 'fonctions', lecteur: 'fonctions', simultanes: 'agents', economie: 'agents', compactage: 'agents', apprendre: 'agents', reflexes: 'agents', rangement: 'agents',
-  moteurs: 'agents', propositions: 'validation', telegram: 'connexions', appareils: 'connexions', executeurs: 'connexions',
+  moteurs: 'agents', propositions: 'validation', telegram: 'connexions', messagerie: 'connexions', appareils: 'connexions', executeurs: 'connexions',
   installation: 'installation', langue: 'affichage', version: 'installation', etoile: 'affichage', evitable: 'validation', integration: 'validation',
   'maj-auto': 'installation', signaler: 'installation', accueil: 'installation', cerveau: 'installation', 'premiers-pas': 'installation' };
 const groupeDe = (cle) => GROUPES.find((g) => g.id === (ANCRES[cle] || cle));

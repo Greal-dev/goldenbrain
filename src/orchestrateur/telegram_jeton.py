@@ -40,12 +40,12 @@ def commande(config) -> str:
     return " ".join(f'"{x}"' if " " in x else x for x in argv(config))
 
 
-def ouvrir_terminal(arguments: list[str]) -> str:
+def ouvrir_terminal(arguments: list[str], titre: str = "Jeton Telegram") -> str:
     """Ouvre `arguments` dans un terminal ; rend "" si c'est fait, sinon le motif (repli : copier la commande)."""
     dossier = str(RACINE_DEPOT)
     try:
         if sys.platform == "win32":
-            natif.ouvrir_onglet("Jeton Telegram", dossier, arguments)
+            natif.ouvrir_onglet(titre, dossier, arguments)
         elif sys.platform == "darwin":
             script = f'tell application "Terminal" to do script {_applescript(shlex.join(arguments))}'
             subprocess.Popen(["osascript", "-e", script, "-e", 'tell application "Terminal" to activate'])

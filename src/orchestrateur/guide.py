@@ -54,6 +54,7 @@ SECTIONS: dict[str, str] = {
     "mise-a-jour-d-un-clic": "Mise à jour d'un clic",
     "manager": "Manager",
     "telegram": "Telegram",
+    "email": "Email",
     "executeurs-distants": "Ordinateurs d'appoint",
     "depannage": "Dépannage",
     "pour-un-agent-ia": "Pour un agent IA",

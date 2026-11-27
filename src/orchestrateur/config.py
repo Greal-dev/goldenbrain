@@ -17,7 +17,7 @@ from pathlib import Path
 from .config_compactage import ConfigCompactage  # noqa: F401  (réexport)
 from .config_distant import ConfigDistant, ConfigExecuteurs  # noqa: F401  (réexport)
 from .apprendre import ConfigApprendre
-from .config_lecteur import ConfigLecteur; from .config_rangement import ConfigRangement  # noqa: E702
+from .config_lecteur import ConfigLecteur; from .config_rangement import ConfigRangement; from .config_messagerie import ConfigMessagerie  # noqa: E702
 from .consigne_tri import TRI
 from .etoile import ConfigEtoile
 
@@ -412,7 +412,7 @@ class Config:
     rangement: ConfigRangement = field(default_factory=ConfigRangement)
     lecteur: ConfigLecteur = field(default_factory=ConfigLecteur)
     moteurs_par_role: dict[str, ConfigRole] = field(default_factory=dict)
-    telegram: ConfigTelegram = field(default_factory=ConfigTelegram)
+    telegram: ConfigTelegram = field(default_factory=ConfigTelegram); messagerie: ConfigMessagerie = field(default_factory=ConfigMessagerie)  # noqa: E702
     credits: dict[str, list[str]] = field(default_factory=lambda: {k: list(v) for k, v in CREDITS_DEFAUT.items()})
     # Fichier d'où vient la configuration (réécriture de `[interface]`) ; None en test.
     chemin: Path | None = None
@@ -495,6 +495,6 @@ def charger(chemin: Path | str | None = None) -> Config:
         lecteur=ConfigLecteur(**brut.get("lecteur", {})),
         moteurs_par_role=_roles(brut.get("moteurs_par_role", {})),
         credits=_credits(brut.get("credits", {})),
-        telegram=ConfigTelegram(**brut.get("telegram", {})),
+        telegram=ConfigTelegram(**brut.get("telegram", {})), messagerie=ConfigMessagerie(**brut.get("messagerie", {})),
         chemin=chemin,
     )

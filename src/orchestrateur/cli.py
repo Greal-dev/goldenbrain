@@ -5,7 +5,7 @@ Rôle : arbre, recherche, lecture d'une tâche, message à une tâche, délégat
 sollicitation d'un persona de l'équipe, feu vert lié à une version, création d'une tâche (description
 exigée ; `--lancer`, `--envoi` pour l'agent de tri Telegram), `rattacher` et `telegram` (envois
 Telegram), arrêt et relance d'une tâche (chat de projet, INV-PILOTAGE-1) ; `console` délègue à
-`console.py` ; `m365` délègue à `m365.py` (INV-M365-1) ; `telegram-jeton` à `telegram_jeton.py` (saisie sans écho, INV-TELEGRAM-2) ; `natif <fichier>`, relais de l'interface native lancé dans l'onglet du terminal
+`console.py` ; `m365` délègue à `m365.py` (INV-M365-1) ; `telegram-jeton` à `telegram_jeton.py` (saisie sans écho, INV-TELEGRAM-2), `messagerie-mdp` à `mail_mdp.py` (INV-MAIL-1) ; `natif <fichier>`, relais de l'interface native lancé dans l'onglet du terminal
 (INV-NATIF-1) ; `executeur` délègue à `executeur.py` (INV-DISTANT-1), `executeur installer` à `installation.py` (INV-INSTALL-1) ; `jeton-executeur` crée
 ou révoque le jeton d'un exécuteur, depuis le poste du chef.
 Frontières : stdlib seule (hors `console`, `m365`, `executeur`, `installation`, importés tard) ; n'importe ni le moteur ni le vault ; sortie texte, code de retour
@@ -255,9 +255,10 @@ def main(argv: list[str] | None = None) -> int:
     te.add_argument("--choix", action="append", default=[], help="tâche candidate (2 ou 3 fois) : boutons de choix au lieu de deviner")
     te.add_argument("--geste", default="", help="statut=<s> | echeance=AAAA-MM-JJ | priorite=<p> sur "
                                                 "--tache, appliqué si l'utilisateur confirme")
-    tj = sous.add_parser("telegram-jeton", help="saisir le jeton du bot Telegram sans l'afficher (coffre du poste)")
-    tj.add_argument("--pause", action="store_true", help="attendre Entrée avant de fermer (fenêtre ouverte par Réglages)")
-    tj.add_argument("--config", help="config.toml à utiliser (transmis par l'interface)")
+    for nom, aide in (("telegram-jeton", "saisir le jeton du bot Telegram sans l'afficher (coffre du poste)"), ("messagerie-mdp", "saisir le mot de passe d'application de la messagerie sans l'afficher (coffre du poste)")):
+        tj = sous.add_parser(nom, help=aide)
+        tj.add_argument("--pause", action="store_true", help="attendre Entrée avant de fermer (fenêtre ouverte par Réglages)")
+        tj.add_argument("--config", help="config.toml à utiliser (transmis par l'interface)")
     po = sous.add_parser("poste", help="réserver / rendre le poste pendant une porte lourde")
     po.add_argument("action", choices=["reserver", "liberer", "etat"])
     po.add_argument("motif", nargs="?", default="", help="pourquoi (reserver)")
@@ -309,8 +310,7 @@ def main(argv: list[str] | None = None) -> int:
         fv.error(f"{a.geste} attend un texte (objet ou motif)")
     if a.commande == "feu-vert" and a.geste == "demander" and not a.a:
         fv.error("demander attend --a <tâche du contrôleur>")
-    if a.commande == "natif":
-        return natif(a.fichier)
+    if a.commande == "natif": return natif(a.fichier)  # noqa: E701
     if a.commande == "guide":  # lu sur place : utile serveur arrêté ou sur un exécuteur distant
         from pathlib import Path
         print((Path(__file__).resolve().parents[2] / "docs" / "GUIDE.md").read_text(encoding="utf-8"))
@@ -330,9 +330,9 @@ def main(argv: list[str] | None = None) -> int:
         return console.main(a.id, a.url)
     if a.commande == "m365":
         return _m365(a)
-    if a.commande == "telegram-jeton":  # local au poste : ni serveur, ni agent, ni conversation
-        from . import config, telegram_jeton
-        return telegram_jeton.saisir(config.charger(a.config), pause=input if a.pause else None)
+    if a.commande in ("telegram-jeton", "messagerie-mdp"):  # local au poste : ni serveur, ni agent, ni conversation
+        from . import config, mail_mdp, telegram_jeton
+        return (mail_mdp if a.commande == "messagerie-mdp" else telegram_jeton).saisir(config.charger(a.config), pause=input if a.pause else None)
     if a.commande == "executeur" and a.action == "installer":
         from . import installation
         return installation.principal(a.serveur, a.harnais, a.verifier)

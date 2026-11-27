@@ -129,10 +129,10 @@ function bannière() {
   });
 }
 
-// L'URL reflète le volet droit : #t=<tâche> · #n=<note> · #q=<recherche> · #g[=<centre>] (graphe) · #base=<dossier> · #equipe. Chaque navigation ajoute une entrée d'historique.
+// L'URL reflète le volet droit : #t=<tâche> · #n=<note> · #q=<recherche> · #g[=<centre>] (graphe) · #base=<dossier> · #equipe · #mail. Chaque navigation ajoute une entrée d'historique.
 const enc = encodeURIComponent;
 const dec = (s) => { try { return decodeURIComponent(s); } catch { return s; } };
-const hashCourant = () => (S.selection ? `#t=${enc(S.selection)}` : S.vue === 'equipe' ? '#equipe' : S.vue === 'reglages' ? (pret('reglages')?.hashReglages() ?? location.hash) : S.vue === 'aujourdhui' ? '#aujourdhui' : S.vue === 'compagnon' ? '#compagnon' : S.vue === 'travail' ? (S.portee ? `#travail=${enc(S.portee)}` : '#travail') : S.vue === 'travaux' ? '#en-cours' : S.vue === 'etiquette' && S.portee ? `#etiquette=${enc(S.portee)}` : S.vue === 'decisions' ? '#decisions' : S.vue === 'guide' ? (pret('guide')?.hashGuide() ?? location.hash) : S.vue === 'note' && S.note ? `#n=${enc(S.note)}` : S.vue === 'base' ? `#base=${enc(S.portee ?? '')}`
+const hashCourant = () => (S.selection ? `#t=${enc(S.selection)}` : S.vue === 'equipe' ? '#equipe' : S.vue === 'reglages' ? (pret('reglages')?.hashReglages() ?? location.hash) : S.vue === 'aujourdhui' ? '#aujourdhui' : S.vue === 'compagnon' ? '#compagnon' : S.vue === 'travail' ? (S.portee ? `#travail=${enc(S.portee)}` : '#travail') : S.vue === 'travaux' ? '#en-cours' : S.vue === 'etiquette' && S.portee ? `#etiquette=${enc(S.portee)}` : S.vue === 'decisions' ? '#decisions' : S.vue === 'mail' ? '#mail' : S.vue === 'guide' ? (pret('guide')?.hashGuide() ?? location.hash) : S.vue === 'note' && S.note ? `#n=${enc(S.note)}` : S.vue === 'base' ? `#base=${enc(S.portee ?? '')}`
   : S.vue === 'recherche' && S.requete ? `#q=${enc(S.requete)}` : S.vue === 'graphe' ? (S.centre ? `#g=${enc(S.centre)}` : '#g') : '');
 function pousserUrl(initial) {
   const hs = hashCourant();
@@ -156,6 +156,7 @@ function majVoletDroit() {
   else if (S.vue === 'etiquette' && S.portee) ecran('vue_etiquette', (m) => m.dessinerVueEtiquette(droit(), S.portee)); // INV-ETIQUETTE-4
   else if (S.vue === 'travaux') ecran('travaux', (m) => m.dessinerTravaux(droit()));
   else if (S.vue === 'decisions') ecran('decisions', (m) => m.dessinerDecisions(droit()));
+  else if (S.vue === 'mail') ecran('mail', (m) => m.dessinerMail(droit())); // INV-MAIL-6 : module et requêtes IMAP au clic seulement
   else if (S.vue === 'guide') ecran('guide', (m) => m.dessinerGuide(droit())); // INV-GUIDE-1
   else if (S.vue === 'note' && S.note) ecran('note-vue', (m) => m.dessinerNote(droit(), S.note), (m) => m.initNoteVue());
   else if (S.vue === 'base') ecran('base_table', (m) => m.dessinerBase(droit(), S.portee ?? '')); // INV-BASES-1
@@ -202,6 +203,7 @@ function depuisUrl() {
     }, (e) => erreur(e.message));
   }
   else if (location.hash === '#decisions') { if (S.vue !== 'decisions' || S.selection) ok = ouvrirVue('decisions'); }
+  else if (location.hash === '#mail') { if (S.vue !== 'mail' || S.selection) ok = ouvrirVue('mail'); }
   else if ((gd = /^#guide(?:=(.*))?$/.exec(location.hash))) {
     const ancre = dec(gd[1] || '');
     charger('guide').then((m) => { m.fixerAncre(ancre); if (!ouvrirVue('guide')) history.pushState(null, '', hashCourant() || location.pathname + location.search); }, (e) => erreur(e.message));
@@ -253,6 +255,7 @@ async function demarrer() {
   else if ((ev0 = /^#etiquette=(.+)$/.exec(location.hash))) { S.vue = 'etiquette'; S.portee = dec(ev0[1]); }
   else if (location.hash === '#en-cours') S.vue = 'travaux';
   else if (location.hash === '#decisions') S.vue = 'decisions';
+  else if (location.hash === '#mail') S.vue = 'mail';
   else if (/^#base=/.test(location.hash) && !sansNotes) { S.vue = 'base'; S.portee = dec(location.hash.slice(6)); }
   else if (/^#guide(=|$)/.test(location.hash)) { S.vue = 'guide'; const ancre = dec(location.hash.slice(7)); charger('guide').then((m) => m.fixerAncre(ancre)); }
   initArbre();
