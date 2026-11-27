@@ -51,6 +51,7 @@ code, pre { font-family: var(--mono); font-size: 12px; }
 .btn.primaire:hover { filter: none; background: var(--action); opacity: .88; }
 .btn.petit { padding: 2px 8px; font-size: 12px; }
 .btn.danger { color: var(--danger); border-color: var(--danger); }
+.btn.primaire.danger-plein, .btn.primaire.danger-plein:hover { background: var(--danger); border-color: var(--danger); color: var(--panneau); } /* INV-SUPPR-1 : geste irréversible */
 .btn:disabled, select:disabled { opacity: .5; cursor: not-allowed; }
 .n { display: inline-block; min-width: 18px; padding: 0 5px; border-radius: 9px; background: var(--panneau-2); border: 1px solid var(--bord); text-align: center; font-size: 11.5px; font-variant-numeric: tabular-nums; }
 .btn-compte.alerte .n { background: var(--c-attente); border-color: var(--c-attente); color: var(--sur-vif); font-weight: 700; }

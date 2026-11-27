@@ -208,7 +208,8 @@ function dessinerTete() {
       b(t('detail.graphe'), () => ouvrirGraphe(tk.id), { cls: 'f-notes', titre: t('detail.graphe_titre') }),
       b(t('detail.solliciter'), demanderAvis, { cls: 'f-equipe', titre: t('detail.solliciter_titre') }), b(t('detail.deriver'), deriver), routine ? null : b(t('detail.routine'), async () => { if (await convertirEnRoutine(tk.id)) { emit('recharger'); rafraichir(); } }, { titre: t('detail.routine_titre') }), b(t('detail.promouvoir'), promouvoir, { cls: 'f-transformations', titre: t('detail.promouvoir_titre') }),
       b(t('detail.console'), consoleGB, { titre: t('detail.console_titre') }),
-      b(t('detail.natif'), natif, { titre: t('detail.natif_titre') })));
+      b(t('detail.natif'), natif, { titre: t('detail.natif_titre') }),
+      b(t('detail.supprimer'), () => import('./suppression.js').then((m) => m.supprimer({ tache: tk.id })), { cls: 'danger', titre: t('detail.supprimer_titre') })));  // INV-SUPPR-1 : geste rare, dans « Détails » seulement
   r.note.textContent = (S.etat.occupees || {})[id]?.terminal // INV-NATIF-1
     ? t('detail.terminal')
     : actif(tk) ? t('detail.tour_en_cours_msg') : '';

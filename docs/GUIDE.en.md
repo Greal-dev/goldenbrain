@@ -1,6 +1,6 @@
 # GoldenBrain guide
 
-Updated on 2026-11-26.
+Updated on 2026-11-27.
 
 GoldenBrain is a control station: you hand tasks to AI agents (Claude Code, Codex, OpenCode, Copilot, Antigravity), each filed in its proper place in your vault (a folder of Markdown notes). GoldenBrain organises and supervises; the agent works in its own conversation, which you can pick up again at any time.
 
@@ -174,6 +174,7 @@ The vault is your **second brain**: ordinary notes (Markdown files) that GoldenB
 - **See the result**: the button opens what the assistant produced, with your computer’s usual application: a file cited in the summary or written during the last work session, a website (local address cited in the summary, or the `index.html` of the working folder) or the working folder. A single result: it opens at once; several: a list to choose from. Nothing found: a message tells you so. Available on the computer only (refused from a phone); a program or a script is never run: its folder opens instead.
 - **Learn**: the “Learn” menu in the header makes the AI assistant explain (or not) what it is doing, for this task only; by default it follows the Settings. The explanations appear in blue boxes in the conversation, and the summary ends with “What you can take away” (three points).
 - **Other actions**: “Link…” (prerequisite, feeds, see also), “Create from this” (neighbouring task), “Promote to project”, “Ask…” (opinion of a team expert).
+- **Delete**: “Delete…”, at the bottom of a task's “Details”, or in the header of a project's view (next to “Reduce to one task”). A window warns that deletion is permanent (the note is erased from the second brain), counts the sub-tasks (for a project: tasks, sub-projects, other files in the folder) and asks what to do with them: delete them too, or move them to a project or to a task that groups others (by default, the parent). “Delete permanently” stays greyed out until “I understand this cannot be undone” is ticked. From a project, only its `contexte.md` note and its tasks are erased: every other note or attachment (contracts, sub-folders) is stored intact in `Archives/supprimes/<date>/`, and a moved sub-project keeps its whole folder. Links, parents and deliverables that pointed to the deleted task are removed from the other tasks. Refused while an agent works on a task concerned (stop it first), and for a role folder, `_meta` or the inbox folder. No recycle bin: the vault's daily git backup is the only way back. An agent cannot delete.
 - **Good to know**: statuses: Not started → In progress → Waiting (a human is needed) or Finished → Approved. “Blocked” signals the technical failure of a work session. A project may require a check (`controle:` in its `contexte.md`) before a task can become “Finished”. In the vault, “Waiting” is written `statut: retour-humain`; a vault that uses another name declares it in `config.toml`: `[vault]` then `statut_retour = "<name>"`.
 
 ### Labels {#etiquettes}

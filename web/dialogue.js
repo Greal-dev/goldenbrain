@@ -32,7 +32,8 @@ export function champ(c, i) {
 }
 
 // `corps` : nœud inséré sous le texte ; `annuler` : libellé du refus (null : pas de refus, la validation ferme) ; `focus: 'annuler'` : le refus prend le focus (confirmation à risque).
-export function formulaire({ titre, texte, champs = [], valider = t('dialogue.valider'), large = false, corps = null, annuler = t('dialogue.annuler'), focus = null }) {
+// `exiger` : nom d'une case qui doit être cochée pour valider (geste irréversible) ; `danger` : bouton de validation rouge.
+export function formulaire({ titre, texte, champs = [], valider = t('dialogue.valider'), large = false, corps = null, annuler = t('dialogue.annuler'), focus = null, exiger = null, danger = false }) {
   return new Promise((resolve) => {
     let rendu = false;
     const fin = (val) => { if (!rendu) { rendu = true; resolve(val); } };
@@ -41,7 +42,12 @@ export function formulaire({ titre, texte, champs = [], valider = t('dialogue.va
     ajouter(form, h('h3', null, titre), texte ? h('p', { class: 'dlg-texte' }, texte) : null, corps, champs.map(champ),
       h('div', { class: 'dlg-actions' },
         annuler ? h('button', { type: 'button', class: 'btn', 'data-refus': '', onclick: () => dlg.close() }, annuler) : null,
-        h('button', { type: 'submit', class: 'btn primaire' }, valider)));
+        h('button', { type: 'submit', class: danger ? 'btn primaire danger-plein' : 'btn primaire' }, valider)));
+    if (exiger) {
+      const caseExigee = form.querySelector(`input[name="${exiger}"]`), ok = form.querySelector('.primaire');
+      const maj = () => { ok.disabled = !caseExigee.checked; };
+      caseExigee.addEventListener('change', maj); maj();
+    }
     form.addEventListener('submit', (e) => {
       e.preventDefault();
       const fd = new FormData(form);

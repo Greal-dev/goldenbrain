@@ -135,11 +135,13 @@ function entete(c, racines) {
     ...c.slice(0, -1).map((a) => crumb(nomLisible(a.titre), () => ouvrirVue('cascade', cle(a)))), h('span', { 'aria-current': 'location' }, nomLisible(c.at(-1).titre))] : null);
   ref.fil.hidden = !c;
   const cont = c?.at(-1);
-  ref.noteBtn.classList.add('f-notes'); ref.reduireBtn.classList.add('f-transformations');
+  ref.noteBtn.classList.add('f-notes'); ref.reduireBtn.classList.add('f-transformations'); ref.supprimerBtn.classList.add('danger');
   ref.noteBtn.hidden = cont?.type !== 'conteneur';
   ref.noteBtn.onclick = cont?.type === 'conteneur' ? () => ouvrirNote(cheminContexte(cont.id)) : null;
   ref.reduireBtn.hidden = cont?.type !== 'conteneur';
   ref.reduireBtn.onclick = cont?.type === 'conteneur' ? () => reduire(cont) : null;
+  ref.supprimerBtn.hidden = cont?.type !== 'conteneur'; // INV-SUPPR-1 : en-tête de la vue, jamais dans les lignes de l'arbre
+  ref.supprimerBtn.onclick = cont?.type === 'conteneur' ? () => import('./suppression.js').then((m) => m.supprimer({ conteneur: cont.id })) : null;
   ref.titre.textContent = c ? nomLisible(c.at(-1).titre) : t('cascade.vue_ensemble');
   majConversation(ref.chatBtn, ref.chat, cont);
   majReglageConteneur(ref.execution, cont); // INV-REGROUPE-1
@@ -331,10 +333,11 @@ function construire() {
     h('button', { type: 'button', 'data-vue': 'toutes', onclick: () => fixerToutes(true) }, t('cascade.toutes')));
   ref.noteBtn = h('button', { class: 'btn petit', type: 'button', hidden: true, title: t('cascade.note_titre') }, t('cascade.note_btn'));
   ref.reduireBtn = h('button', { class: 'btn petit', type: 'button', hidden: true, title: t('cascade.reduire_titre') }, t('cascade.reduire'));
+  ref.supprimerBtn = h('button', { class: 'btn petit', type: 'button', hidden: true, 'data-id': 'supprimer-projet', title: t('cascade.supprimer_titre') }, t('cascade.supprimer'));
   ref.chat = h('div', { class: 'casc-chat', hidden: true });
   ref.chatBtn = boutonConversation(ref.chat);
   ref.execution = h('span', { class: 'casc-execution' });
-  const outils = h('div', { class: 'casc-outils' }, ref.chatBtn, ref.execution, ref.noteBtn, ref.reduireBtn,
+  const outils = h('div', { class: 'casc-outils' }, ref.chatBtn, ref.execution, ref.noteBtn, ref.reduireBtn, ref.supprimerBtn,
     h('button', { class: 'btn petit', type: 'button', onclick: () => toutBasculer(true) }, t('cascade.replier')),
     h('button', { class: 'btn petit', type: 'button', onclick: () => toutBasculer(false) }, t('cascade.deplier')), bascule);
   coque = h('div', { class: 'casc' },
