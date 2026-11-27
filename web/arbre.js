@@ -245,7 +245,7 @@ function surTouche(e) {
       return;
     case 'Enter': case ' ':
       e.preventDefault();
-      if (estNeuf(n)) nouvelleTache(n); else if (n.type === 'tache') ouvrir(n.id); else if (e.key === 'Enter' && n.type !== 'groupe') ouvrirVue('cascade', cle(n)); else basculer(n);
+      if (estNeuf(n)) nouvelleTache(n); else if (n.type === 'tache') ouvrir(n.id); else if (e.key === 'Enter' && n.mot) ouvrirVue('etiquette', n.mot); else if (e.key === 'Enter' && n.type !== 'groupe') ouvrirVue('cascade', cle(n)); else basculer(n);
   }
 }
 
@@ -269,7 +269,7 @@ export function initArbre() {
     cleFocus = cle(n);
     const puce = e.target.closest('.etiq[data-etiquette]'); // INV-ETIQUETTE-4 : clic sur une puce = vue de l'étiquette
     if (puce) { ouvrirVue('etiquette', puce.dataset.etiquette); return; }
-    if (estNeuf(n)) nouvelleTache(n); else if (e.target.classList.contains('chev')) basculer(n); else if (n.type === 'tache') ouvrir(n.id); else if (n.type === 'groupe') basculer(n); else ouvrirVue('cascade', cle(n));
+    if (estNeuf(n)) nouvelleTache(n); else if (e.target.classList.contains('chev')) basculer(n); else if (n.type === 'tache') ouvrir(n.id); else if (n.mot) ouvrirVue('etiquette', n.mot); else if (n.type === 'groupe') basculer(n); else ouvrirVue('cascade', cle(n));
     row.focus?.();
   });
   brancher(cont, cont);

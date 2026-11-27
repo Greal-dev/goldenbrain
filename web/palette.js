@@ -8,6 +8,7 @@ import { groupesStatut, ecrireStatut } from './statut.js';
 import { envoyerIA } from './main.js';
 import { motsConnus, charger as chargerEtiquettes } from './etiquettes.js';
 import { ouvert } from './interface.js';
+import { charger } from './paresseux.js';
 
 const MAX = 8, FERMES = new Set(['fait', 'cloture', 'abandonne']);
 const norm = (s) => (s || '').normalize('NFD').replace(/\p{M}/gu, '').toLowerCase();
@@ -30,6 +31,7 @@ function commandes() {
     { libelle: t('palette.nouvelle'), agir: () => $('#btn-nouvelle').click() },
     { libelle: t('palette.decisions'), agir: () => ouvrirVue('decisions') },
     { libelle: t('palette.reglages'), agir: () => ouvrirVue('reglages') },
+    { libelle: t('palette.nouvelle_etiquette'), agir: () => charger('etiquette_trouver').then((m) => m.nouvelleEtiquette(), (e) => erreur(e.message)) }, // INV-ETIQUETTE-5
     ...motsConnus().map((m) => ({ libelle: t('palette.etiquette', { mot: m }), agir: () => ouvrirVue('etiquette', m) })), // INV-ETIQUETTE-4
   ];
   // Bases ouvertes récemment (base_table.js les note) : lues sans charger le module du tableau.

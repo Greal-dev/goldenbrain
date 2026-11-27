@@ -4,7 +4,8 @@ Rôle : traduire HTTP en appels à `etiquettes` et `lot_statuts` ; fournir à `G
 leurs consignes et les tâches liées par étiquette ; `GET /api/etiquettes` sert le filtre et Réglages.
 Frontières : aucune logique d'étiquette ici (module `etiquettes`) ; le renommage et la fusion passent par un lot
 annulable (INV-LOT-1). La consigne, le renommage et la fusion sont des gestes humains : refusés à un agent.
-Invariants portés : INV-ETIQUETTE-1, INV-ETIQUETTE-4 (vue par étiquette, lecture seule), INV-ETIQUETTE-2 (un agent pose une étiquette connue, ne l'invente pas, ne
+`/api/etiquettes/{mot}/candidates` (et `/ia`) proposent les tâches à étiqueter, sans rien écrire.
+Invariants portés : INV-ETIQUETTE-1, INV-ETIQUETTE-4 (vue par étiquette, lecture seule), INV-ETIQUETTE-5, INV-ETIQUETTE-2 (un agent pose une étiquette connue, ne l'invente pas, ne
 retire pas celle d'un autre), INV-LOT-1.
 """
 
@@ -13,7 +14,7 @@ from __future__ import annotations
 from fastapi import APIRouter, Request
 from pydantic import BaseModel
 
-from . import etiquettes, langues, lot_statuts, vue_etiquette
+from . import etiquette_trouver, etiquettes, langues, lot_statuts, vue_etiquette
 from .vault import Conflit, Invalide
 
 
@@ -73,6 +74,15 @@ def routes(moteur, tache) -> APIRouter:
     @r.get("/api/etiquettes/{mot}/vue")
     async def vue_par_etiquette(mot: str):
         return vue_etiquette.assembler(moteur, mot)
+
+    @r.get("/api/etiquettes/{mot}/candidates")
+    async def candidates(mot: str):
+        return etiquette_trouver.public(etiquette_trouver.classer(moteur, mot))
+
+    @r.post("/api/etiquettes/{mot}/candidates/ia")
+    async def candidates_ia(mot: str, request: Request):
+        _humain(request)  # INV-ETIQUETTE-5 : geste de l'utilisateur, qui seul pose ensuite en bloc
+        return await etiquette_trouver.affiner(moteur, mot)
 
     @r.post("/api/taches/{ident}/etiquettes")
     async def poser(ident: str, c: CorpsPose, request: Request):

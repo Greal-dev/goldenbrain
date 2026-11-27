@@ -97,5 +97,5 @@ def test_volet_des_taches_se_regle_en_tirant_son_bord_et_s_en_souvient(navigateu
     assert 198 <= p.evaluate(largeur) <= 200, "la largeur choisie doit survivre au rechargement"
     p.locator("[data-id=poignee-arbre]").dblclick()
     assert p.evaluate(largeur) == l0, "le double-clic rend la largeur d'origine"
-    p.wait_for_function("document.documentElement.scrollWidth - innerWidth <= 0", timeout=10000)  # attente explicite : la mise en page se rétablit après le double-clic, plus ou moins vite sous charge
+    p.wait_for_function("() => document.documentElement.scrollWidth - innerWidth <= 0", timeout=10000)  # attente explicite : la mise en page se rétablit après le double-clic, plus ou moins vite sous charge
     ctx.close()

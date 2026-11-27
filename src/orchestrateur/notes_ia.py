@@ -54,17 +54,19 @@ def extraire(final: str) -> str:
     return (blocs[-1] if blocs else final or "").strip()
 
 
-async def executer(moteur, nom: str, message: str, consigne: str = CONSIGNE) -> dict:
-    """Un appel éphémère du rôle `notes` (partagé avec `notes_chat`) : réponse finale ou erreur lisible,
-    harnais, modèle, coût, durée. Aucune écriture hors journal et consommation (INV-EXEC-4, INV-ECO-2)."""
+async def executer(moteur, nom: str, message: str, consigne: str = CONSIGNE, *, role: str = "notes",
+                   choix: Choix | None = None, delai: float = DELAI_S) -> dict:
+    """Un appel éphémère d'un rôle assistant (`notes` par défaut ; partagé avec `notes_chat` et
+    `etiquette_trouver`) : réponse finale ou erreur lisible, harnais, modèle, coût, durée. Aucune écriture
+    hors journal et consommation (INV-EXEC-4, INV-ECO-2)."""
     debut = time.monotonic()
-    choix = moteur.roles.choisir("notes") or Choix(moteur.config.moteur.harnais_defaut, "")
+    choix = choix or moteur.roles.choisir(role) or Choix(moteur.config.moteur.harnais_defaut, "")
     final, erreur, courant, mesure = None, None, [], None
     try:
         with moteur._journal(nom) as journal:  # INV-EXEC-4
-            flux = moteur.roles.lancer("notes", choix, message, consigne=consigne, env={},
+            flux = moteur.roles.lancer(role, choix, message, consigne=consigne, env={},
                                        sur_harnais=lambda h, n: courant.append((h, n)))
-            async with aclosing(flux), asyncio.timeout(DELAI_S):
+            async with aclosing(flux), asyncio.timeout(delai):
                 async for ev in flux:
                     journal.write(json.dumps(ev.brut or asdict(ev), ensure_ascii=False) + "\n")
                     if ev.type == "fin":
@@ -75,7 +77,7 @@ async def executer(moteur, nom: str, message: str, consigne: str = CONSIGNE) -> 
                     elif ev.type == "erreur":
                         erreur = ev.texte or langues.t("serveur.notes_ia.erreur_assistant")
     except TimeoutError:
-        erreur = langues.t("serveur.notes_ia.delai_depasse", n=DELAI_S)
+        erreur = langues.t("serveur.notes_ia.delai_depasse", n=delai)
     except Exception as e:  # harnais introuvable ou en échec : réponse lisible, jamais de 500
         erreur = langues.t("serveur.notes_ia.modele_indisponible", type=type(e).__name__, detail=e)
     finally:

@@ -90,7 +90,6 @@ const nomProjet = (chem, arbre) => {
 const GROUPEURS = {
   statut: (n) => [STATUTS_COURTS.findIndex(([c]) => c === cleStatut(n)), libelleCourt(n)],
   priorite: (n) => [rangPriorite(n.priorite), n.priorite ? libellePriorite(n.priorite) : t('filtres.sans_priorite')],
-  etiquette: (n) => [n.etiquettes?.length ? 0 : 1, n.etiquettes?.[0] ? `#${n.etiquettes[0]}` : t('filtres.sans_etiquette')], // la première étiquette range la tâche
   echeance: (n) => (n.retard ? [0, t('filtres.en_retard')] : !n.echeance ? [4, t('filtres.sans_echeance')] : ecartJours(n.echeance) === 0 ? [1, t('filtres.aujourdhui')] : semaine(n) ? [2, t('filtres.cette_semaine')] : [3, t('filtres.plus_tard')]),
 };
 function grouper(arbre) {
@@ -103,10 +102,16 @@ function grouper(arbre) {
     }
   })(arbre, []);
   const groupes = new Map();
-  for (const { n, chem } of taches) {
-    const [ordre, titre] = F.groupe === 'projet' ? [0, nomProjet(chem, S.arbre)] : GROUPEURS[F.groupe](n);
-    if (!groupes.has(titre)) groupes.set(titre, { ordre, noeud: { id: `${F.groupe}:${titre}`, type: 'groupe', titre, enfants: [], ouvertes: 0 } });
+  const poser = (ordre, titre, n, mot = null) => {
+    if (!groupes.has(titre)) groupes.set(titre, { ordre, noeud: { id: `${F.groupe}:${titre}`, type: 'groupe', titre, mot, enfants: [], ouvertes: 0 } });
     groupes.get(titre).noeud.enfants.push(n);
+  };
+  for (const { n, chem } of taches) {
+    // INV-ETIQUETTE-4 : chaque étiquette a son groupe (une tâche paraît sous chacune) ; `mot` : un clic ouvre sa vue.
+    if (F.groupe === 'etiquette') {
+      if (n.etiquettes?.length) for (const m of n.etiquettes) poser(0, `#${m}`, n, m);
+      else poser(1, t('filtres.sans_etiquette'), n);
+    } else poser(...(F.groupe === 'projet' ? [0, nomProjet(chem, S.arbre)] : GROUPEURS[F.groupe](n)), n);
   }
   return [...groupes.values()].sort((a, b) => a.ordre - b.ordre || a.noeud.titre.localeCompare(b.noeud.titre, LOCALE))
     .map(({ noeud }) => ({ ...noeud, enfants: noeud.enfants.sort(F.tri === 'priorite' ? cmp : () => 0), ouvertes: noeud.enfants.length }));
