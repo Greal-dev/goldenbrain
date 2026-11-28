@@ -163,7 +163,9 @@ async function dossierCasquette(n) {
     const d = s.slice(0, 2).join('/');
     if (c.casquette === code && s.length > 2 && !ids.has(d)) compte.set(d, (compte.get(d) || 0) + 1);
   }
-  const d = [...compte].sort((a, b) => b[1] - a[1])[0]?.[0];
+  // Repli : projets tous rangés hors « Casquettes/ » (ex. « Projets/C5-… ») → le dossier propre de la casquette, s'il est un conteneur.
+  const d = [...compte].sort((a, b) => b[1] - a[1])[0]?.[0]
+    || conts.find((c) => c.casquette === code && c.id.split('/').length === 2 && c.id.startsWith('Casquettes/'))?.id;
   if (!d) throw new Error(t('arbre.casquette_sans_dossier'));
   return d;
 }

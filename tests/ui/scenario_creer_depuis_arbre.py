@@ -42,6 +42,24 @@ def test_nouveau_projet_sous_une_casquette(page, serveur):
     assert not page.erreurs, page.erreurs
 
 
+def test_nouveau_projet_sous_une_casquette_dont_les_projets_sont_ailleurs(page, serveur):
+    # Régression (28/11) : casquette sans projet sous « Casquettes/ » mais avec son propre dossier de tâches →
+    # la création s'arrêtait avant tout envoi ; le projet naît désormais dans ce dossier.
+    seul = "Casquettes/C8-Seul"
+    _ECRITS.extend([serveur.vault / seul, serveur.vault / "Projets/C8-Ailleurs"])
+    univers.ecrire(serveur.vault, f"{seul}/contexte.md", "---\ntype: contexte\ncasquette: C8\nnom: Seul C8\n---\n")
+    univers.ecrire(serveur.vault, f"{seul}/taches/c8-t.md", univers.tache("Tâche C8", extra="casquette: C8\n"))
+    univers.ecrire(serveur.vault, "Projets/C8-Ailleurs/contexte.md", "---\ntype: contexte\ncasquette: C8\nnom: Ailleurs C8\n---\n")
+    charger(page)
+    _pied(page, ligne(page, "C8")).locator("[data-ajout=projet]").click()
+    page.fill("dialog[open] input[name=nom]", "Neuf C8")
+    with page.expect_response(lambda r: r.url.endswith("/api/conteneurs") and r.request.method == "POST") as rep:
+        page.click("dialog[open] .primaire")
+    assert rep.value.status == 201 and rep.value.json()["id"] == f"{seul}/Neuf-C8", rep.value.text()
+    page.wait_for_selector("#arbre .ligne.t-conteneur .titre:text-is('Neuf C8')")
+    assert not page.erreurs, page.erreurs
+
+
 def test_nouvelle_tache_sous_un_projet_et_une_tache_groupe(page, serveur):
     _univers(serveur)
     charger(page)

@@ -71,7 +71,7 @@ port = {port}
 
 [vault]
 racine = "{vault.as_posix()}"
-taches = ["Projets/*/taches/*.md", "Casquettes/*/*/taches/*.md", "Casquettes/*/*/*/taches/*.md", "_meta/taches/*.md"]
+taches = ["Projets/*/taches/*.md", "Casquettes/*/taches/*.md", "Casquettes/*/*/taches/*.md", "Casquettes/*/*/*/taches/*.md", "_meta/taches/*.md"]
 exclure = ["_meta/templates/*"]
 index_ttl_s = 0  # les scénarios écrivent des fiches puis relisent aussitôt ; scenario_reactivite le remet à 2 (défaut réel)
 
