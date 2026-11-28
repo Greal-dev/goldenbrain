@@ -167,6 +167,30 @@ def test_decision_repondue_disparait_et_ne_revient_pas_pendant_le_tour_de_l_agen
     assert not page.erreurs, page.erreurs
 
 
+def test_reponse_a_une_decision_s_affiche_dans_le_fil_avec_celle_de_l_agent(page, serveur):
+    """Symptôme (28/11) : l'utilisateur répond à une décision, « il ne se passe rien » (ni écho, ni indicateur, ni la
+    réponse de l'agent) et renvoie 3-4 fois le même message. Le message s'affiche aussitôt, un indicateur dit que l'agent
+    répond, sa réponse arrive sans recharger, même si la décision a quitté la liste ; un seul envoi part."""
+    univers.ecrire(serveur.vault, "Projets/C1-Decis/contexte.md",
+                   "---\ntype: contexte\ncasquette: C1-Pro\nnom: Decis\n---\n")
+    univers.ecrire(serveur.vault, "Projets/C1-Decis/taches/dc-e.md",
+                   univers.tache("Echange Decis", statut="retour-humain", extra='commentaire: "A ou B ?"\n'))
+    envois = []
+    page.on("request", lambda r: envois.append(r.url) if r.method == "POST" and r.url.endswith("/api/taches/dc-e/messages") else None)
+    page.goto(page.url_serveur + "/#decisions")
+    c = carte(page, "Echange Decis")
+    c.locator("textarea").fill("Option A [lent 2]")
+    bouton = c.get_by_role("button", name="Répondre")
+    bouton.evaluate("b => { b.click(); b.click(); }")  # double envoi : la 2e pression part avant tout redessin
+    echange = page.locator(".dc-echange", has_text="Echange Decis")
+    expect(echange.locator(".msg.user")).to_contain_text("Option A", timeout=3000)
+    expect(echange.locator(".activite")).to_be_visible()
+    expect(echange.locator(".msg.agent")).to_contain_text("bonjour s-faux", timeout=10000)  # transcript du harnais factice
+    expect(echange.locator(".activite")).to_have_count(0)
+    assert len(envois) == 1, envois
+    assert not page.erreurs, page.erreurs
+
+
 def test_decision_reportee_disparait_jusqu_a_sa_date_puis_reapparait(page, serveur):
     """Symptôme (23/11) : « Reporter » ne retirait pas l'entrée ni sa pastille avant la nouvelle date (INV-DECISIONS-3)."""
     univers.ecrire(serveur.vault, "Projets/C1-Decis/contexte.md",

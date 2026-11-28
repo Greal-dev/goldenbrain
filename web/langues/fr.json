@@ -565,6 +565,8 @@
  "decisions.de_quoi": "De quoi il s’agit",
  "decisions.documenter_titre": "Demande à l’agent d’écrire ces deux lignes et le mode de validation",
  "decisions.ecartees": "{n} préconisation(s) écartée(s) : {liste}",
+ "decisions.echange_fermer": "Fermer",
+ "decisions.echange_vide": "L’agent n’a pas écrit de réponse : ouvrez la fiche pour voir où en est la tâche.",
  "decisions.echec_office": "Non appliquée d'office : {motif}",
  "decisions.en_attente.plusieurs": "{n} décisions en attente",
  "decisions.en_attente.un": "{n} décision en attente",

@@ -79,7 +79,7 @@ function surEvenement(e) {
         const titre = S.etat.tours?.find((x) => x.tache === e.tache)?.titre || e.tache;
         erreur(t('app.tour_echec', { titre, erreur: e.erreur }));
       }
-      chargerEtat(); evtDetail(e); evtTransfo(e); evtTourManager(e); planifier(e.tache); rechargerCompactage(); break; // mesure par tour (INV-REGLAGES-1 : plus de redessin complet sur etat)
+      emit('tour_fin', e); chargerEtat(); evtDetail(e); evtTransfo(e); evtTourManager(e); planifier(e.tache); rechargerCompactage(); break; // mesure par tour (INV-REGLAGES-1 : plus de redessin complet sur etat)
     }
     case 'tour_debut': chargerEtat(); evtDetail(e); evtTourManager(e); planifier(e.tache); break;
     case 'manager': evtManager(e); break; // INV-MANAGER-1

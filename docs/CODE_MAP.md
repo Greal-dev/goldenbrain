@@ -268,6 +268,7 @@ Les tests d'interface (`ui/`) se lancent à part : `python scripts/check_ui.py`.
 | `web/decisions.js` | page « Décisions » du volet droit — une carte par décision, question en clair, gestes sur place, lot de validations. | INV-DECISIONS-1, INV-ROUTINE-4, INV-PROP-1 | `ui/scenario_decisions.py` |
 | `web/base_table.js` | page « Base » du volet droit (`#base=<dossier>`) — tableau d'un dossier : tri, filtres par colonne, regroupement et sous-totaux, calcul en pied, colonnes visibles ; réglages par dossier dans localStorage. | INV-BASES-1 | `ui/scenario_base_table.py` |
 | `web/decisions-agents.js` | Lignes « Agent Claude Code » de la page Décisions : choix rattacher / créer / ignorer, lot. | INV-AGENTSCC-1 | `ui/scenario_agents_cc.py` |
+| `web/decisions-echange.js` | Fil d'une réponse donnée sur la page Décisions : écho, « l'agent travaille… », réponse de l'agent. | INV-DECISIONS-4 | `ui/scenario_decisions.py` |
 | `web/evitable.js` | section « Pastille « évitable ? » » des Réglages : activée, seuil. | INV-EVITABLE-1 | `ui/scenario_evitable.py` |
 | `web/tri_rapide.js` | « Tri rapide » de la page Décisions : une carte plein écran à la fois, gestes à la touche ou au clic par les routes existantes. | INV-DECISIONS-1 | `ui/scenario_tri_rapide.py` |
 | `web/decisions.css` | Page « Décisions » : cartes, groupes de projet repliables, barre de lot. | — | `ui/scenario_decisions.py` |

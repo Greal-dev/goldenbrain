@@ -565,6 +565,8 @@
  "decisions.de_quoi": "De qué se trata",
  "decisions.documenter_titre": "Pide al agente que escriba estas dos líneas y el modo de validación",
  "decisions.ecartees": "{n} recomendación(es) descartada(s): {liste}",
+ "decisions.echange_fermer": "Cerrar",
+ "decisions.echange_vide": "El agente no escribió respuesta: abra la tarea para ver cómo va.",
  "decisions.echec_office": "No aplicada de oficio: {motif}",
  "decisions.en_attente.plusieurs": "{n} decisiones pendientes",
  "decisions.en_attente.un": "{n} decisión pendiente",

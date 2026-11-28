@@ -565,6 +565,8 @@
  "decisions.de_quoi": "What it is about",
  "decisions.documenter_titre": "Asks the agent to write these two lines and the way of validating",
  "decisions.ecartees": "{n} recommendation(s) set aside: {liste}",
+ "decisions.echange_fermer": "Close",
+ "decisions.echange_vide": "The agent wrote no reply: open the task to see where it stands.",
  "decisions.echec_office": "Not applied automatically: {motif}",
  "decisions.en_attente.plusieurs": "{n} decisions waiting",
  "decisions.en_attente.un": "{n} decision waiting",

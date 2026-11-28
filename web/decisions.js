@@ -8,7 +8,9 @@ import { formulaire } from './dialogue.js';
 import { description, groupePropositions } from './propositions.js';
 import { libelleEcheance } from './temps.js';
 import { ligneAgent, lotAgents } from './decisions-agents.js';
-import { boutonAide } from './guide.js';import { t, tn } from './langues.js';
+import { boutonAide } from './guide.js';
+import { t, tn } from './langues.js';
+import { repondre as envoyerReponse, blocEchanges, enCours } from './decisions-echange.js';
 
 let coque = null, version = 0, donnees = null;
 const reponses = new Map();   // brouillons de réponse, conservés d'un redessin à l'autre
@@ -45,10 +47,12 @@ function reporter(d) {
 function repondre(d) {
   const zone = h('textarea', { rows: 2, placeholder: t('decisions.reponse_invite'), 'aria-label': t('decisions.reponse'), oninput: () => reponses.set(d.id, zone.value) }, reponses.get(d.id) || '');
   return h('div', { class: 'dc-rep' }, zone,
-    h('button', { class: 'btn primaire petit', type: 'button', onclick: () => zone.value.trim() && geste(async () => {
-      await post(`/taches/${d.tache}/messages`, { texte: zone.value.trim() });
+    h('button', { class: 'btn primaire petit', type: 'button', disabled: enCours(d.tache) ? true : null, onclick: async () => {
+      const texte = zone.value.trim();
+      if (!texte || !await envoyerReponse(d, texte, dessiner)) return;
       reponses.delete(d.id);
-    }) }, t('decisions.repondre')));
+      recharger();
+    } }, t('decisions.repondre')));
 }
 
 // « De quoi il s'agit » et « Ce qui a été fait » : deux lignes ; sinon « Fiche muette » et la consigne à l'agent.
@@ -195,7 +199,7 @@ function dessiner() {
   remplacer(coque, h('h2', { class: 'casc-titre' }, t('decisions.titre'), ' ', boutonAide('decisions')),
     h('p', { class: 'au-date' }, tn('decisions.en_attente', tout.length) + (seulementRapides ? ' — ' + tn('decisions.rapides', liste.length) : '')),
     donnees.reprises?.length ? h('p', { class: 'dc-reprises', 'data-reprises': '' }, t('decisions.reprises', { liste: donnees.reprises.map((r) => r.titre).join(', ') })) : null, // INV-DECISIONS-2
-    barre, liste.length ? groupes(regrouper(liste)) : h('p', { class: 'vide' }, t('decisions.rien')), closAuto(donnees.clos_auto), office(donnees.office));
+    barre, blocEchanges(dessiner), liste.length ? groupes(regrouper(liste)) : h('p', { class: 'vide' }, t('decisions.rien')), closAuto(donnees.clos_auto), office(donnees.office));
 }
 
 // Un redessin tardif d'un appel périmé est ignoré (même garde que « Aujourd'hui »).

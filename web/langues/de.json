@@ -565,6 +565,8 @@
  "decisions.de_quoi": "Worum es geht",
  "decisions.documenter_titre": "Bittet den Agenten, diese beiden Zeilen und die Art der Abnahme zu schreiben",
  "decisions.ecartees": "{n} Empfehlung(en) verworfen: {liste}",
+ "decisions.echange_fermer": "Schließen",
+ "decisions.echange_vide": "Der Agent hat nicht geantwortet: Öffnen Sie die Aufgabe, um den Stand zu sehen.",
  "decisions.echec_office": "Nicht automatisch angewendet: {motif}",
  "decisions.en_attente.plusieurs": "{n} Entscheidungen warten",
  "decisions.en_attente.un": "{n} Entscheidung wartet",
