@@ -328,6 +328,7 @@ boucles_max = 2
 # relecteur IA independant de l auteur. Vide = un autre harnais, sinon une autre famille de modele.
 revue_harnais = ""
 revue_modele = ""
+rex = true   # INV-REX-1 : passe de REX à chaque tâche validée (dérogation par tâche : `rex: non`)
 # Reglages par contexte.md (pas ici) : validation: manuelle|automatique, validation_accord, validation_echantillon (N, defaut 5),
 # validation_exclusions: [mots] (mots ENTIERS, accents ignores ; "deploi*" ouvre la fin du mot ; remplace la liste par defaut),
 # validation_exemptions: [expressions] (retirees du titre avant la recherche ; defaut : "garde de publication").

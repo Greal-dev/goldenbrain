@@ -164,6 +164,7 @@ class Vault:
         self._cache: dict[Path, tuple] = {}
         self._index: tuple | None = None
         self._rels: dict[Path, str] = {}
+        self.apres_statut = None  # INV-REX-1 : écouteur (ident, ancien, nouveau, humain) posé par `rex.Rex`
         self._structure: tuple | None = None  # (index, arbre.Structure) : suit l'index
 
     # --- lecture -----------------------------------------------------------------------
@@ -350,6 +351,8 @@ class Vault:
         ouverts = self.cfg.statuts_ouverts
         maj.update(recent.pour_statut(t.fm, t.statut in ouverts, statut in ouverts, humain))  # INV-RECENT-1
         self.modifier(ident, maj)
+        if self.apres_statut:
+            self.apres_statut(ident, t.statut, statut, humain)
 
     def liberer(self, ident: str) -> None:
         """Geste humain : retire `paperclip` et `execution` ; la tâche redevient pilotable."""

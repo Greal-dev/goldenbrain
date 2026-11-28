@@ -174,6 +174,7 @@ class ConfigValidation:
     boucles_max: int = 2         # renvois automatiques avant de rendre la main à l'humain
     revue_harnais: str = ""  # INV-VALID-2 : revue IA de la validation automatique ; vide = autre harnais
     revue_modele: str = ""   # vide = autre modèle
+    rex: bool = True         # INV-REX-1 : passe de REX à chaque tâche validée (dérogation : `rex: non` en tâche)
 
     def __post_init__(self):
         if self.mode not in ("humain", "persona"):
@@ -194,8 +195,7 @@ class ConfigNotes:
 
 
 @dataclass
-class ConfigAlignement:
-    # Lieux hors vault où les chemins déplacés sont signalés, jamais modifiés (lot 5).
+class ConfigAlignement:  # lieux hors vault signalés, jamais modifiés (lot 5)
     externes: list[str] = field(default_factory=lambda: [
         "~/.claude/skills", "~/.claude/projects/*/memory", "~/.claude/CLAUDE.md"])
     apres: str = ""  # commande lancée en tâche de fond après un alignement (vide = rien)
@@ -259,7 +259,7 @@ class ConfigTelegram:
     transcription_fichier: str = ""  # vide = <donnees>/etat/transcription.cle (DPAPI)
 
 
-ROLES = ("tache", "conseil", "persona", "jardinage", "mandat", "fiche", "tri", "notes")
+ROLES = ("tache", "conseil", "persona", "jardinage", "mandat", "fiche", "tri", "notes", "rex")
 FAMILLES_MODELE = ("rapide", "sonnet", "opus")
 # Ordre des moteurs par famille de modèle : Antigravity d'abord, Claude Code ensuite.
 CREDITS_DEFAUT = {f: ["agy", "claude"] for f in FAMILLES_MODELE}

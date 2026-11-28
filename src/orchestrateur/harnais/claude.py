@@ -111,7 +111,8 @@ class HarnaisClaude:
         if consigne:
             argv += ["--append-system-prompt", consigne]
         if modele:
-            argv += ["--model", modele]
+            nom, _, effort = modele.partition("@")  # `modèle@effort` (INV-REX-1)
+            argv += (["--model", nom] if nom else []) + (["--effort", effort] if effort else [])
         return argv
 
     def _env_compactage(self) -> dict[str, str]:
@@ -290,5 +291,6 @@ class HarnaisClaude:
         if consigne:
             argv += ["--append-system-prompt", consigne]
         if modele:
-            argv += ["--model", modele]
+            nom, _, effort = modele.partition("@")  # `modèle@effort` (INV-REX-1)
+            argv += (["--model", nom] if nom else []) + (["--effort", effort] if effort else [])
         return argv + ([message] if message else [])

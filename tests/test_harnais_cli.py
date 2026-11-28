@@ -246,3 +246,8 @@ def test_claude_avec_et_sans_modele():
     assert "--model" not in h._argv(None, False, "")
     argv = h._argv("abc", False, "", "opus")
     assert argv[argv.index("--model") + 1] == "opus"
+
+
+def test_claude_modele_avec_effort():
+    argv = HarnaisClaude({"commande": sys.executable})._argv(None, False, "", "opus@high")
+    assert argv[argv.index("--model") + 1] == "opus" and argv[argv.index("--effort") + 1] == "high"

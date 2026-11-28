@@ -29,7 +29,7 @@ QUOTA = echecs.QUOTA  # INV-QUOTA-1 : une seule reconnaissance du quota (« usag
 PANNE_S = 600  # un harnais en erreur de quota est évité d'emblée pendant ce délai
 ASSISTANTS = tuple(r for r in ROLES if r != "tache")
 # Rôle sans section dans `config.toml` : réglage par défaut (INV-EXECUTANT-3 : outil de rédaction économique).
-DEFAUTS = {"notes": ConfigRole(famille="rapide")}
+DEFAUTS = {"notes": ConfigRole(famille="rapide"), "rex": ConfigRole(famille="opus")}
 
 
 @dataclass

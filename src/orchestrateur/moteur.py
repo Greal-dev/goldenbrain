@@ -23,7 +23,7 @@ from collections import defaultdict, deque
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 
-from . import (apprendre, etiquettes, assistant_absent, attente_muette, etat_main, instrumentation, agents_cc, langues, catalogue, codespace, decisions, depot, echecs, economie, executant, executeurs, fiches, incidents, liens, natif, ordonnancement, pilotage,
+from . import (rex, apprendre, etiquettes, assistant_absent, attente_muette, etat_main, instrumentation, agents_cc, langues, catalogue, codespace, decisions, depot, echecs, economie, executant, executeurs, fiches, incidents, liens, natif, ordonnancement, pilotage,
                quota, regroupement, reprise, reprise_auto, reseau, retour, session_perdue, sessions, simultanes, temps, transformations)
 from .propagation import MixinPropagation
 from .config import RACINE_DEPOT, Config
@@ -103,7 +103,7 @@ class Moteur(retour.MixinRetour, MixinVerrou, MixinControle, MixinCompactage, Mi
         self.etats.update(dict.fromkeys(self.interrompus, "interrompu"))
         self._sauver_actifs()
         self._init_reveils()  # INV-EXEC-10
-        self.revues, self.validation_auto = Revues(self), ValidationAuto(self)
+        self.revues, self.validation_auto, self.rex = Revues(self), ValidationAuto(self), rex.Rex(self)  # INV-REX-1
         self.agents_cc = agents_cc.Releve(self)  # INV-AGENTSCC-1
         self.roles = Roles(config, self.registre); self.etiquettes = etiquettes.Registre(config.donnees); self.mandats = transformations.Mandats(config.donnees / "etat" / "mandats.json")
         self._init_verrou()
