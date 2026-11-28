@@ -1,17 +1,20 @@
 // Rôle : page « Email » (#mail) — dossiers (Boîte de réception, Non lus, Suivis, Envoyés, Tous les messages, libellés), liste paginée,
-//        recherche à la syntaxe Gmail, lecture d'un mail (en-têtes, corps, pièces jointes) et ses gestes : lu / non lu, archiver,
-//        répondre, répondre à tous, transférer, créer une tâche ou rattacher à une tâche (mail-gestes.js).
+//        recherche à la syntaxe Gmail, lecture d'un mail (en-têtes, corps, pièces jointes) et ses gestes : lu / non lu, masquer (archiver, avec « Annuler »),
+//        répondre, répondre à tous, transférer, créer une tâche ou associer à une tâche (mail-gestes.js).
 // Frontières : parle à /api/mail seulement ; chargée au clic (app.js, INV-REACTIVITE-1). INV-MAIL-3 : le HTML d'un mail n'entre jamais
 //        dans la page — il vit dans un <iframe sandbox> servi par le serveur sous CSP sans script ; le texte brut passe par textContent.
 import { t } from './langues.js';
 import { h, remplacer, heure } from './dom.js';
 import { api, post } from './api.js';
-import { erreur } from './store.js';
-import { composer, versTache } from './mail-gestes.js';
+import { erreur, on } from './store.js';
+import { composer, versTache, masquer, masquable, actionsLigne } from './mail-gestes.js';
 
 const enc = encodeURIComponent;
 const E = { vue: 'inbox', q: '', page: 0, uid: null, images: false, racine: null, jeton: 0 };
 const NOMS = { inbox: 'mail.inbox', 'non-lus': 'mail.non_lus', suivis: 'mail.suivis', envoyes: 'mail.envoyes', tous: 'mail.tous' };
+export function choisir(uid) { E.vue = 'inbox'; E.q = ''; E.page = 0; E.uid = uid; } // ouvrir un mail de l'onglet « Mails » du volet
+// Un mail masqué ou remis (mail-gestes.js) : la liste se relit ; le mail ouvert qui vient d'être masqué se ferme.
+on('mail-change', (d) => { if (d?.masque && d.masque === E.uid) { E.uid = null; lecture(null); } liste(); });
 const zone = (id) => E.racine?.querySelector(`[data-id="${id}"]`);
 
 export async function dessinerMail(racine) {
@@ -64,10 +67,10 @@ export async function liste() {
 }
 
 function ligne(m) {
-  return h('li', null, h('button', { type: 'button', class: `mail-ligne${m.lu ? '' : ' non-lu'}${m.uid === E.uid ? ' sel' : ''}`, 'data-id': 'mail-ligne', 'data-uid': m.uid, onclick: () => lire(m.uid) },
+  return h('li', { class: 'mail-item' }, h('button', { type: 'button', class: `mail-ligne${m.lu ? '' : ' non-lu'}${m.uid === E.uid ? ' sel' : ''}`, 'data-id': 'mail-ligne', 'data-uid': m.uid, onclick: () => lire(m.uid) },
     h('span', { class: 'mail-de' }, m.de), h('span', { class: 'mail-date' }, m.date ? heure(m.date) : ''),
     h('span', { class: 'mail-objet' }, m.piece ? '📎 ' : '', m.objet || t('mail.sans_objet')),
-    h('span', { class: 'mail-extrait' }, m.extrait)));
+    h('span', { class: 'mail-extrait' }, m.extrait)), actionsLigne(E.vue, m));
 }
 
 async function lire(uid) {
@@ -92,7 +95,6 @@ function lecture(m) {
   if (!m) { remplacer(z, h('p', { class: 'note' }, t('mail.choisir'))); return; }
   const geste = (cle, f, id) => h('button', { type: 'button', class: 'btn petit', 'data-id': id, onclick: f }, t(cle));
   const agir = (f) => async () => { try { await f(); } catch (e) { erreur(e.message); } };
-  const archivable = E.vue === 'inbox' || E.vue === 'non-lus';
   const corps = m.html ? cadre(m) : h('pre', { class: 'mail-texte', 'data-id': 'mail-texte' }, m.texte);
   remplacer(z,
     h('h3', { 'data-id': 'mail-objet' }, m.objet || t('mail.sans_objet')),
@@ -103,7 +105,7 @@ function lecture(m) {
       geste('mail.repondre_tous', () => composer('repondre_tous', E.vue, m), 'mail-repondre-tous'),
       geste('mail.transferer', () => composer('transferer', E.vue, m), 'mail-transferer'),
       geste(m.lu ? 'mail.marquer_non_lu' : 'mail.marquer_lu', agir(async () => { await post('/mail/marquer', { vue: E.vue, uid: m.uid, lu: !m.lu }); m.lu = !m.lu; lecture(m); liste(); }), 'mail-lu'),
-      archivable ? geste('mail.archiver', agir(async () => { await post('/mail/archiver', { vue: E.vue, uid: m.uid }); E.uid = null; lecture(null); liste(); }), 'mail-archiver') : null,
+      masquable(E.vue) ? geste('mail.archiver', () => masquer(E.vue, m), 'mail-archiver') : null,
       geste('mail.creer_tache', () => versTache(E.vue, m, true), 'mail-creer-tache'),
       geste('mail.rattacher', () => versTache(E.vue, m, false), 'mail-rattacher')),
     m.html && !E.images ? h('button', { type: 'button', class: 'btn petit', 'data-id': 'mail-images', onclick: () => { E.images = true; lecture(m); } }, t('mail.afficher_images')) : null,

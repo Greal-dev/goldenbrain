@@ -239,11 +239,11 @@ Les tests d'interface (`ui/`) se lancent à part : `python scripts/check_ui.py`.
 | `src/orchestrateur/suppression.py` | Suppression définitive d'une tâche ou d'un projet : aperçu, sous-tâches effacées ou déplacées, autres fichiers rangés dans `Archives/supprimes/<date>/`, références nettoyées, états oubliés, journal `suppressions.jsonl` ; tout ou rien. | INV-SUPPR-1, INV-VAULT-1, INV-VAULT-2, INV-ALIGN-2, INV-ROUTINE-1 | `test_suppression.py` |
 | `src/orchestrateur/api_suppression.py` | Routes `GET /api/suppression`, `POST /api/taches/{id}/supprimer`, `POST /api/conteneurs/supprimer` ; 403 pour un agent. | INV-SUPPR-1 | `test_suppression.py` |
 | `src/orchestrateur/config_messagerie.py` | Réglage `[messagerie]` : adresse, serveurs IMAP/SMTP, délais, emplacement du mot de passe (jamais le mot de passe) ; TLS obligatoire hors boucle locale. | INV-MAIL-1 | `test_mail.py` |
-| `src/orchestrateur/mail_imap.py` | Boîte IMAP (Gmail) et envoi SMTP : connexion réutilisée sous verrou, vues et libellés, liste paginée, recherche X-GM-RAW, lecture, lu / non lu, archivage. | INV-MAIL-1, INV-MAIL-6 | `test_mail.py` |
+| `src/orchestrateur/mail_imap.py` | Boîte IMAP (Gmail) et envoi SMTP : connexion réutilisée sous verrou, vues et libellés, liste paginée, recherche X-GM-RAW, lecture, lu / non lu, archivage (« masquer ») et son annulation par Message-ID. | INV-MAIL-1, INV-MAIL-6, INV-MAIL-8 | `test_mail.py` |
 | `src/orchestrateur/mail_message.py` | Mail brut : résumé, détail, HTML encadré pour le cadre isolé, pièces jointes, réponse et transfert composés. | INV-MAIL-3, INV-MAIL-4, INV-MAIL-5 | `test_mail.py` |
 | `src/orchestrateur/mail_tache.py` | Mail → tâche : note `type: mail` dans le dossier du projet, pièces à côté, livrable, ligne « Entrée — Instruction », premier tour sur demande. | INV-MAIL-2, INV-MAIL-5, INV-LIVRABLES-1, INV-VAULT-1 | `test_mail.py`, `ui/scenario_mail.py` |
 | `src/orchestrateur/mail_mdp.py` | Saisie du mot de passe d'application au terminal du poste (étoiles), essai IMAP, coffre ; commande exacte des Réglages. | INV-INSTALL-1, INV-MAIL-1 | `test_mail.py` |
-| `src/orchestrateur/api_mail.py` | Routes `/api/mail` : réglage, terminal, essai, dossiers, messages, lecture, cadre HTML, pièce, lu, archiver, brouillon, envoi, mail → tâche ; refus des agents. | INV-MAIL-1, INV-MAIL-3, INV-MAIL-4, INV-MAIL-6, INV-MAIL-7, INV-INSTALL-1, INV-SUPPR-1 | `test_mail.py`, `ui/scenario_mail.py` |
+| `src/orchestrateur/api_mail.py` | Routes `/api/mail` : réglage, terminal, essai, dossiers, messages, lecture, cadre HTML, pièce, lu, archiver, restaurer, brouillon, envoi, mail → tâche ; refus des agents. | INV-MAIL-1, INV-MAIL-3, INV-MAIL-4, INV-MAIL-6, INV-MAIL-7, INV-MAIL-8, INV-INSTALL-1, INV-SUPPR-1 | `test_mail.py`, `ui/scenario_mail.py` |
 | `src/orchestrateur/validation_auto.py` | Validation automatique par périmètre : réglage hérité, exclusions, relecteur indépendant, préalables, revue IA, journal, échantillon, « Rouvrir ». | INV-CONTROLE-1, INV-EXEC-5, INV-EXECUTANT-1, INV-VALID-1, INV-VALID-2, INV-VAULT-1 | `test_validation_auto.py`, `ui/scenario_validation_auto.py` |
 | `src/orchestrateur/api_validation.py` | Routes `/api/validation-auto` : réglage d'un conteneur, réouverture. | INV-VALID-2 | `test_validation_auto.py` |
 | `src/orchestrateur/vault.py` | Index du vault : tâches, conteneurs, création, déplacement (promotion : `transformations`). | INV-EXECUTANT-2, INV-PILOTAGE-1, INV-STATUT-1, INV-VAULT-1, INV-VAULT-2, INV-VAULT-3, INV-VAULT-4, INV-RENOMMER-1, INV-NATURE-1 | `test_vault.py`, `test_verrou.py`, `test_pilotage.py` |
@@ -271,12 +271,13 @@ Les tests d'interface (`ui/`) se lancent à part : `python scripts/check_ui.py`.
 | `web/decisions.css` | Page « Décisions » : cartes, groupes de projet repliables, barre de lot. | — | `ui/scenario_decisions.py` |
 | `web/palette.css` | Palette Ctrl+K : dialogue centré en haut, liste et ligne active. | — | `ui/scenario_palette.py` |
 | `web/base_table.css` | Page « Base » : tableau défilant à en-tête et pied fixes, filtres, groupes ; geste « Voir en tableau » de l'arbre des notes. | — | `ui/scenario_base_table.py` |
-| `web/mail.css` | Page « Email » : grille dossiers / liste / lecture, lignes non lues en gras, cadre de lecture. | — | `ui/scenario_mail.py` |
+| `web/mail.css` | Page « Email » et onglet « Mails » : grille dossiers / liste / lecture, lignes non lues en gras, gestes de ligne au survol, cadre de lecture. | — | `ui/scenario_mail.py` |
 | `web/aujourdhui.js` | vue « Aujourd'hui » du volet droit — en retard, dues aujourd'hui, dues dans les sept jours, puis « À moi ». | — | chargement par `ui/scenario_fumee.py` seulement |
 | `web/palette.js` | palette de commandes Ctrl+K — recherche locale des tâches (S.arbre) complétée par /api/recherche, gestes (nouvelle tâche, décisions, réglages, renvoi à l'IA, statut) ; chargée à la demande par `app.js`. | INV-REACTIVITE-1 | `ui/scenario_palette.py` |
 | `web/bandeau.js` | bandeau haut — tours en cours, compteurs (dont « Aujourd'hui »), déroulant des propositions, recherche, nouvelle tâche (option « ＋ Nouveau projet… » ; emplacement ou tâche mère pré-choisis par l'évènement `nouvelle`). | INV-DEROULANT-1 | chargement par `ui/scenario_fumee.py` seulement |
-| `web/mail.js` | page « Email » (`#mail`) — dossiers, liste paginée, recherche Gmail, lecture (cadre `sandbox` pour le HTML, texte brut, pièces), lu / non lu, archiver. | INV-MAIL-3, INV-MAIL-6 | `ui/scenario_mail.py` |
-| `web/mail-gestes.js` | Gestes à dialogue de la page « Email » : compositeur (répondre, répondre à tous, transférer), créer une tâche (nouvelleTache, lancement différé), rattacher. | INV-MAIL-2 | `ui/scenario_mail.py` |
+| `web/mail.js` | page « Email » (`#mail`) — dossiers, liste paginée, recherche Gmail, lecture (cadre `sandbox` pour le HTML, texte brut, pièces), lu / non lu, masquer. | INV-MAIL-3, INV-MAIL-6 | `ui/scenario_mail.py` |
+| `web/mail-gestes.js` | Gestes à dialogue de la page « Email » : compositeur (répondre, répondre à tous, transférer), créer une tâche (nouvelleTache, lancement différé), associer, masquer / annuler, gestes d'une ligne de liste. | INV-MAIL-2 | `ui/scenario_mail.py` |
+| `web/mail-volet.js` | Onglet « Mails » du volet gauche : Boîte de réception en liste (non lus en gras), gestes de ligne, clic → page Email ; invitation « Régler la messagerie ». | INV-MAIL-6, INV-MAIL-8 | `ui/scenario_mail.py` |
 | `web/messagerie.js` | Section « Messagerie » des Réglages : adresse, mot de passe d'application saisi au terminal, essai de connexion, lien d'aide Google. | INV-MAIL-1 | chargement par `ui/scenario_reglages.py` seulement |
 | `web/apercus.js` | aperçus déroulants de la barre haute (Aujourd'hui, Décisions, À moi, En cours) et pastille « Infos » des bandeaux d'information. | INV-DEROULANT-1 | `ui/scenario_deroulant.py` |
 | `web/cascade.js` | vue en cascade du volet droit — sous-arbre des tâches en tableau indenté repliable, | — | chargement par `ui/scenario_fumee.py` seulement |
@@ -345,7 +346,7 @@ Les tests d'interface (`ui/`) se lancent à part : `python scripts/check_ui.py`.
 | `web/notes-liees.js` | bloc « Notes liées » du détail d'une tâche (cite, mentionnée par, mentions non liées). | INV-NOTE-4 | `ui/scenario_graphe.py` |
 | `web/graphe.js` | volet droit — vue graphe en canvas (local, global filtré, recherche, clic d'ouverture). | INV-GRAPHE-2 | `ui/scenario_graphe.py` |
 | `web/notes.css` | Lots 5 et 6 — notes du vault, recherche, alignement. Mêmes variables de thème que style.css. | — | chargement par `ui/scenario_fumee.py` seulement |
-| `web/notes.js` | volet gauche, onglets « Tâches » / « Notes » et arborescence des dossiers du vault (un niveau par requête). | — | chargement par `ui/scenario_fumee.py` seulement |
+| `web/notes.js` | volet gauche, onglets « Tâches » / « Notes » / « Mails » et arborescence des dossiers du vault (un niveau par requête). | — | chargement par `ui/scenario_fumee.py` seulement |
 | `web/pilotage.js` | accès à la conversation d'un conteneur depuis sa vue en cascade (bouton « Conversation », premier message). | INV-PILOTAGE-1 | `ui/scenario_pilotage.py` |
 | `web/execution.js` | réglage « Exécution » d'une tâche mère ou d'un conteneur ; motif de la décision sur une sous-tâche. | INV-REGROUPE-1 | `ui/scenario_execution.py` |
 | `web/ponts.js` | ponts entre tâches et notes — clic sur un wikilink ou un chemin de note (fiches, conversations, notes), | — | chargement par `ui/scenario_fumee.py` seulement |
@@ -428,7 +429,7 @@ Les tests d'interface (`ui/`) se lancent à part : `python scripts/check_ui.py`.
 | `tests/test_agy.py` | Adaptateur Antigravity (`agy`) : faux exécutable Python (jamais le vrai CLI) et extraits réels | — | — |
 | `tests/test_arbre.py` | arbre libre : chemins `A > B`, conteneur sous conteneur, cycles, gestes, INV-ARBRE-1. | INV-ARBRE-1, INV-ARBRE-2, INV-VAULT-1 | — |
 | `tests/test_bases.py` | Bases : inférence des types, filtres, tri, groupes, agrégats, troncature, lecture seule ; route, traversée et lien symbolique refusés. | INV-BASES-1 | — |
-| `tests/test_mail.py` | Messagerie sur faux serveurs IMAP/SMTP : liste, recherche, lecture, pièces, lu, archiver, réponse, transfert, CRLF, refus agent, mail → tâche, secret absent. | INV-MAIL-1, INV-MAIL-2, INV-MAIL-3, INV-MAIL-4, INV-MAIL-7 | — |
+| `tests/test_mail.py` | Messagerie sur faux serveurs IMAP/SMTP : liste, recherche, lecture, pièces, lu, masquer et annuler, réponse, transfert, CRLF, refus agent, mail → tâche, secret absent. | INV-MAIL-1, INV-MAIL-2, INV-MAIL-3, INV-MAIL-4, INV-MAIL-7, INV-MAIL-8 | — |
 | `tests/faux_mail.py` | Faux serveurs IMAP (façon Gmail) et SMTP de la boucle locale, partagés par pytest et les scénarios d'interface. | — | — |
 | `tests/test_bugs_usage.py` | Défauts relevés à l'usage (14/11) : INV-EXEC-6, INV-EXEC-7, mandat sans tour, conversation. | INV-EXEC-6, INV-EXEC-7 | — |
 | `tests/test_mcp.py` | MCP strict par défaut : argv avec et sans `--strict-mcp-config` selon réglage et frontmatter. | INV-MCP-1 | — |
@@ -555,7 +556,7 @@ Les tests d'interface (`ui/`) se lancent à part : `python scripts/check_ui.py`.
 | `tests/ui/aides_arbre.py` | Aides communes aux scénarios d'arbre, de tâche et de glisser-déposer | — | — |
 | `tests/ui/scenario_arbre_cascade.py` | Scénarios d'arbre (volet gauche) et de cascade (volet droit) : hiérarchie, replis, clavier, bascule, filtres | — | — |
 | `tests/ui/scenario_base_table.py` | Page « Base » : geste « Voir en tableau », tri, filtre, groupe par locataire avec sous-totaux, somme en pied, clic de ligne qui ouvre la note, palette. | INV-BASES-1 | — |
-| `tests/ui/scenario_mail.py` | Page « Email » : Menu → Email, mail HTML dans son cadre isolé, « Créer une tâche » avec « Payer », note rangée et entrée de la fiche. | INV-MAIL-2, INV-MAIL-3 | — |
+| `tests/ui/scenario_mail.py` | Page « Email » : Menu → Email, mail HTML dans son cadre isolé, « Créer une tâche » avec « Payer », note rangée et entrée de la fiche ; onglet « Mails » : liste, masquer / annuler, créer et associer depuis la ligne. | INV-MAIL-2, INV-MAIL-3, INV-MAIL-8 | — |
 | `tests/ui/scenario_glisser.py` | Scénarios de glisser-déposer (volet gauche et cascade) : dépôt admis, refusé, menu tâche sur tâche, annulation, clavier | — | — |
 | `tests/ui/scenario_agents_cc.py` | Agents de Claude Code dans Décisions : doublons regroupés, proposition modifiée, lot appliqué. | INV-AGENTSCC-1 | — |
 | `tests/ui/scenario_evitable.py` | Pastille « évitable ? » : Réglages puis Décisions, motif, seuil, désactivation. | INV-EVITABLE-1 | — |

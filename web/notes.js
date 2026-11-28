@@ -1,4 +1,4 @@
-// Rôle : volet gauche, onglets « Tâches » / « Notes » et arborescence des dossiers du vault (un niveau par requête).
+// Rôle : volet gauche, onglets « Tâches » / « Notes » / « Mails » (le contenu de « Mails » : mail-volet.js) et arborescence des dossiers du vault (un niveau par requête).
 // Frontières : API /vault/dossier ; ouvre une note par store.ouvrirNote, un dossier en tableau par store.ouvrirVue('base') ; ne rend jamais le contenu d'une note.
 // Performance : chaque dossier n'est lu qu'une fois (cache) ; l'événement SSE `note` relit seulement les dossiers ancêtres.
 import { h, $, remplacer, nomDe } from './dom.js';
@@ -7,6 +7,7 @@ import { ouvert } from './interface.js';
 import { api } from './api.js';
 import { t, tn } from './langues.js';
 import { nouvelleNote } from './note-gestes.js';
+import { charger as chargerEcran } from './paresseux.js';
 
 const CLE = 'orch.notes.ouverts';
 const enc = encodeURIComponent;
@@ -150,25 +151,34 @@ export async function actualiser() {
   dessiner();
 }
 
+const ONGLETS = ['taches', 'notes', 'mails'];
+// INV-MAIL-6 : la messagerie n'est lue qu'à l'ouverture de l'onglet « Mails » (module et requêtes à la demande).
+function voletMails() { if (S.onglet === 'mails') chargerEcran('mail-volet').then((m) => m.dessinerVoletMail($('#pan-mails')), (e) => erreur(e.message)); }
+
 function majOnglets() {
-  const n = S.onglet === 'notes';
-  for (const [id, actif] of [['#onglet-taches', !n], ['#onglet-notes', n]]) {
+  const n = S.onglet === 'notes', m = S.onglet === 'mails';
+  for (const [id, actif] of [['#onglet-taches', !n && !m], ['#onglet-notes', n], ['#onglet-mails', m]]) {
     const b = $(id);
     b.setAttribute('aria-selected', String(actif));
     b.tabIndex = actif ? 0 : -1;
   }
-  $('#pan-taches').hidden = n;
+  $('#pan-taches').hidden = n || m;
   $('#pan-notes').hidden = !n;
-  $('#volet-gauche').setAttribute('aria-label', n ? t('notes.volet_notes') : t('notes.volet_taches'));
+  $('#pan-mails').hidden = !m;
+  $('#volet-gauche').setAttribute('aria-label', t(n ? 'notes.volet_notes' : m ? 'notes.volet_mails' : 'notes.volet_taches'));
 }
 
 export function initNotes() {
   cont = $('#notes-arbre');
-  for (const id of ['taches', 'notes']) $(`#onglet-${id}`).addEventListener('click', () => fixerOnglet(id));
+  for (const id of ONGLETS) $(`#onglet-${id}`).addEventListener('click', () => fixerOnglet(id));
   $('#onglets').addEventListener('keydown', (e) => {
-    if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') { e.preventDefault(); const o = S.onglet === 'notes' ? 'taches' : 'notes'; fixerOnglet(o); $(`#onglet-${o}`).focus(); }
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+      e.preventDefault();
+      const o = ONGLETS[(ONGLETS.indexOf(S.onglet) + (e.key === 'ArrowRight' ? 1 : ONGLETS.length - 1)) % ONGLETS.length];
+      fixerOnglet(o); $(`#onglet-${o}`).focus();
+    }
   });
-  on('onglet', () => { majOnglets(); if (S.onglet === 'notes') charger('').then(completer).then(dessiner, (e) => erreur(e.message)); });
+  on('onglet', () => { majOnglets(); if (S.onglet === 'notes') charger('').then(completer).then(dessiner, (e) => erreur(e.message)); else voletMails(); });
   $('#btn-note-neuve').addEventListener('click', () => nouvelleNote(courant));
   $('#btn-note-actu').addEventListener('click', actualiser);
   $('#btn-graphe').addEventListener('click', () => ouvrirGraphe(null));
@@ -197,5 +207,6 @@ export function initNotes() {
     } else dessiner();
   });
   majOnglets();
+  voletMails();
   if (S.onglet === 'notes' || noteOuverte()) charger('').then(completer).then(() => { if (noteOuverte()) reveler(S.note); else dessiner(); }, (e) => erreur(e.message));
 }

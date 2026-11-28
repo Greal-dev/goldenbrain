@@ -1,7 +1,7 @@
 // Rôle : point d'entrée — chargements, flux SSE, bannière d'erreurs, aiguillage du volet droit.
 // Frontières : orchestre les modules ; aucune logique d'affichage propre.
 import { t, traduireDom } from './langues.js';
-import { $ } from './dom.js';
+import { $, h } from './dom.js';
 
 traduireDom();  // INV-LANGUE-1 : textes du HTML statique (data-t*) avant tout rendu
 import { api, ouvrirFlux, MSG_PERIME, MSG_ANNULE } from './api.js';
@@ -117,15 +117,16 @@ function surEvenement(e) {
 function bannière() {
   const b = $('#banniere');
   let t = 0;
-  on('banniere', ({ m, type }) => {
+  on('banniere', ({ m, type, action }) => {
     if (m === MSG_PERIME) return; // le bandeau « serveur à mettre à jour » le dit déjà, en permanence
     if (String(m).endsWith(MSG_ANNULE)) return; // INV-VERROU-1 : « Non » à la confirmation, rien n'a changé
     b.textContent = m;
+    if (action) b.append(' ', h('button', { type: 'button', class: 'btn petit', 'data-id': 'banniere-action', onclick: action.fn }, action.libelle));
     b.className = type;
     b.hidden = false;
     b.onclick = () => { b.hidden = true; };
     clearTimeout(t);
-    t = setTimeout(() => { b.hidden = true; }, type === 'info' ? 5000 : 9000);
+    t = setTimeout(() => { b.hidden = true; }, action ? 10000 : type === 'info' ? 5000 : 9000);
   });
 }
 

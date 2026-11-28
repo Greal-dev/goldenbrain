@@ -12,14 +12,14 @@ export const S = {
   toutes: false, selection: null, recherche: '', filtreAMoi: false,
   vue: 'cascade', portee: null, centre: null, filtres: new Set(), marque: null, // marque : clé du dernier élément déplacé (mise en évidence brève)
   // volet droit sans tâche : 'reglages' | 'cascade' (portée = "type:id" ou null) | 'aujourdhui' | 'compagnon' | 'decisions' | 'equipe' | 'note' (S.note = chemin) | 'recherche' (S.requete)
-  onglet: localStorage.getItem('orch.onglet') === 'notes' ? 'notes' : 'taches', note: null, requete: '',
+  onglet: ['notes', 'mails'].includes(localStorage.getItem('orch.onglet')) ? localStorage.getItem('orch.onglet') : 'taches', note: null, requete: '',
   interface: null, // {mode, familles, propositions} : valeurs effectives du serveur (interface.js)
   garde: null, // () => bool : l'éditeur de note y refuse (ou fait confirmer) toute navigation qui perdrait des modifications
 };
 const ecouteurs = {};
 export const on = (nom, f) => (ecouteurs[nom] ??= []).push(f);
 export const emit = (nom, donnee) => (ecouteurs[nom] || []).forEach((f) => f(donnee));
-export const erreur = (m, type = 'erreur') => emit('banniere', { m, type });
+export const erreur = (m, type = 'erreur', action = null) => emit('banniere', { m, type, action }); // action : { libelle, fn } = un bouton dans le bandeau
 const quitter = () => !S.garde || S.garde();
 export function ouvrir(id) {
   if (!quitter()) return false;

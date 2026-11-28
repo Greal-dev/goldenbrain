@@ -1,8 +1,10 @@
 // Rôle : gestes de la page « Email » qui ouvrent un dialogue — compositeur (répondre, répondre à tous, transférer ; l'envoi est le clic
-//        « Envoyer »), « Créer une tâche » (instruction puis nouvelleTache(pre) du bandeau, titre = objet) et « Rattacher à une tâche ».
-// Frontières : POST /api/mail/envoyer et /api/mail/tache ; la création passe par le dialogue « Nouvelle tâche » existant, dont le « Lancer »
+//        « Envoyer »), « Créer une tâche » (instruction puis nouvelleTache(pre) du bandeau, titre = objet), « Associer à une tâche » et
+//        « Masquer » (retire de la boîte sans supprimer, « Annuler » le remet) ; `actionsLigne` : les trois gestes d'une ligne de liste.
+// Frontières : POST /api/mail/envoyer, /tache, /archiver et /restaurer ; la création passe par le dialogue « Nouvelle tâche » existant, dont le « Lancer »
 //        est différé jusqu'à ce que le mail soit rangé (INV-MAIL-2 : le premier tour reçoit le mail comme donnée, avec l'instruction).
 import { t } from './langues.js';
+import { h } from './dom.js';
 import { api, post } from './api.js';
 import { S, parcourir, chemin, erreur, emit, ouvrir } from './store.js';
 import { formulaire } from './dialogue.js';
@@ -49,15 +51,38 @@ function tachesOuvertes() {
   return r;
 }
 
+// INV-MAIL-8 : masquer n'efface rien (déplacement vers « Tous les messages ») ; l'annulation retrouve le mail par son Message-ID.
+export async function masquer(vue, m) {
+  let r;
+  try { r = await post('/mail/archiver', { vue, uid: m.uid }); } catch (e) { erreur(e.message); return; }
+  emit('mail-change', { masque: m.uid });
+  const annuler = async () => {
+    try { await post('/mail/restaurer', { message_id: r.message_id }); emit('mail-change', {}); erreur(t('mail.remis'), 'info'); } catch (e) { erreur(e.message); }
+  };
+  erreur(t('mail.masque'), 'info', r.message_id ? { libelle: t('mail.annuler'), fn: annuler } : null);
+}
+
+export const masquable = (vue) => vue === 'inbox' || vue === 'non-lus';
+
+/** Gestes d'une ligne de liste, visibles au survol (toujours sur écran tactile) ; hors du bouton de la ligne, jamais dedans. */
+export function actionsLigne(vue, m) {
+  const g = (cle, court, id, f) => h('button', { type: 'button', class: 'btn petit', 'data-id': id, title: t(cle), 'aria-label': t(cle), onclick: f }, t(court));
+  return h('div', { class: 'mail-actions' },
+    masquable(vue) ? g('mail.archiver', 'mail.archiver', 'mail-ligne-masquer', () => masquer(vue, m)) : null,
+    g('mail.creer_tache', 'mail.tache_court', 'mail-ligne-creer', () => versTache(vue, m, true)),
+    g('mail.rattacher', 'mail.associer_court', 'mail-ligne-associer', () => versTache(vue, m, false)));
+}
+
 export async function versTache(vue, m, creer) {
   const options = creer ? [] : tachesOuvertes();
   const v = await formulaire({
     titre: t(creer ? 'mail.creer_tache' : 'mail.rattacher'), valider: t(creer ? 'mail.suivant_etape' : 'mail.rattacher'), texte: t('mail.tache_aide'),
-    champs: [...(creer ? [] : [{ nom: 'tache', label: t('mail.tache'), type: 'select', valeur: S.selection, options }]), ...champsInstruction()],
+    champs: [...(creer ? [] : [{ nom: 'tache', label: t('mail.tache'), type: 'select', valeur: S.selection, options }]), ...champsInstruction(),
+      ...(creer ? [] : [{ nom: 'lancer', label: t('mail.lancer_agent'), type: 'checkbox', valeur: true }])],
   });
   if (!v) return;
   if (!v.instruction && !v.libre.trim()) { erreur(t('mail.instr_requise')); return; }
-  let cible = { id: v.tache, lancer: false };
+  let cible = { id: v.tache, lancer: !!v.lancer };
   if (creer) {
     cible = await nouvelleTache({ titre: m.objet || t('mail.sans_objet'), description: t('mail.description', { instruction: libelle(v), de: m.de }), differer: true });
     if (!cible) return;

@@ -107,6 +107,17 @@ def test_marquer_non_lu_et_archiver(client, faux_mail):
     assert client.post("/api/mail/archiver", headers=H, json={"vue": "envoyes", "uid": 1}).status_code == 400
 
 
+def test_masquer_retire_de_la_boite_et_annuler_la_remet(client, faux_mail):
+    u = _boite(faux_mail)
+    r = client.post("/api/mail/archiver", headers=H, json={"vue": "inbox", "uid": u["html"]}).json()
+    assert r["message_id"].startswith("<") and u["html"] not in [m["uid"] for m in faux_mail.boites["INBOX"]]
+    assert u["html"] not in [m["uid"] for m in client.get("/api/mail/messages?vue=inbox", headers=H).json()["messages"]]
+    assert client.post("/api/mail/restaurer", headers=H, json={"message_id": r["message_id"]}).json() == {"ok": True}
+    assert [m["objet"] for m in client.get("/api/mail/messages?vue=inbox", headers=H).json()["messages"]].count("Lettre") == 1
+    assert client.post("/api/mail/restaurer", headers=H, json={"message_id": "<inconnu@example.org>"}).status_code == 400
+    assert client.post("/api/mail/restaurer", headers=H, json={"message_id": "<a>\r\nBcc: x"}).status_code == 400
+
+
 def test_repondre_porte_in_reply_to_et_references(client, faux_mail):
     u = _boite(faux_mail)
     b = client.get(f"/api/mail/brouillon?mode=repondre_tous&vue=inbox&uid={u['facture']}").json()
@@ -141,6 +152,7 @@ def test_agent_refuse_403(client, faux_mail, entete):
     r = client.post("/api/mail/envoyer", headers={**H, **entete}, json={"mode": "repondre", "vue": "inbox", "uid": u["texte"], "a": "x@example.org"})
     assert r.status_code == 403 and faux_mail.envoyes == []
     assert client.get("/api/mail/dossiers", headers=entete).status_code == 403
+    assert client.post("/api/mail/restaurer", headers={**H, **entete}, json={"message_id": "<a@example.org>"}).status_code == 403
 
 
 def test_mail_vers_tache_note_livrable_instruction_sans_doublon(client, faux_mail, vault):

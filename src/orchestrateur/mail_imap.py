@@ -255,6 +255,17 @@ class Boite:
             _ok(imap.uid("MOVE", str(int(uid)), _cite(tous)), self.cpt)
         self._avec(f)
 
+    def restaurer(self, message_id: str) -> None:
+        """Annuler un archivage : « Tous les messages » → Boîte de réception, le message étant retrouvé par son Message-ID (son UID a changé)."""
+        def f(imap):
+            self._choisir(imap, self._resoudre(imap, "tous")[0])
+            imap.literal = message_id.encode("utf-8")
+            trouves = b" ".join(_ok(imap.uid("SEARCH", "CHARSET", "UTF-8", "HEADER", "Message-ID"), self.cpt)).split()
+            if not trouves:
+                raise Invalide(langues.t("serveur.mail.message_inconnu"))
+            _ok(imap.uid("MOVE", ",".join(str(int(u)) for u in trouves), _cite("INBOX")), self.cpt)
+        self._avec(f)
+
     def tester(self) -> dict:
         self.fermer()
         self._avec(lambda imap: _ok(imap.noop(), self.cpt))

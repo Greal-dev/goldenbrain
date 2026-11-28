@@ -44,6 +44,10 @@ class CorpsMessage(BaseModel):
     uid: int = Field(ge=1)
 
 
+class CorpsRestaurer(BaseModel):
+    message_id: str = Field(min_length=1, max_length=998, pattern=r"^[^\r\n\x00]+$")
+
+
 class CorpsMarquer(CorpsMessage):
     lu: bool
 
@@ -158,8 +162,16 @@ def routes(config, moteur) -> APIRouter:
 
     @r.post("/archiver")
     async def archiver(c: CorpsMessage):
+        # Le Message-ID permet d'annuler : l'UID change avec le dossier (INV-MAIL-8).
+        octets, flags = await brut(c.vue, c.uid)
+        mid = mail_message.detail(octets, c.uid, flags)["message_id"]
         await asyncio.to_thread(boite().archiver, c.vue, c.uid)
         etat["bruts"].pop((c.vue, c.uid), None)
+        return {"ok": True, "message_id": mid}
+
+    @r.post("/restaurer")
+    async def restaurer(c: CorpsRestaurer):
+        await asyncio.to_thread(boite().restaurer, c.message_id)
         return {"ok": True}
 
     @r.get("/brouillon")
