@@ -144,7 +144,7 @@ function champsGroupe(options) {
 // `pre` : valeurs de départ { titre, description, conteneur } (barre de chat d'une note, emplacement pré-choisi de l'arbre)
 // et `parent` {id, titre} pour une sous-tâche (« ＋ Nouvelle tâche » de l'arbre) ; rien n'est créé avant « Créer ».
 // Rend {id, lancer} de la tâche créée (ou complétée), sinon rien ; `differer` : « Lancer » est rendu à l'appelant au lieu de partir
-// avec la création (page Email : le mail se range avant le premier tour, INV-MAIL-2).
+// avec la création (page Email : le mail se range avant le premier tour, INV-MAIL-2) ; `encart` : texte rappelant le mail joint, en tête du dialogue.
 export async function nouvelleTache(pre = {}) {
   const parent = pre.parent || null;
   let conteneurs = [];
@@ -172,7 +172,7 @@ export async function nouvelleTache(pre = {}) {
   const proches = listeProches(completer);
   const v = await formulaire({
     titre: t('bandeau.nouvelle_titre'), valider: t('bandeau.creer'), corps: await galerie,
-    texte: [...parcourir(S.arbre)].some((x) => x.type === 'tache') ? undefined : t('premiers-pas.avertissement'), // première tâche : on dit ce que l'assistant pourra faire (D4)
+    texte: [pre.encart, [...parcourir(S.arbre)].some((x) => x.type === 'tache') ? '' : t('premiers-pas.avertissement')].filter(Boolean).join('\n\n') || undefined, // encart du mail joint ; première tâche : on dit ce que l'assistant pourra faire (D4)
     champs: [
       { nom: 'titre', label: t('bandeau.titre'), requis: true, valeur: pre.titre, sous: proches.zone, surSaisie: proches.maj },
       { nom: 'description', label: t('bandeau.description'), type: 'textarea', valeur: pre.description, aide: t('bandeau.description_aide') },
@@ -201,7 +201,7 @@ export async function nouvelleTache(pre = {}) {
     }
     emit('recharger');
     ouvrir(nt.id);
-    return { id: nt.id, lancer: v.lancer && !corps.lancer };
+    return { id: nt.id, lancer: v.lancer && !corps.lancer, description: corps.description || '' };
   } catch (e) { erreur(e.message); }
 }
 

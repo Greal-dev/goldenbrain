@@ -55,11 +55,13 @@ def test_lire_un_mail_et_en_faire_une_tache_a_payer(navigateur, srv):
     expect(page.locator('[data-id="mail-pieces"]')).to_contain_text("facture.pdf")
 
     page.click('[data-id="mail-creer-tache"]')
-    dlg = page.locator("dialog[open]")
-    expect(dlg.locator('select[name="instruction"]')).to_have_value("payer")
-    dlg.locator(".primaire").click()
-    dlg = page.locator("dialog[open]")
+    dlg = page.locator("dialog[open]")  # un seul dialogue : « Nouvelle tâche », prérempli, avec le rappel du mail joint
+    expect(page.locator("dialog[open]")).to_have_count(1)
     expect(dlg.locator('input[name="titre"]')).to_have_value("Facture électricité")
+    expect(dlg.locator('textarea[name="description"]')).to_have_value("Traiter le mail joint.")
+    expect(dlg.locator('select[name="instruction"]')).to_have_count(0)
+    expect(dlg.locator(".dlg-texte")).to_contain_text("Facture électricité")
+    dlg.locator('textarea[name="description"]').fill("Payer la facture avant vendredi.")
     dlg.locator('select[name="conteneur"]').select_option("Projets/C1-Alpha")
     dlg.locator(".primaire").click()
     expect(page).to_have_url(re.compile(r"#t=\d{4}-\d{2}-\d{2}-facture-electricite$"), timeout=10000)
@@ -67,7 +69,7 @@ def test_lire_un_mail_et_en_faire_une_tache_a_payer(navigateur, srv):
     [fiche] = (srv.vault / "Projets" / "C1-Alpha" / "taches").glob("*-facture-electricite.md")
     mails = srv.vault / "Projets" / "C1-Alpha" / "mails"
     expect(page.locator("#volet-droit")).to_contain_text("Entrée : Projets/C1-Alpha/mails/", timeout=10000)  # l'entrée se lit dans la tâche
-    expect(page.locator("#volet-droit")).to_contain_text("Instruction : Payer")
+    expect(page.locator("#volet-droit")).to_contain_text("Instruction : Payer la facture avant vendredi.")
     expect(page.get_by_role("button", name="Livrables")).to_contain_text("1")  # la note est déclarée en livrable
     notes = list(mails.glob("*.md"))
     assert len(notes) == 1 and "type: mail" in notes[0].read_text(encoding="utf-8")
@@ -131,17 +133,17 @@ def test_creer_et_associer_une_tache_depuis_la_ligne(navigateur, srv):
     expect(dlg.locator('input[name="lancer"]')).to_be_checked()  # lancer l'agent tout de suite : coché d'emblée
     dlg.locator('input[name="lancer"]').uncheck()
     dlg.locator('select[name="tache"]').select_option(label="Facture électricité")
-    dlg.locator('select[name="instruction"]').select_option("investiguer")
+    dlg.locator('textarea[name="consigne"]').fill("Investiguer le devis")
     dlg.locator(".primaire").click()
     [fiche] = (srv.vault / "Projets" / "C1-Alpha" / "taches").glob("*-facture-electricite.md")
     for _ in range(40):
-        if "Instruction : Investiguer" in fiche.read_text(encoding="utf-8"):
+        if "Instruction : Investiguer le devis" in fiche.read_text(encoding="utf-8"):
             break
         page.wait_for_timeout(250)
-    assert "Instruction : Investiguer" in fiche.read_text(encoding="utf-8")
+    assert "Instruction : Investiguer le devis" in fiche.read_text(encoding="utf-8")
 
     page.locator('[data-id="volet-mail-ligne"]', has_text="Rendez-vous chantier").hover()
     page.locator('.mail-item:has-text("Rendez-vous chantier") [data-id="mail-ligne-creer"]').click()
-    expect(page.locator('dialog[open] select[name="instruction"]')).to_be_visible()
+    expect(page.locator('dialog[open] input[name="titre"]')).to_have_value("Rendez-vous chantier")  # directement « Nouvelle tâche »
     assert not erreurs, erreurs
     ctx.close()

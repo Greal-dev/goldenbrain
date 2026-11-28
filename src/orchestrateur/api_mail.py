@@ -62,8 +62,7 @@ class CorpsEnvoi(CorpsMessage):
 
 class CorpsTache(CorpsMessage):
     tache: str = Field(max_length=300)
-    instruction: str = ""
-    libre: str = Field(default="", max_length=2000)
+    consigne: str = Field(default="", max_length=2000)
     lancer: bool = False
 
 
@@ -193,6 +192,6 @@ def routes(config, moteur) -> APIRouter:
     async def tache(c: CorpsTache):
         octets = (await brut(c.vue, c.uid))[0]
         # Sur la boucle : quelques écritures du vault, et `soumettre` planifie le tour sur elle.
-        return mail_tache.rattacher(moteur, c.tache, octets, c.instruction, c.libre, c.lancer)
+        return mail_tache.rattacher(moteur, c.tache, octets, c.consigne, c.lancer)
 
     return r

@@ -1,5 +1,5 @@
 // Rôle : gestes de la page « Email » qui ouvrent un dialogue — compositeur (répondre, répondre à tous, transférer ; l'envoi est le clic
-//        « Envoyer »), « Créer une tâche » (instruction puis nouvelleTache(pre) du bandeau, titre = objet), « Associer à une tâche » et
+//        « Envoyer »), « Créer une tâche » (directement le dialogue « Nouvelle tâche » du bandeau, titre = objet, consigne par défaut, encart du mail joint), « Associer à une tâche » (tâche, consigne facultative) et
 //        « Masquer » (retire de la boîte sans supprimer, « Annuler » le remet) ; `actionsLigne` : les trois gestes d'une ligne de liste.
 // Frontières : POST /api/mail/envoyer, /tache, /archiver et /restaurer ; la création passe par le dialogue « Nouvelle tâche » existant, dont le « Lancer »
 //        est différé jusqu'à ce que le mail soit rangé (INV-MAIL-2 : le premier tour reçoit le mail comme donnée, avec l'instruction).
@@ -12,7 +12,6 @@ import { nouvelleTache } from './bandeau.js';
 import { filLisible } from './dom.js';
 
 const enc = encodeURIComponent;
-const INSTRUCTIONS = ['payer', 'investiguer', 'sauvegarder', 'etudier', 'repondre'];
 const FERMES = new Set(['fait', 'cloture', 'abandonne']);
 const TITRES = { repondre: 'mail.repondre', repondre_tous: 'mail.repondre_tous', transferer: 'mail.transferer' };
 
@@ -34,13 +33,6 @@ export async function composer(mode, vue, m) {
     erreur(t('mail.envoye'), 'info');
   } catch (e) { erreur(e.message); }
 }
-
-const champsInstruction = () => [
-  { nom: 'instruction', label: t('mail.instruction'), type: 'select', valeur: 'payer',
-    options: [...INSTRUCTIONS.map((x) => ({ valeur: x, libelle: t(`mail.instr_${x}`) })), { valeur: '', libelle: t('mail.instr_libre') }] },
-  { nom: 'libre', label: t('mail.instr_texte'), type: 'textarea', lignes: 2, aide: t('mail.instr_texte_aide') },
-];
-const libelle = (v) => [v.instruction ? t(`mail.instr_${v.instruction}`) : '', v.libre.trim()].filter(Boolean).join(' : ');
 
 function tachesOuvertes() {
   const r = [];
@@ -74,21 +66,24 @@ export function actionsLigne(vue, m) {
 }
 
 export async function versTache(vue, m, creer) {
-  const options = creer ? [] : tachesOuvertes();
-  const v = await formulaire({
-    titre: t(creer ? 'mail.creer_tache' : 'mail.rattacher'), valider: t(creer ? 'mail.suivant_etape' : 'mail.rattacher'), texte: t('mail.tache_aide'),
-    champs: [...(creer ? [] : [{ nom: 'tache', label: t('mail.tache'), type: 'select', valeur: S.selection, options }]), ...champsInstruction(),
-      ...(creer ? [] : [{ nom: 'lancer', label: t('mail.lancer_agent'), type: 'checkbox', valeur: true }])],
-  });
-  if (!v) return;
-  if (!v.instruction && !v.libre.trim()) { erreur(t('mail.instr_requise')); return; }
-  let cible = { id: v.tache, lancer: !!v.lancer };
+  let cible, consigne = '';
   if (creer) {
-    cible = await nouvelleTache({ titre: m.objet || t('mail.sans_objet'), description: t('mail.description', { instruction: libelle(v), de: m.de }), differer: true });
+    cible = await nouvelleTache({ titre: m.objet || t('mail.sans_objet'), description: t('mail.consigne_defaut'), differer: true, encart: t('mail.encart', { objet: m.objet || t('mail.sans_objet'), de: m.de }) });
     if (!cible) return;
+    consigne = cible.description || '';
+  } else {
+    const v = await formulaire({
+      titre: t('mail.rattacher'), valider: t('mail.rattacher'), texte: t('mail.tache_aide'),
+      champs: [{ nom: 'tache', label: t('mail.tache'), type: 'select', valeur: S.selection, options: tachesOuvertes() },
+        { nom: 'consigne', label: t('mail.consigne'), type: 'textarea', lignes: 2, aide: t('mail.consigne_aide') },
+        { nom: 'lancer', label: t('mail.lancer_agent'), type: 'checkbox', valeur: true }],
+    });
+    if (!v) return;
+    cible = { id: v.tache, lancer: !!v.lancer };
+    consigne = v.consigne.trim();
   }
   try {
-    await post('/mail/tache', { vue, uid: m.uid, tache: cible.id, instruction: v.instruction, libre: v.libre, lancer: !!cible.lancer });
+    await post('/mail/tache', { vue, uid: m.uid, tache: cible.id, consigne, lancer: !!cible.lancer });
     emit('recharger');
     if (creer) ouvrir(cible.id); else erreur(t('mail.rattache'), 'info');
   } catch (e) { erreur(e.message); }

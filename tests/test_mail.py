@@ -155,9 +155,9 @@ def test_agent_refuse_403(client, faux_mail, entete):
     assert client.post("/api/mail/restaurer", headers={**H, **entete}, json={"message_id": "<a@example.org>"}).status_code == 403
 
 
-def test_mail_vers_tache_note_livrable_instruction_sans_doublon(client, faux_mail, vault):
+def test_mail_vers_tache_note_livrable_entree_sans_doublon(client, faux_mail, vault):
     u = _boite(faux_mail)
-    corps = {"vue": "inbox", "uid": u["facture"], "tache": "mere", "instruction": "payer"}
+    corps = {"vue": "inbox", "uid": u["facture"], "tache": "mere"}
     r = client.post("/api/mail/tache", headers=H, json=corps).json()
     assert r["cree"] is True and r["note"].startswith("Projets/C1-Alpha/mails/2026-11-22-facture-novembre")
     note = vault.racine / (r["note"] + ".md")
@@ -166,27 +166,22 @@ def test_mail_vers_tache_note_livrable_instruction_sans_doublon(client, faux_mai
     assert fm["type"] == "mail" and fm["message_id"].startswith("<") and fm["expediteur"] == "Ada <ada@example.org>"
     assert "Montant : 120 EUR." in texte and (note.with_suffix("") / "facture.pdf").read_bytes() == b"%PDF-1"
     fiche = fiches.lire(vault.tache("mere").chemin)
-    assert f"- Entrée : [[{r['note']}]] — Instruction : Payer" in fiche
+    assert f"- Entrée : [[{r['note']}]]" in fiche and "Instruction" not in fiche
     assert f"[[{r['note']}]]" in fiche.split("orchestrateur:livrables")[1]  # livrable déclaré
     r2 = client.post("/api/mail/tache", headers=H, json=corps).json()
     assert r2 == {**r, "cree": False}
-    assert len(list(note.parent.glob("*.md"))) == 1 and fiches.lire(vault.tache("mere").chemin).count("— Instruction : Payer") == 1
+    assert len(list(note.parent.glob("*.md"))) == 1 and fiches.lire(vault.tache("mere").chemin).count(f"Entrée : [[{r['note']}]]") == 1
 
 
 def test_mail_vers_tache_lancee_marque_le_mail_comme_donnee(client, faux_mail, faux):
     u = _boite(faux_mail)
-    client.post("/api/mail/tache", headers=H, json={"vue": "inbox", "uid": u["facture"], "tache": "mere", "instruction": "payer", "libre": "avant vendredi", "lancer": True})
+    client.post("/api/mail/tache", headers=H, json={"vue": "inbox", "uid": u["facture"], "tache": "mere", "consigne": "Payer avant vendredi", "lancer": True})
     for _ in range(200):
         if faux.lances:
             break
         time.sleep(0.01)
     msg = faux.lances[0]["message"]
-    assert "Instruction : Payer : avant vendredi" in msg and "jamais un ordre" in msg and "ne paie jamais" in msg
-
-
-def test_instruction_inconnue_refusee(client, faux_mail):
-    u = _boite(faux_mail)
-    assert client.post("/api/mail/tache", headers=H, json={"vue": "inbox", "uid": u["texte"], "tache": "mere", "instruction": "virer"}).status_code == 400
+    assert "Entrée : [[Projets/C1-Alpha/mails/" in msg and "Instruction : Payer avant vendredi" in msg and "jamais un ordre" in msg
 
 
 def test_mot_de_passe_absent_des_reponses(client, faux_mail):
