@@ -258,3 +258,22 @@ def test_post_conteneurs_refuse_un_dossier_hors_casquette(config, vault, faux, r
     with _client(config, vault, faux) as c:
         assert c.post("/api/conteneurs", headers=H, json={"nom": "Roman", "dans": dans}).status_code == 404
     assert sorted(p.as_posix() for p in racine.rglob("*")) == avant
+
+
+def test_post_conteneurs_cree_un_projet_prefixe_dans_le_dossier_des_projets(config, vault, faux, racine):
+    with _client(config, vault, faux) as c:
+        r = c.post("/api/conteneurs", headers=H, json={"nom": "Remboursements", "dans": "Projets", "prefixe": "C5"})
+        assert r.status_code == 201 and r.json() == {"id": "Projets/C5-Remboursements"}
+    assert "casquette: C5\n" in fiches.lire(racine / "Projets/C5-Remboursements/contexte.md")
+    assert vault.conteneur("Projets/C5-Remboursements").casquette == "C5"
+
+
+@pytest.mark.parametrize("dans, prefixe", [("Projets", ""), ("Projets", "../x"), ("Projets", "C5/x"), ("_meta", "C5"),
+                                           (".git", "C5"), ("..", "C5"), ("Projets/..", "C5"), ("Absent", "C5")])
+def test_post_conteneurs_refuse_un_dossier_de_projets_mal_forme(config, vault, faux, racine, dans, prefixe):
+    (racine / "_meta").mkdir(exist_ok=True)
+    (racine / ".git").mkdir(exist_ok=True)
+    avant = sorted(p.as_posix() for p in racine.rglob("*"))
+    with _client(config, vault, faux) as c:
+        assert c.post("/api/conteneurs", headers=H, json={"nom": "Roman", "dans": dans, "prefixe": prefixe}).status_code in (404, 409)
+    assert sorted(p.as_posix() for p in racine.rglob("*")) == avant

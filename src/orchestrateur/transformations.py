@@ -162,28 +162,34 @@ def _defaire(vault, rel: str) -> None:
             pass
 
 
-def _lieu(vault, dans: str) -> tuple[str, str]:
-    """Dossier et casquette où naît un projet : un conteneur, ou le dossier d'une casquette (jamais
-    un conteneur : les motifs de tâches ne le couvrent pas), désigné par un seul segment sain."""
+PREFIXE = re.compile(r"[A-Za-z0-9]{1,12}")
+
+
+def _lieu(vault, dans: str, prefixe: str = "") -> tuple[str, str, str]:
+    """Dossier, casquette et préfixe de nom où naît un projet : un conteneur, ou un dossier non-conteneur (jamais un
+    conteneur : les motifs de tâches ne le couvrent pas) désigné par un seul segment sain, sous
+    `casquettes/` (casquette tirée du nom) ou à la racine avec `prefixe` (code de casquette, « Projets/C5-… »)."""
     try:
         c = vault.conteneur(dans)
-        return c.id, c.casquette
+        return c.id, c.casquette, ""
     except NonTrouve:
         tete, _, nom = (dans or "").rpartition("/")
-        if tete != vault.cfg.casquettes or nom in ("", ".", "..") or "\\" in nom \
-                or not (vault.racine / tete / nom).is_dir():
+        # INV-ARBRE-3 : un seul segment, ni caché ni réservé (`_meta`), dans le vault — jamais d'écriture ailleurs.
+        sain = nom not in ("", ".", "..") and "\\" not in nom and not nom.startswith(("_", "."))
+        racine = tete == "" and bool(PREFIXE.fullmatch(prefixe))
+        if not sain or (tete != vault.cfg.casquettes and not racine) or not (vault.racine / tete / nom).is_dir():
             raise
-        return dans, casquette_normalisee(nom) or "?"
+        return dans, (prefixe if racine else casquette_normalisee(nom)) or "?", f"{prefixe}-" if racine else ""
 
 
-def creer_conteneur(vault, dans: str, nom: str) -> str:
+def creer_conteneur(vault, dans: str, nom: str, prefixe: str = "") -> str:
     """Projet vide (`contexte.md` + `taches/`) né dans le dossier du conteneur `dans`, dont il
     hérite la casquette, ou dans le dossier d'une casquette (« ＋ Nouveau projet » de l'arbre) ;
     tout ou rien. Rend le rel du nouveau conteneur."""
     if not (nom := (nom or "").strip()):
         raise Invalide(langues.t("serveur.transformations.nom_vide"))
-    base, casquette = _lieu(vault, dans)
-    rel = posixpath.join(base, slugifier(nom, minuscules=False))
+    base, casquette, pre = _lieu(vault, dans, prefixe)
+    rel = posixpath.join(base, pre + slugifier(nom, minuscules=False))
     if not _couvert(f"{rel}/taches/x.md", vault.cfg.taches):
         raise Conflit(langues.t("serveur.transformations.projet_invisible", chemin=f"{rel}/taches"))
     dossier = vault.racine / rel

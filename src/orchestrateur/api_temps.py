@@ -17,7 +17,8 @@ from .vault import Vault
 
 class CorpsGroupe(BaseModel):
     nom: str
-    dans: str  # id du conteneur sous lequel le projet naît
+    dans: str  # id du conteneur sous lequel le projet naît (ou dossier de projets : alors `prefixe`)
+    prefixe: str = ""  # code de casquette : projet créé dans un dossier non-conteneur de la racine (« Projets/C5-… »)
 
 
 class CorpsTache(BaseModel):

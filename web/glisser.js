@@ -229,8 +229,14 @@ export function brancher(cont, defile, haut = 0) {
   });
   cont.addEventListener('dragend', fin);
 
+  // INV-ARBRE-3 : un projet neuf (vide) est absent de S.arbre ; son bouton agit quand même, sur l'id lu dans la clé de la ligne.
+  const neuf = (k) => {
+    const [type, ...id] = k.split(':');
+    const titre = cont.querySelector(`[data-cle="${CSS.escape(k)}"] .titre`)?.textContent;
+    return type === 'conteneur' && titre ? { n: { type, id: id.join(':'), titre } } : null;
+  };
   const agir = (act, k) => {
-    const idx = indexer(), en = idx.get(k);
+    const idx = indexer(), en = idx.get(k) ?? neuf(k);
     if (!en) return;
     if (act === 'routine' && en.n.type === 'conteneur') { nouvelleRoutine(en.n.id); return; }
     if (act === 'chaine' && en.n.type === 'conteneur') { lancerChaine(en.n.id); return; }

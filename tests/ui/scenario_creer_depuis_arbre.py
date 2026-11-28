@@ -43,10 +43,11 @@ def test_nouveau_projet_sous_une_casquette(page, serveur):
 
 
 def test_nouveau_projet_sous_une_casquette_dont_les_projets_sont_ailleurs(page, serveur):
-    # Régression (28/11) : casquette sans projet sous « Casquettes/ » mais avec son propre dossier de tâches →
-    # la création s'arrêtait avant tout envoi ; le projet naît désormais dans ce dossier.
+    # Régression (28/11) : casquette sans projet sous « Casquettes/ » → la création s'arrêtait avant tout envoi,
+    # puis le projet naissait dans le dossier propre de la casquette, un niveau trop bas ; il naît désormais
+    # au niveau de ses voisins (« Projets/C8-… »).
     seul = "Casquettes/C8-Seul"
-    _ECRITS.extend([serveur.vault / seul, serveur.vault / "Projets/C8-Ailleurs"])
+    _ECRITS.extend([serveur.vault / seul, serveur.vault / "Projets/C8-Ailleurs", serveur.vault / "Projets/C8-Neuf-C8"])
     univers.ecrire(serveur.vault, f"{seul}/contexte.md", "---\ntype: contexte\ncasquette: C8\nnom: Seul C8\n---\n")
     univers.ecrire(serveur.vault, f"{seul}/taches/c8-t.md", univers.tache("Tâche C8", extra="casquette: C8\n"))
     univers.ecrire(serveur.vault, "Projets/C8-Ailleurs/contexte.md", "---\ntype: contexte\ncasquette: C8\nnom: Ailleurs C8\n---\n")
@@ -55,7 +56,8 @@ def test_nouveau_projet_sous_une_casquette_dont_les_projets_sont_ailleurs(page, 
     page.fill("dialog[open] input[name=nom]", "Neuf C8")
     with page.expect_response(lambda r: r.url.endswith("/api/conteneurs") and r.request.method == "POST") as rep:
         page.click("dialog[open] .primaire")
-    assert rep.value.status == 201 and rep.value.json()["id"] == f"{seul}/Neuf-C8", rep.value.text()
+    assert rep.value.status == 201 and rep.value.json()["id"] == "Projets/C8-Neuf-C8", rep.value.text()
+    assert "casquette: C8" in (serveur.vault / "Projets/C8-Neuf-C8/contexte.md").read_text(encoding="utf-8")
     page.wait_for_selector("#arbre .ligne.t-conteneur .titre:text-is('Neuf C8')")
     assert not page.erreurs, page.erreurs
 
@@ -94,3 +96,25 @@ def test_dialogue_nouvelle_tache_tient_dans_la_fenetre(page, serveur):
         page.keyboard.press("Escape")
         page.wait_for_selector("dialog[open]", state="detached")
     assert not page.erreurs, page.erreurs
+
+
+def test_bouton_reduire_d_un_projet_neuf_ouvre_le_dialogue_et_envoie(page, serveur):
+    # Régression (28/11) : « Réduire en tâche » sur un projet créé à l'instant (vide, absent de l'arbre du serveur)
+    # ne faisait rien : aucune requête, aucun message.
+    _univers(serveur)
+    charger(page)
+    _pied(page, ligne(page, "C7")).locator("[data-ajout=projet]").click()
+    page.fill("dialog[open] input[name=nom]", "Vide AJ")
+    page.click("dialog[open] .primaire")
+    page.wait_for_selector("#arbre .ligne.t-conteneur .titre:text-is('Vide AJ')")
+    rangee = ligne(page, "Vide AJ")
+    rangee.hover()
+    rangee.locator("[data-act=reduire]").click()
+    dlg = page.locator("dialog[aria-label^='Réduire']")
+    dlg.wait_for(timeout=10000)
+    dlg.locator("input[name=point_git]").uncheck()
+    with page.expect_response(lambda r: r.url.endswith("/api/conteneurs/reduire")) as rep:
+        dlg.locator("button[type=submit]").click()
+    assert rep.value.request.post_data_json["conteneur"] == f"{CAS}/Vide-AJ"
+    page.wait_for_selector("#info-geste:not([hidden]), #banniere:not([hidden])")  # le résultat se dit, réussi ou refusé
+

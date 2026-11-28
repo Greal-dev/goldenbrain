@@ -41,6 +41,8 @@ function surReduire() {
   reduire({ id, titre: noeud?.titre || nomDe(id) });
 }
 
+function surSupprimer() { import('./suppression.js').then((m) => m.supprimer({ conteneur: dossierDe(note.chemin) })); }
+
 // INV-VALID-2 : le réglage de validation du projet est l'accord écrit de l'utilisateur, tracé dans le contexte.
 function reglageValidation() {
   const conteneur = dossierDe(note.chemin);
@@ -65,6 +67,7 @@ function barreLecture() {
     b(t('note_vue.nouvelle'), () => nouvelleNote(dossierDe(note.chemin)), { titre: t('note_vue.nouvelle_titre') }),
     deplacerDisponible() ? b(t('note_vue.deplacer'), surDeplacer) : null,
     estContexte() ? b(t('note_vue.reduire'), surReduire, { titre: t('note_vue.reduire_titre') }) : null,
+    estContexte() ? b(t('cascade.supprimer'), surSupprimer, { cls: 'danger', titre: t('cascade.supprimer_titre') }) : null,
     estContexte() ? reglageValidation() : null,
     b(t('note_vue.graphe'), () => ouvrirGraphe(note.chemin), { titre: t('note_vue.graphe_titre') }),
     note.tache ? b(t('note_vue.ouvrir_tache'), () => ouvrir(note.tache), { cls: 'primaire', titre: t('note_vue.ouvrir_tache_titre') }) : null,

@@ -151,23 +151,26 @@ function nouvelleTache(n) {
   emit('nouvelle', n.type === 'tache' ? { parent: { id: n.id, titre: nomLisible(n.titre) } } : { conteneur: n.id });
 }
 
-// Le dossier d'une casquette n'est pas un conteneur : il se lit dans les projets qu'elle porte déjà.
-// ponytail: dossier le plus fréquent ; une casquette sans projet sous « Casquettes/ » ne s'y crée pas d'ici.
-async function dossierCasquette(n) {
+// Où naît un projet de casquette : là où vivent déjà ses voisins. Rend le corps `{dans, prefixe?}` de POST /conteneurs.
+// ponytail: dossier le plus fréquent ; sans aucun projet nulle part, le dossier propre de la casquette s'il est un conteneur.
+async function lieuCasquette(n) {
   const code = n.id.replace(/^casquette:/, '');
   const conts = await api('/conteneurs');
   const ids = new Set(conts.map((c) => c.id));
-  const compte = new Map();
-  for (const c of conts) {
+  const siens = conts.filter((c) => c.casquette === code);
+  const plus = (m) => [...m].sort((x, y) => y[1] - x[1])[0]?.[0];
+  const sous = new Map(), racine = new Map();
+  for (const c of siens) {
     const s = c.id.split('/');
     const d = s.slice(0, 2).join('/');
-    if (c.casquette === code && s.length > 2 && !ids.has(d)) compte.set(d, (compte.get(d) || 0) + 1);
+    if (s.length > 2 && !ids.has(d)) sous.set(d, (sous.get(d) || 0) + 1); // « Casquettes/<dossier non-conteneur>/<projet> »
+    else if (s.length === 2 && !c.id.startsWith('Casquettes/') && s[1].startsWith(`${code}-`) && !ids.has(s[0])) racine.set(s[0], (racine.get(s[0]) || 0) + 1); // « Projets/C5-<projet> »
   }
-  // Repli : projets tous rangés hors « Casquettes/ » (ex. « Projets/C5-… ») → le dossier propre de la casquette, s'il est un conteneur.
-  const d = [...compte].sort((a, b) => b[1] - a[1])[0]?.[0]
-    || conts.find((c) => c.casquette === code && c.id.split('/').length === 2 && c.id.startsWith('Casquettes/'))?.id;
-  if (!d) throw new Error(t('arbre.casquette_sans_dossier'));
-  return d;
+  if (plus(sous)) return { dans: plus(sous) };
+  if (plus(racine)) return { dans: plus(racine), prefixe: code };
+  const propre = siens.find((c) => c.id.split('/').length === 2 && c.id.startsWith('Casquettes/'))?.id;
+  if (!propre) throw new Error(t('arbre.casquette_sans_dossier'));
+  return { dans: propre };
 }
 
 async function nouveauProjet(n) {
@@ -176,8 +179,7 @@ async function nouveauProjet(n) {
   const nom = v?.nom.trim();
   if (!nom) return;
   try {
-    const dans = n.type === 'casquette' ? await dossierCasquette(n) : n.id;
-    const { id } = await post('/conteneurs', { nom, dans });
+    const { id } = await post('/conteneurs', { nom, ...(n.type === 'casquette' ? await lieuCasquette(n) : { dans: n.id }) });
     const k = cleNoeud(n);
     neufs.set(k, [...(neufs.get(k) || []), { id, type: 'conteneur', titre: nom, enfants: [], ouvertes: 0, neuf: true }]);
     emit('deplier', k);

@@ -57,3 +57,19 @@ def test_supprimer_projet_annexe_rangee(page, serveur):
     charger(page)
     assert page.locator("#arbre .ligne .titre", has_text="Tâche du projet supprimé").count() == 0
     assert not page.erreurs, page.erreurs
+
+
+def test_supprimer_depuis_la_note_de_contexte_du_projet(page, serveur):
+    projet(serveur, "C1-SupprNote", {"suppr-n1": ("Tâche de la note", "")})
+    charger(page, deplier=False)
+    page.click("#onglet-notes")
+    for dossier in ("Projets", "C1-SupprNote"):
+        page.click(f".ligne.t-dossier >> text={dossier}")
+    page.click(".ligne.t-note >> text=contexte")
+    page.click("button:has-text('Supprimer…')")
+    dlg = page.locator(DLG)
+    dlg.wait_for(timeout=10000)
+    assert "SupprNote" in dlg.inner_text() and dlg.locator("button[type=submit]").is_disabled()
+    page.keyboard.press("Escape")
+    assert (serveur.vault / "Projets/C1-SupprNote/contexte.md").exists()
+    assert not page.erreurs, page.erreurs

@@ -93,7 +93,7 @@ def routes(moteur) -> APIRouter:
 
     @racine.post("/api/conteneurs", status_code=201)
     async def nouveau_groupe(c: CorpsGroupe):
-        rel = transformations.creer_conteneur(vault, c.dans, c.nom)
+        rel = transformations.creer_conteneur(vault, c.dans, c.nom, c.prefixe)
         moteur.publier("arbre")
         return {"id": rel}
 
