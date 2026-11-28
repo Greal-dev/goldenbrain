@@ -53,7 +53,7 @@ def test_arbre_conteneurs_etat(client):
     etat = client.get("/api/etat").json()
     assert etat.pop("version")["a_jour"] is True
     assert etat == {"pauses": {}, "tours": [], "en_file": 0, "file": [], "a_moi": 0, "moi_valider": 0, "moi_questions": 0, "moi_faire": 0, "en_retard": 0, "propositions": 0,
-                    "decisions": 0, "a_valider": 0, "mandats_sans_tour": [], "occupees": {}, "poste": None, "alertes_vigie": [],
+                    "decisions": 0, "recent": 0, "a_valider": 0, "mandats_sans_tour": [], "occupees": {}, "poste": None, "alertes_vigie": [],
                     "fiches_absentes": {"absentes": 0, "relancees": 0, "bloquees": 0},
                     "reseau": {"actif": True, "perdu_depuis": None, "hors": {}, "en_attente": 0, "taches": []},
                     "compte": {"a-faire": 6},

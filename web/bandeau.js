@@ -61,6 +61,8 @@ export function dessinerBandeau() {
     $(`#n-${cle}`).textContent = n || 0;
     $(`#btn-${cle}`).classList.toggle('alerte', n > 0);
   }
+  $('#n-recent').textContent = e.recent || 0;
+  $('#btn-recent').setAttribute('aria-pressed', String(!S.selection && S.vue === 'etiquette' && S.portee === 'recent'));
   $('#n-retard').textContent = e.en_retard || 0;
   $('#btn-aujourdhui').setAttribute('aria-pressed', String(!S.selection && S.vue === 'aujourdhui'));
   $('#btn-aujourdhui').classList.toggle('alerte', (e.en_retard || 0) > 0);
@@ -255,6 +257,7 @@ export function initBandeau() {
   on('nouvelle', nouvelleTache);
   $('#btn-routine').addEventListener('click', () => nouvelleRoutine());
   $('#btn-chaines').addEventListener('click', () => ouvrirChaines());
+  $('#btn-recent').addEventListener('click', () => ouvrirVue('etiquette', 'recent'));
   $('#btn-equipe').addEventListener('click', () => ouvrirVue('equipe'));
   $('#btn-reglages').addEventListener('click', () => ouvrirVue('reglages'));
   $('#btn-guide').addEventListener('click', () => ouvrirGuide());

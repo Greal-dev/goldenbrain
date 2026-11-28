@@ -346,6 +346,9 @@ class Vault:
         tags = t.fm.get("tags")
         if isinstance(tags, list) and t.statut and t.statut in tags and t.statut != statut:
             maj["tags"] = [statut if x == t.statut else x for x in tags]
+        from . import recent  # import tardif : recent -> etiquettes -> vault
+        ouverts = self.cfg.statuts_ouverts
+        maj.update(recent.pour_statut(t.fm, t.statut in ouverts, statut in ouverts, humain))  # INV-RECENT-1
         self.modifier(ident, maj)
 
     def liberer(self, ident: str) -> None:

@@ -8,10 +8,11 @@
 .b-haut .rel > :is(.btn-compte, .btn) { flex-shrink: 0; }
 
 /* 1 — pastilles secondaires en icône + compteur */
-.b-haut[data-r1] :is(#btn-aujourdhui, #btn-decisions, #btn-props, #btn-incidents, #btn-align, #btn-etat) > span:not(.n),
+.b-haut[data-r1] :is(#btn-recent, #btn-aujourdhui, #btn-decisions, #btn-props, #btn-incidents, #btn-align, #btn-etat) > span:not(.n),
 .b-haut[data-r5] :is(#btn-avalider, #btn-questions, #btn-afaire) > span:not(.n) { display: none; }
-.b-haut[data-r1] :is(#btn-aujourdhui, #btn-decisions, #btn-props, #btn-incidents, #btn-align, #btn-etat)::before,
+.b-haut[data-r1] :is(#btn-recent, #btn-aujourdhui, #btn-decisions, #btn-props, #btn-incidents, #btn-align, #btn-etat)::before,
 .b-haut[data-r5] :is(#btn-avalider, #btn-questions, #btn-afaire)::before { margin-right: 4px; }
+.b-haut[data-r1] #btn-recent::before { content: "◷"; }
 .b-haut[data-r1] #btn-aujourdhui::before { content: "☀"; }
 .b-haut[data-r1] #btn-decisions::before { content: "⚖"; }
 .b-haut[data-r1] #btn-props::before { content: "⊕"; }
@@ -29,8 +30,8 @@
 .b-menu > .rel.en-menu { display: block; position: relative; }
 body.barre-fine .b-menu > .rel.en-menu > button { width: 100%; text-align: left; padding: 5px 10px; font-size: 13px; }
 :root body.barre-fine #bandeau .b-menu > .rel.en-menu > button { background: transparent; border-color: var(--bord); color: var(--texte); }
-.b-haut[data-r1] .b-menu > .rel.en-menu > :is(#btn-aujourdhui, #btn-decisions, #btn-props, #btn-incidents, #btn-align, #btn-etat) > span:not(.n) { display: inline; }
-.b-haut[data-r1] .b-menu > .rel.en-menu > :is(#btn-aujourdhui, #btn-decisions, #btn-props, #btn-incidents, #btn-align, #btn-etat)::before { content: none; }
+.b-haut[data-r1] .b-menu > .rel.en-menu > :is(#btn-recent, #btn-aujourdhui, #btn-decisions, #btn-props, #btn-incidents, #btn-align, #btn-etat) > span:not(.n) { display: inline; }
+.b-haut[data-r1] .b-menu > .rel.en-menu > :is(#btn-recent, #btn-aujourdhui, #btn-decisions, #btn-props, #btn-incidents, #btn-align, #btn-etat)::before { content: none; }
 
 /* 4 — recherche réduite à une loupe (reprend sa largeur quand on y écrit) */
 .b-haut[data-r4]:not([data-focus]) .rech-zone { flex: 0 0 34px; width: 34px; }

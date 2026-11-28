@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import datetime as dt
 import re
+from contextlib import suppress
 
 from . import etiquettes, routines
 from .vault import aujourdhui
@@ -45,7 +46,7 @@ def assembler(moteur, mot: str) -> dict:
     taches = vault.index()[0]
     parents = vault._parents(taches)
     limite = aujourdhui() - dt.timedelta(days=FERMEES_JOURS)
-    lignes = []
+    lignes, actif = [], {}
     for ident, t in taches.items():
         if t.pilotage or mot not in etiquettes.de(t.fm):
             continue
@@ -65,6 +66,8 @@ def assembler(moteur, mot: str) -> dict:
                                 "prochaine": p["prochaine"], "derniere": p["derniere"], "erreur": p["erreur"],
                                 "en_cours": moteur.etat_de(ident) in routines.OCCUPEE}
         lignes.append(ligne)
+        with suppress(OSError):
+            actif[ident] = t.chemin.stat().st_mtime  # dernière activité : départage les tâches du même jour
     lignes.sort(key=lambda x: (x["routine"] is None, not x["ouverte"],
-                               -(_jour(x["maj"]) or dt.date.min).toordinal(), x["titre"].casefold()))
+                               -(_jour(x["maj"]) or dt.date.min).toordinal(), -actif.get(x["id"], 0), x["titre"].casefold()))
     return {"mot": mot, "consigne": moteur.etiquettes.consigne(mot), "taches": lignes[:MAX_LIGNES]}

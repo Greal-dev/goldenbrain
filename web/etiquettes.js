@@ -36,15 +36,18 @@ export function carteEtiquettes(tk, surChangement) {
     if (v) { saisie.value = ''; poser([v], []); }
   });
   const liees = tk.liees_etiquette || [];
+  const lib = (m) => (m === 'recent' ? t('etiquettes.recent') : `#${m}`);
   return h('div', { class: 'etiq-carte', 'data-id': 'etiquettes' },
     h('h4', { class: 'etiq-titre' }, t('etiquettes.titre')),
     h('div', { class: 'etiq-ligne' },
       mots.map((m) => h('span', { class: 'etiq-duo' },
         h('button', { type: 'button', class: 'etiq retirable', 'data-etiquette': m, title: (tk.consignes_etiquettes || {})[m] || t('etiquettes.retirer', { mot: m }),
-          'aria-label': t('etiquettes.retirer', { mot: m }), onclick: () => poser([], [m]) }, `#${m} ×`),
+          'aria-label': t('etiquettes.retirer', { mot: m }), onclick: () => poser([], [m]) }, `${lib(m)} ×`),
         h('button', { type: 'button', class: 'etiq retirable', 'data-vue-etiquette': m, title: t('vue_etiquette.puce_titre', { mot: m }),
           'aria-label': t('vue_etiquette.puce_titre', { mot: m }), onclick: () => ouvrirVue('etiquette', m) }, '↗'))),
-      saisie, completion('etiq-liste')),
+      saisie, completion('etiq-liste'),
+      mots.includes('recent') ? h('button', { type: 'button', class: 'btn petit', 'data-id': 'non-prioritaire', title: t('etiquettes.non_prioritaire_titre'),
+        onclick: () => poser([], ['recent']) }, t('etiquettes.non_prioritaire')) : null),
     liees.length ? h('ul', { class: 'etiq-liees', 'aria-label': t('etiquettes.liees') }, liees.map((x) => h('li', null,
       h('button', { type: 'button', class: 'lien-titre', onclick: () => ouvrir(x.id) }, x.titre || x.id), ' ', h('span', { class: 'etiq-st' }, x.statut || '')))) : null);
 }

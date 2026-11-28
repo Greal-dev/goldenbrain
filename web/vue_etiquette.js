@@ -59,7 +59,7 @@ function ligne(x) {
 
 function dessiner(d) {
   const routines = d.taches.filter((x) => x.routine);
-  remplacer(coque, h('h2', { class: 'casc-titre' }, t('vue_etiquette.titre', { mot: d.mot })),
+  remplacer(coque, h('h2', { class: 'casc-titre' }, d.mot === 'recent' ? t('etiquettes.recent') : t('vue_etiquette.titre', { mot: d.mot })),
     d.consigne ? h('p', { class: 'au-date' }, d.consigne) : null,
     h('p', { 'data-id': 'etiq-gestes' },
       h('button', { class: 'btn', type: 'button', 'data-id': 'etiq-trouver', onclick: trouver }, t('etiq_trouver.bouton')), ' ',

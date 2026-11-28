@@ -51,13 +51,13 @@ export async function changerInterface(corps) { adopter(await api('/interface', 
 
 // --- Barre haute : elle ne déborde jamais de la fenêtre et rien n'y chevauche rien (INV-BARRE-1). Chaque pastille est insécable
 // (libellé + compteur d'un bloc, jamais rétrécie) ; quand la rangée est trop large, elle se replie par niveaux cumulatifs, dans cet ordre :
-// 1 pastilles secondaires (Aujourd'hui, Décisions, Propositions, Incidents, « dossier à aligner », Infos) en icône + compteur + infobulle ;
+// 1 pastilles secondaires (Récent, Aujourd'hui, Décisions, Propositions, Incidents, « dossier à aligner », Infos) en icône + compteur + infobulle ;
 // 2 repère « Intelligent » masqué ; 3 pastilles secondaires rangées dans « Menu » ; 4 recherche réduite à une loupe ; 5 pastilles « À moi »
 // en icône + compteur + infobulle ; 6 marque en logo seul et « Nouvelle tâche » en « + ». « Menu » reste toujours entier. Les libellés et
 // les pastilles reviennent d'eux-mêmes quand la place revient (le calcul repart du niveau 0 ; niveaux posés en `data-r1` … `data-r6`).
 // Frontières : DOM seul ; la mise en page des niveaux est dans barre.css (`.b-haut[data-r1…r6]`). Aucune requête.
 const MAX = 6;
-const SECOND = '#btn-aujourdhui, #btn-decisions, #btn-props, #btn-incidents, #btn-align, #btn-etat';
+const SECOND = '#btn-recent, #btn-aujourdhui, #btn-decisions, #btn-props, #btn-incidents, #btn-align, #btn-etat';
 const A_MOI = '#btn-avalider, #btn-questions, #btn-afaire';
 
 // Une pastille en icône garde son compte ; l'infobulle (title) et l'étiquette d'accessibilité reprennent son libellé.

@@ -24,7 +24,7 @@ from . import (api_lecteur, api_styles, api_compagnon, api_apprendre, api_accuei
                api_reflexes, api_travaux, api_validation, api_vigie, api_chaines, api_lots, api_etiquettes, api_bases, api_suppression, api_mail)
 from .api_temps import CorpsTache
 from . import (appareils, codespace, conseil, console, decisions, depot, etat_main, executant, geste, guide, langues, liens, recherche, regroupement,
-               prechauffage, reprise, temps, transformations, version, vigie)
+               prechauffage, recent, reprise, temps, transformations, version, vigie)
 from .alignement import Aligneur
 from .catalogue import Catalogue
 from .config import RACINE_DEPOT, Config
@@ -158,8 +158,7 @@ def creer_app(config: Config, moteur: Moteur | None = None) -> FastAPI:
         await moteur.fermer()  # INV-EXEC-1 : à l'arrêt, aucun processus d'agent ne survit
 
     app = FastAPI(title="orchestrateur", lifespan=cycle)
-    app.state.moteur = moteur
-    app.state.jardinier = jardinier
+    app.state.moteur, app.state.jardinier = moteur, jardinier
     app.state.telegram = connecteur
     app.state.aligneur, app.state.version = aligneur, version.Version()  # INV-VERSION-1 : empreinte au démarrage
     app.state.appareils = connecteur.appareils = registre = appareils.Appareils(config.donnees)  # INV-DISTANT-6, INV-APPAIRAGE-2
@@ -181,6 +180,7 @@ def creer_app(config: Config, moteur: Moteur | None = None) -> FastAPI:
             reponse = JSONResponse({"detail": langues.t("serveur.api.fonction_desactivee", fonction=f)}, status_code=409)
         else:
             reponse = await appel(request)
+            recent.apres(moteur, request, reponse.status_code)  # INV-RECENT-1 : une reprise humaine remet la tâche en « Récent »
             if reponse.status_code == 404 and request.url.path.startswith("/api/"):
                 reponse = await app.state.version.marquer_404(reponse)  # INV-VERSION-1
         # INV-API-1 : l'interface ne peut être encadrée par une page tierce (clickjacking).
@@ -232,7 +232,7 @@ def creer_app(config: Config, moteur: Moteur | None = None) -> FastAPI:
     @app.get("/api/etat")
     async def etat():
         return {**api_vigie.enrichir_etat(moteur.vigie, moteur.etat_global()),  # INV-VIGIE-1
-                "decisions": decisions.compter(moteur),
+                "decisions": decisions.compter(moteur), "recent": recent.compter(vault),
                 "version": await app.state.version.etat()}
 
     @app.post("/api/conseil")

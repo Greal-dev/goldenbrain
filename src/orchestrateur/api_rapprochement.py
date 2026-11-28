@@ -15,7 +15,7 @@ from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
-from . import etiquettes, langues, liens, rangement, rapprochement, transformations
+from . import etiquettes, langues, liens, rangement, rapprochement, recent, transformations
 from .api_temps import CorpsGroupe
 from .vault import Invalide, NonTrouve, exiger_description
 
@@ -77,6 +77,8 @@ def creer(moteur, tache, c, source: str | None):
                          c.harnais, c.modele, c.echeance, c.priorite, c.mission)
     if genre:
         moteur.vault.modifier(ident, {"genre": genre})
+    if not agent:
+        recent.entrer(moteur.vault, ident)  # INV-RECENT-1 : création par l'utilisateur
     if mots:
         for m in mots if not agent else ():
             moteur.etiquettes.declarer(m)
